@@ -13,6 +13,9 @@
 # BINARY_DIR: The location where the build outputs will be written
 # BOARD: The string identifying the board target for TF-M (AN521, etc.)
 # CMAKE_BUILD_TYPE: The TF-M build type to use, (Debug, Release, etc.)
+# PSA_TEST_SUITE: A PSA test suite to add, choose one of
+#                 PROTECTED_STORAGE/INTERNAL_TRUSTED_STORAGE/STORAGE/CRYPTO/
+#                 INITIAL_ATTESTATION
 # IPC: Build TFM IPC library. This library allows a non-secure application to
 #      interface to secure domain using IPC.
 # ISOLATION_LEVEL: The TF-M isolation level to use
@@ -31,7 +34,7 @@
 #                        BUILD_PROFILE profile_small)
 function(trusted_firmware_build)
   set(options IPC REGRESSION)
-  set(oneValueArgs BINARY_DIR BOARD BL2 ISOLATION_LEVEL CMAKE_BUILD_TYPE BUILD_PROFILE MCUBOOT_IMAGE_NUMBER)
+  set(oneValueArgs BINARY_DIR BOARD BL2 ISOLATION_LEVEL CMAKE_BUILD_TYPE BUILD_PROFILE MCUBOOT_IMAGE_NUMBER PSA_TEST_SUITE)
   cmake_parse_arguments(TFM "${options}" "${oneValueArgs}" "" ${ARGN})
 
   if(NOT DEFINED TFM_BL2)
@@ -49,7 +52,7 @@ function(trusted_firmware_build)
     set(TFM_ISOLATION_LEVEL_ARG -DTFM_ISOLATION_LEVEL=${TFM_ISOLATION_LEVEL})
   endif()
 
-  if(DEFINED TFM_REGRESSION)
+  if(TFM_REGRESSION)
     set(TFM_REGRESSION_ARG -DTEST_S=ON)
   endif()
 
@@ -67,9 +70,25 @@ function(trusted_firmware_build)
     set(MCUBOOT_IMAGE_NUM_ARG -DMCUBOOT_IMAGE_NUMBER=${TFM_MCUBOOT_IMAGE_NUMBER})
   endif()
 
+  if(DEFINED TFM_PSA_TEST_SUITE)
+    set(PSA_TEST_ARG -DTEST_PSA_API=${TFM_PSA_TEST_SUITE})
+  endif()
+
   set(VENEERS_FILE ${TFM_BINARY_DIR}/secure_fw/s_veneers.o)
   set(TFM_API_NS_FILE ${TFM_BINARY_DIR}/app/libtfm_api_ns.a)
   set(TFM_GENERATED_INCLUDES ${TFM_BINARY_DIR}/generated/interface/include)
+  set(PLATFORM_NS_FILE ${TFM_BINARY_DIR}/platform/libplatform_ns.a)
+
+  if (TFM_PSA_TEST_SUITE)
+    set(PSA_TEST_VAL_FILE ${TFM_BINARY_DIR}/app/psa_api_tests/val/val_nspe.a)
+    set(PSA_TEST_PAL_FILE ${TFM_BINARY_DIR}/app/psa_api_tests/platform/pal_nspe.a)
+    set(COMBINE_DIR_STORAGE storage)
+    set(COMBINE_DIR_PROTECTED_STORAGE storage)
+    set(COMBINE_DIR_INTERNAL_TRUSTED_STORAGE storage)
+    set(COMBINE_DIR_CRYPTO crypto)
+    set(COMBINE_DIR_INITIAL_ATTESTATION initial_attestation)
+    set(PSA_TEST_COMBINE_FILE ${TFM_BINARY_DIR}/app/psa_api_tests/dev_apis/${COMBINE_DIR_${TFM_PSA_TEST_SUITE}}/test_combine.a)
+  endif()
 
   if(TFM_BL2)
     set(BL2_BIN_FILE ${TFM_BINARY_DIR}/bin/bl2.bin)
@@ -87,6 +106,10 @@ function(trusted_firmware_build)
     ${VENEERS_FILE}
     ${TFM_API_NS_FILE}
     ${TFM_GENERATED_INCLUDES}/psa_manifest/sid.h
+    ${PSA_TEST_VAL_FILE}
+    ${PSA_TEST_PAL_FILE}
+    ${PSA_TEST_COMBINE_FILE}
+    ${PLATFORM_NS_FILE}
     ${BL2_BIN_FILE}
     ${BL2_HEX_FILE}
     ${TFM_S_BIN_FILE}
@@ -129,8 +152,10 @@ function(trusted_firmware_build)
                ${TFM_REGRESSION_ARG}
                ${TFM_PROFILE_ARG}
                ${MCUBOOT_IMAGE_NUM_ARG}
+               ${PSA_TEST_ARG}
                -DTFM_TEST_REPO_PATH=${ZEPHYR_TFM_MODULE_DIR}/tf-m-tests
                -DMCUBOOT_PATH=${ZEPHYR_TFM_MODULE_DIR}/../tfm-mcuboot
+               -DPSA_ARCH_TESTS_PATH=${ZEPHYR_TFM_MODULE_DIR}/psa-arch-tests
                -DZEPHYR_BASE=${ZEPHYR_BASE}
     BUILD_ALWAYS True
     USES_TERMINAL_BUILD True
@@ -161,7 +186,7 @@ function(trusted_firmware_build)
     )
 
   add_library(tfm_api
-    ${ZEPHYR_TFM_MODULE_DIR}/tf-m-tests/app/os_wrapper_cmsis_rtos_v2.c
+    ${ZEPHYR_BASE}/modules/tfm/src/zephyr_tfm_log.c
   )
 
   target_include_directories(tfm_api
@@ -177,6 +202,10 @@ function(trusted_firmware_build)
     PUBLIC
     zephyr_interface
     INTERFACE
+    ${PSA_TEST_VAL_FILE}
+    ${PSA_TEST_PAL_FILE}
+    ${PSA_TEST_COMBINE_FILE}
+    ${PLATFORM_NS_FILE}
     ${TFM_API_NS_FILE}
     ${VENEERS_FILE}
     $<TARGET_FILE:tfm_api>
@@ -207,6 +236,17 @@ if (CONFIG_BUILD_WITH_TFM)
     set(TFM_IMAGE_NUMBER_ARG
         MCUBOOT_IMAGE_NUMBER ${CONFIG_TFM_MCUBOOT_IMAGE_NUMBER})
   endif()
+  if (CONFIG_TFM_PSA_TEST_CRYPTO)
+    set(TFM_PSA_TEST_ARG PSA_TEST_SUITE CRYPTO)
+  elseif (CONFIG_TFM_PSA_TEST_PROTECTED_STORAGE)
+    set(TFM_PSA_TEST_ARG PSA_TEST_SUITE PROTECTED_STORAGE)
+  elseif (CONFIG_TFM_PSA_TEST_INTERNAL_TRUSTED_STORAGE)
+    set(TFM_PSA_TEST_ARG PSA_TEST_SUITE INTERNAL_TRUSTED_STORAGE)
+  elseif (CONFIG_TFM_PSA_TEST_STORAGE)
+    set(TFM_PSA_TEST_ARG PSA_TEST_SUITE STORAGE)
+  elseif (CONFIG_TFM_PSA_TEST_INITIAL_ATTESTATION)
+    set(TFM_PSA_TEST_ARG PSA_TEST_SUITE INITIAL_ATTESTATION)
+  endif()
   if (CONFIG_TFM_CMAKE_BUILD_TYPE_RELEASE)
     set(TFM_CMAKE_BUILD_TYPE "Release")
   elseif (CONFIG_TFM_CMAKE_BUILD_TYPE_MINSIZEREL)
@@ -226,10 +266,13 @@ if (CONFIG_BUILD_WITH_TFM)
     ${TFM_BL2_ARG}
     ${TFM_IPC_ARG}
     ${TFM_REGRESSION_ARG}
+    ${TFM_PSA_TEST_ARG}
     CMAKE_BUILD_TYPE ${TFM_CMAKE_BUILD_TYPE}
   )
 
   zephyr_link_libraries(tfm_api)
+  zephyr_sources(
+    ${ZEPHYR_BASE}/modules/tfm/src/zephyr_tfm_ns_interface.c)
 
   # Set default image versions if not defined elsewhere
   if (NOT DEFINED TFM_IMAGE_VERSION_S)
