@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Arm Limited. All rights reserved.
+ * Copyright (c) 2020-2021, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -83,17 +83,17 @@ struct tfm_msg_body_t {
  * phase.
  */
 struct partition_static_t {
-    uint32_t psa_framework_version;
-    uint32_t partition_id;
-    uint32_t partition_flags;
-    uint32_t partition_priority;
-    sp_entry_point partition_init;
-    uintptr_t stack_base;
-    size_t stack_size;
-    uintptr_t heap_base;
-    size_t heap_size;
-    uint32_t dependencies_num;
-    uint32_t *p_dependencies;
+    uint32_t psa_ff_ver;                /* PSA-FF version                   */
+    uint32_t pid;                       /* Partition ID                     */
+    uint32_t flags;                     /* Flags of the partition           */
+    uint32_t priority;                  /* Priority of the partition thread */
+    sp_entry_point entry;               /* Entry point of the partition     */
+    uintptr_t stack_base_addr;          /* Stack base of the partition      */
+    size_t stack_size;                  /* Stack size of the partition      */
+    uintptr_t heap_base_addr;           /* Heap base of the partition       */
+    size_t heap_size;                   /* Heap size of the partition       */
+    uint32_t ndeps;                     /* Numbers of depended services     */
+    uint32_t *deps;                     /* Pointer to dependency arrays     */
 };
 
 /**
@@ -101,7 +101,7 @@ struct partition_static_t {
  * divided to structures, to keep the related fields close to each other.
  */
 struct partition_t {
-    const struct partition_static_t *static_data;
+    const struct partition_static_t *p_static;
     void *p_platform;
     void *p_interrupts;
     void *p_metadata;
@@ -506,16 +506,14 @@ void notify_with_signal(int32_t partition_id, psa_signal_t signal);
  *
  * \param[in]      partition_id    The ID of the partition in which we look for
  *                                 the signal.
- * \param[in]      signal          The signal we do the query for.
- * \param[out]     irq_line        The irq line associated with signal
+ * \param[in]      signal          The signal to query for.
  *
- * \retval IPC_SUCCESS          Execution successful, irq_line contains a valid
- *                              value.
- * \retval IPC_ERROR_GENERIC    There was an error finding the IRQ line for the
- *                              signal. irq_line is unchanged.
+ * \retval None-negative value  The irq line associated with signal
+ * \retval Negative value       if one of more the following are true:
+ *                              - the \ref signal indicates more than one signal
+ *                              - the \ref signal does not belong to the
+ *                                partition.
  */
-int32_t get_irq_line_for_signal(int32_t partition_id,
-                                psa_signal_t signal,
-                                IRQn_Type *irq_line);
+int32_t get_irq_line_for_signal(int32_t partition_id, psa_signal_t signal);
 
 #endif /* __SPM_IPC_H__ */
