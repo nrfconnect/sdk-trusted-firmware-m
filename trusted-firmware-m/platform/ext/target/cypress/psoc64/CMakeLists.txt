@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020, Arm Limited. All rights reserved.
+# Copyright (c) 2020-2021, Arm Limited. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -32,9 +32,9 @@ target_sources(tfm_s
         $<$<C_COMPILER_ID:IAR>:${CMAKE_CURRENT_SOURCE_DIR}/Device/Source/iar/cy_syslib_iar.c>
 )
 target_add_scatter_file(tfm_s
-    $<$<C_COMPILER_ID:ARMClang>:${CMAKE_BINARY_DIR}/generated/platform/ext/common/armclang/tfm_common_s.sct>
-    $<$<C_COMPILER_ID:GNU>:${CMAKE_BINARY_DIR}/generated/platform/ext/common/gcc/tfm_common_s.ld>
-    $<$<C_COMPILER_ID:IAR>:${CMAKE_BINARY_DIR}/generated/platform/ext/common/iar/tfm_common_s.icf>
+    $<$<C_COMPILER_ID:ARMClang>:${CMAKE_SOURCE_DIR}/platform/ext/common/armclang/tfm_common_s.sct>
+    $<$<C_COMPILER_ID:GNU>:${CMAKE_SOURCE_DIR}/platform/ext/common/gcc/tfm_common_s.ld>
+    $<$<C_COMPILER_ID:IAR>:${CMAKE_SOURCE_DIR}/platform/ext/common/iar/tfm_common_s.icf>
 )
 
 if(NS)
@@ -198,20 +198,19 @@ target_include_directories(platform_ns
 
 target_compile_definitions(platform_ns
     PUBLIC
-        TFM_MULTI_CORE_MULTI_CLIENT_CALL
         RTE_USART5
 )
 
 # device_cfg.h defines the number of mailbox queue slots to support multiple
 # PSA client calls feature.
-target_include_directories(psa_interface
+target_include_directories(tfm_ns_interface
     INTERFACE
         Device/Config
 )
 
 target_link_libraries(platform_ns
     PRIVATE
-        psa_interface
+        tfm_ns_interface
 )
 
 ########################### export sources #####################################

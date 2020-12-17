@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020, Arm Limited. All rights reserved.
+# Copyright (c) 2020-2021, Arm Limited. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -31,20 +31,20 @@ target_include_directories(tfm_spm
 
 target_sources(tfm_spm
     PRIVATE
-        $<$<BOOL:${TFM_PARTITION_INITIAL_ATTESTATION}>:common/tfm_boot_data.c>
-        common/tfm_core_utils.c
-        common/utilities.c
-        common/spm_log.c
+        ffm/tfm_boot_data.c
+        ffm/tfm_core_utils.c
+        ffm/utilities.c
+        $<$<NOT:$<STREQUAL:${TFM_SPM_LOG_LEVEL},${TFM_SPM_LOG_LEVEL_SILENCE}>>:ffm/spm_log.c>
         $<$<BOOL:${TFM_MULTI_CORE_TOPOLOGY}>:cmsis_psa/tfm_multi_core.c>
         $<$<BOOL:${TFM_MULTI_CORE_TOPOLOGY}>:cmsis_psa/tfm_multi_core_mem_check.c>
         $<$<BOOL:${TFM_MULTI_CORE_TOPOLOGY}>:cmsis_psa/tfm_rpc.c>
         $<$<BOOL:${TFM_MULTI_CORE_TOPOLOGY}>:cmsis_psa/tfm_spe_mailbox.c>
-        $<$<NOT:$<BOOL:${TFM_PSA_API}>>:common/tfm_core_mem_check.c>
+        $<$<NOT:$<BOOL:${TFM_PSA_API}>>:ffm/tfm_core_mem_check.c>
         $<$<BOOL:${TFM_PSA_API}>:cmsis_psa/arch/tfm_arch.c>
         $<$<BOOL:${TFM_PSA_API}>:cmsis_psa/main.c>
         $<$<BOOL:${TFM_PSA_API}>:cmsis_psa/spm_ipc.c>
-        $<$<BOOL:${TFM_PSA_API}>:common/spm_psa_client_call.c>
-        $<$<BOOL:${TFM_PSA_API}>:common/psa_client_service_apis.c>
+        $<$<BOOL:${TFM_PSA_API}>:ffm/spm_psa_client_call.c>
+        $<$<BOOL:${TFM_PSA_API}>:ffm/psa_client_service_apis.c>
         $<$<BOOL:${TFM_PSA_API}>:cmsis_psa/tfm_core_svcalls_ipc.c>
         $<$<AND:$<BOOL:${TFM_PSA_API}>,$<NOT:$<BOOL:${TFM_MULTI_CORE_TOPOLOGY}>>>:cmsis_psa/tfm_nspm_ipc.c>
         $<$<BOOL:${TFM_PSA_API}>:cmsis_psa/tfm_pools.c>
@@ -63,6 +63,16 @@ target_sources(tfm_spm
         $<$<AND:$<BOOL:${TFM_PSA_API}>,$<STREQUAL:${CMAKE_SYSTEM_ARCHITECTURE},armv6-m>>:cmsis_psa/arch/tfm_arch_v6m_v7m.c>
         $<$<AND:$<BOOL:${TFM_PSA_API}>,$<STREQUAL:${CMAKE_SYSTEM_ARCHITECTURE},armv7-m>>:cmsis_psa/arch/tfm_arch_v6m_v7m.c>
 )
+
+#workaround for arch-test
+if (TEST_PSA_API STREQUAL IPC)
+    target_sources(driver_partition PRIVATE
+        ${CMAKE_BINARY_DIR}/generated/api-tests/platform/manifests/auto_generated/intermedia_driver_partition_psa.c)
+    target_sources(client_partition PRIVATE
+        ${CMAKE_BINARY_DIR}/generated/api-tests/platform/manifests/auto_generated/intermedia_client_partition_psa.c)
+    target_sources(server_partition PRIVATE
+        ${CMAKE_BINARY_DIR}/generated/api-tests/platform/manifests/auto_generated/intermedia_server_partition_psa.c)
+endif()
 
 target_link_libraries(tfm_spm
     PUBLIC
@@ -130,12 +140,12 @@ target_include_directories(tfm_utilities
 ############################ Secure API ########################################
 
 target_link_libraries(tfm_secure_api
-    PRIVATE
+    INTERFACE
         tfm_partitions
 )
 
 target_include_directories(tfm_secure_api
-    PUBLIC
+    INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<$<BOOL:${TFM_PSA_API}>:${CMAKE_CURRENT_SOURCE_DIR}/model_ipc/include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/arch/include>

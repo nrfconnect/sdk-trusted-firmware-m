@@ -29,9 +29,7 @@ target_include_directories(bl2
 
 target_link_libraries(bl2
     PRIVATE
-        platform_bl2
         tfm_boot_status
-        bl2_mbedcrypto
 )
 
 target_link_options(bl2
@@ -100,3 +98,16 @@ target_link_libraries(bl2_mbedcrypto
     PUBLIC
         bl2_mbedcrypto_config
 )
+
+############################### CODE SHARING ###################################
+
+if (TFM_CODE_SHARING)
+    compiler_create_shared_code(bl2 ${CMAKE_CURRENT_SOURCE_DIR}/src/shared_symbol_template.txt)
+
+    if (NOT EXISTS ${MBEDCRYPTO_PATH}/library/code_share.c)
+        message(FATAL_ERROR "File ${MBEDCRYPTO_PATH}/library/code_share.c does not exist.
+        Have the patch ${CMAKE_SOURCE_DIR}/lib/ext/mbedcrypto/0005-Enable-crypto-code-sharing-between-independent-binar.patch
+        been applied to the mbedcrypto repo at ${MBEDCRYPTO_PATH}?
+        Hint: The command might be `cd ${MBEDCRYPTO_PATH} && git apply ${CMAKE_SOURCE_DIR}/lib/ext/mbedcrypto/*.patch`")
+    endif()
+endif()
