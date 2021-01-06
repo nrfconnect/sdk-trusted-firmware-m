@@ -10,19 +10,19 @@
 #include "test_framework.h"
 
 /* Service specific includes */
-#ifdef TFM_PARTITION_PROTECTED_STORAGE
+#if defined(TFM_PARTITION_PROTECTED_STORAGE) || defined(FORWARD_PROT_MSG)
 #include "ps_tests.h"
 #endif
-#ifdef TFM_PARTITION_INTERNAL_TRUSTED_STORAGE
+#if defined(TFM_PARTITION_INTERNAL_TRUSTED_STORAGE) || defined(FORWARD_PROT_MSG)
 #include "its_s_tests.h"
 #endif
-#ifdef TFM_PARTITION_INITIAL_ATTESTATION
+#if defined(TFM_PARTITION_INITIAL_ATTESTATION) || defined(FORWARD_PROT_MSG)
 #include "attest_s_tests.h"
 #endif
-#ifdef TFM_PARTITION_CRYPTO
+#if defined(TFM_PARTITION_CRYPTO) || defined(FORWARD_PROT_MSG)
 #include "crypto_s_tests.h"
 #endif
-#ifdef TFM_PARTITION_PLATFORM
+#if defined(TFM_PARTITION_PLATFORM) || defined(FORWARD_PROT_MSG)
 #include "platform_s_tests.h"
 #endif
 #ifdef TFM_PSA_API
@@ -34,8 +34,7 @@
 #endif /* TFM_PSA_API */
 
 static struct test_suite_t test_suites[] = {
-
-#ifdef TFM_PARTITION_PROTECTED_STORAGE
+#if defined(TFM_PARTITION_PROTECTED_STORAGE) || defined(FORWARD_PROT_MSG)
     {&register_testsuite_s_psa_ps_interface, 0, 0, 0},
     {&register_testsuite_s_psa_ps_reliability, 0, 0, 0},
 
@@ -44,23 +43,23 @@ static struct test_suite_t test_suites[] = {
 #endif
 #endif
 
-#ifdef TFM_PARTITION_INTERNAL_TRUSTED_STORAGE
+#if defined(TFM_PARTITION_INTERNAL_TRUSTED_STORAGE) || defined(FORWARD_PROT_MSG)
     /* Secure ITS test cases */
     {&register_testsuite_s_psa_its_interface, 0, 0, 0},
     {&register_testsuite_s_psa_its_reliability, 0, 0, 0},
 #endif
 
-#ifdef TFM_PARTITION_CRYPTO
+#if defined(TFM_PARTITION_CRYPTO) || defined(FORWARD_PROT_MSG)
     /* Crypto test cases */
     {&register_testsuite_s_crypto_interface, 0, 0, 0},
 #endif
 
-#ifdef TFM_PARTITION_INITIAL_ATTESTATION
+#if defined(TFM_PARTITION_INITIAL_ATTESTATION) || defined(FORWARD_PROT_MSG)
     /* Secure initial attestation service test cases */
     {&register_testsuite_s_attestation_interface, 0, 0, 0},
 #endif
 
-#ifdef TFM_PARTITION_PLATFORM
+#if defined(TFM_PARTITION_PLATFORM) || defined(FORWARD_PROT_MSG)
     /* Secure platform service test cases */
     {&register_testsuite_s_platform_interface, 0, 0, 0},
 #endif

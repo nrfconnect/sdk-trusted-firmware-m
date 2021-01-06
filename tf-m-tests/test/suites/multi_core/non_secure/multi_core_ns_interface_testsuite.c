@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2020, Arm Limited. All rights reserved.
+ * Copyright (c) 2019-2021, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -16,7 +16,7 @@
 #include "test_framework_helpers.h"
 #include "tfm_ns_mailbox.h"
 
-#ifdef TFM_MULTI_CORE_MULTI_CLIENT_CALL
+#if (NUM_MAILBOX_QUEUE_SLOT > 1)
 /* Max number of child threads for multiple outstanding PSA client call test */
 #define NR_MULTI_CALL_CHILD                   (NUM_MAILBOX_QUEUE_SLOT * 2)
 #else

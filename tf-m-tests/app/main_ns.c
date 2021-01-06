@@ -16,7 +16,6 @@
 #ifdef PSA_API_TEST_NS
 #include "psa_api_test.h"
 #endif
-#include "target_cfg.h"
 #include "tfm_plat_ns.h"
 #include "driver/Driver_USART.h"
 #include "device_cfg.h"
