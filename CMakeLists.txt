@@ -18,6 +18,9 @@
 # ISOLATION_LEVEL: The TF-M isolation level to use
 # REGRESSION: Boolean if TF-M build includes building the TF-M regression tests
 # BL2: Boolean if the TF-M build uses MCUboot. Default: True
+# CMAKE_ARGS: Additional CMake flags to be used when building TF-M
+#             This is a list of flags, such as
+#             `CMAKE_ARGS -DARG0=val0 -DARG1=val1`
 #
 # Example usage:
 #
@@ -30,9 +33,13 @@
 #                        BL2 True
 #                        BUILD_PROFILE profile_small)
 function(trusted_firmware_build)
+  # Fetch sublist CUSTOM_TFM_START ${CONFIG_CUSTOM_TFM_SETTINGS} CONFIG_TFM_END
+
+
   set(options IPC REGRESSION)
   set(oneValueArgs BINARY_DIR BOARD BL2 ISOLATION_LEVEL CMAKE_BUILD_TYPE BUILD_PROFILE MCUBOOT_IMAGE_NUMBER)
-  cmake_parse_arguments(TFM "${options}" "${oneValueArgs}" "" ${ARGN})
+  set(multiValueArgs CMAKE_ARGS)
+  cmake_parse_arguments(TFM "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
   if(NOT DEFINED TFM_BL2)
     set(TFM_BL2 True)
@@ -129,6 +136,7 @@ function(trusted_firmware_build)
                ${TFM_REGRESSION_ARG}
                ${TFM_PROFILE_ARG}
                ${MCUBOOT_IMAGE_NUM_ARG}
+               "${TFM_CMAKE_ARGS}"
                -DTFM_TEST_REPO_PATH=${ZEPHYR_TFM_MODULE_DIR}/tf-m-tests
                -DMCUBOOT_PATH=${ZEPHYR_TFM_MODULE_DIR}/../tfm-mcuboot
                -DZEPHYR_BASE=${ZEPHYR_BASE}
@@ -217,6 +225,10 @@ if (CONFIG_BUILD_WITH_TFM)
     set(TFM_CMAKE_BUILD_TYPE "RelWithDebInfo")
   endif()
 
+  if(DEFINED CONFIG_TFM_EXTRA_CMAKE_ARGS)
+    string(REPLACE " " ";" TFM_CMAKE_ARGS "${CONFIG_TFM_EXTRA_CMAKE_ARGS}")
+  endif()
+
   trusted_firmware_build(
     BINARY_DIR ${CMAKE_BINARY_DIR}/tfm
     BOARD ${CONFIG_TFM_BOARD}
@@ -226,6 +238,7 @@ if (CONFIG_BUILD_WITH_TFM)
     ${TFM_BL2_ARG}
     ${TFM_IPC_ARG}
     ${TFM_REGRESSION_ARG}
+    CMAKE_ARGS "${TFM_CMAKE_ARGS}"
     CMAKE_BUILD_TYPE ${TFM_CMAKE_BUILD_TYPE}
   )
 
