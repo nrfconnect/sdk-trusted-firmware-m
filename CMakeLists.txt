@@ -31,7 +31,7 @@
 #                        BUILD_PROFILE profile_small)
 function(trusted_firmware_build)
   set(options IPC REGRESSION)
-  set(oneValueArgs BINARY_DIR BOARD BL2 ISOLATION_LEVEL CMAKE_BUILD_TYPE BUILD_PROFILE MCUBOOT_IMAGE_NUMBER)
+  set(oneValueArgs BINARY_DIR BOARD BL2 ISOLATION_LEVEL CMAKE_BUILD_TYPE BUILD_PROFILE)
   cmake_parse_arguments(TFM "${options}" "${oneValueArgs}" "" ${ARGN})
 
   if(NOT DEFINED TFM_BL2)
@@ -63,9 +63,6 @@ function(trusted_firmware_build)
     set(TFM_PROFILE_ARG -DTFM_PROFILE=${TFM_BUILD_PROFILE})
   endif()
 
-  if(DEFINED TFM_MCUBOOT_IMAGE_NUMBER)
-    set(MCUBOOT_IMAGE_NUM_ARG -DMCUBOOT_IMAGE_NUMBER=${TFM_MCUBOOT_IMAGE_NUMBER})
-  endif()
 
   set(VENEERS_FILE ${TFM_BINARY_DIR}/secure_fw/s_veneers.o)
   set(TFM_API_NS_FILE ${TFM_BINARY_DIR}/app/libtfm_api_ns.a)
@@ -128,7 +125,6 @@ function(trusted_firmware_build)
                ${TFM_ISOLATION_LEVEL_ARG}
                ${TFM_REGRESSION_ARG}
                ${TFM_PROFILE_ARG}
-               ${MCUBOOT_IMAGE_NUM_ARG}
                -DTFM_TEST_REPO_PATH=${ZEPHYR_TFM_MODULE_DIR}/tf-m-tests
                -DMCUBOOT_PATH=${ZEPHYR_TFM_MODULE_DIR}/../tfm-mcuboot
     BUILD_ALWAYS True
@@ -202,17 +198,12 @@ if (CONFIG_BUILD_WITH_TFM)
   if (CONFIG_TFM_PROFILE)
     set(TFM_PROFILE_ARG BUILD_PROFILE ${CONFIG_TFM_PROFILE})
   endif()
-  if (DEFINED CONFIG_TFM_MCUBOOT_IMAGE_NUMBER)
-    set(TFM_IMAGE_NUMBER_ARG
-        MCUBOOT_IMAGE_NUMBER ${CONFIG_TFM_MCUBOOT_IMAGE_NUMBER})
-  endif()
 
   trusted_firmware_build(
     BINARY_DIR ${CMAKE_BINARY_DIR}/tfm
     BOARD ${CONFIG_TFM_BOARD}
     ${TFM_ISOLATION_LEVEL_ARG}
     ${TFM_PROFILE_ARG}
-    ${TFM_IMAGE_NUMBER_ARG}
     ${TFM_BL2_ARG}
     ${TFM_IPC_ARG}
     ${TFM_REGRESSION_ARG}
