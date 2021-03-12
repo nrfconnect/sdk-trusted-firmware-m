@@ -26,8 +26,7 @@ TF-M Tests:
 
 psa-arch-tests:
     repo: https://github.com/ARM-software/psa-arch-tests
-    tag: v20.03_API1.0
-    commit: 3d986e72d9e084bb45763849699718f474fb10ba
+    commit: d4b75cc0a8e3df96c2240d7f28d2aac4b0def0f8
     license: Apache 2.0
 
 See also west.yml for more dependencies.

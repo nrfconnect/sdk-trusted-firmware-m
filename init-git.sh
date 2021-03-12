@@ -2,7 +2,7 @@
 
 TFM_GIT_SHA=TF-Mv1.2.0
 TFM_TESTS_GIT_SHA=TF-Mv1.2.0
-PSA_ARCH_TESTS_GIT_SHA=v20.03_API1.0
+PSA_ARCH_TESTS_GIT_SHA=d4b75cc0a8e3df96c2240d7f28d2aac4b0def0f8
 
 if [ ! -d trusted-firmware-m/.git ]; then
    git clone https://git.trustedfirmware.org/TF-M/trusted-firmware-m.git -b ${TFM_GIT_SHA} --bare trusted-firmware-m/.git
