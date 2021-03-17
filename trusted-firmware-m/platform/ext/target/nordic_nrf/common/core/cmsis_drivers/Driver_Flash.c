@@ -51,7 +51,7 @@ static ARM_FLASH_INFO FlashInfo = {
     .erased_value = 0xFF
 };
 
-static bool is_range_valid(uint32_t addr, uint32_t cnt)
+bool is_range_valid(uint32_t addr, uint32_t cnt)
 {
     uint32_t start_offset = (addr - FLASH_BASE_ADDRESS);
 
@@ -66,29 +66,29 @@ static bool is_range_valid(uint32_t addr, uint32_t cnt)
     return true;
 }
 
-static ARM_DRIVER_VERSION ARM_Flash_GetVersion(void)
+ARM_DRIVER_VERSION ARM_Flash_GetVersion(void)
 {
     return DriverVersion;
 }
 
-static ARM_FLASH_CAPABILITIES ARM_Flash_GetCapabilities(void)
+ARM_FLASH_CAPABILITIES ARM_Flash_GetCapabilities(void)
 {
     return DriverCapabilities;
 }
 
-static int32_t ARM_Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
+int32_t ARM_Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
 {
     ARG_UNUSED(cb_event);
 
     return ARM_DRIVER_OK;
 }
 
-static int32_t ARM_Flash_Uninitialize(void)
+int32_t ARM_Flash_Uninitialize(void)
 {
     return ARM_DRIVER_OK;
 }
 
-static int32_t ARM_Flash_PowerControl(ARM_POWER_STATE state)
+int32_t ARM_Flash_PowerControl(ARM_POWER_STATE state)
 {
     switch (state) {
     case ARM_POWER_FULL:
@@ -102,7 +102,7 @@ static int32_t ARM_Flash_PowerControl(ARM_POWER_STATE state)
     }
 }
 
-static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
+int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
 {
     if (!is_range_valid(addr, cnt)) {
         return ARM_DRIVER_ERROR_PARAMETER;
@@ -112,7 +112,7 @@ static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
     return ARM_DRIVER_OK;
 }
 
-static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
+int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
                                      uint32_t cnt)
 {
     /* Only aligned writes of full 32-bit words are allowed. */
@@ -130,7 +130,7 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
     return ARM_DRIVER_OK;
 }
 
-static int32_t ARM_Flash_EraseSector(uint32_t addr)
+int32_t ARM_Flash_EraseSector(uint32_t addr)
 {
     nrfx_err_t err_code = nrfx_nvmc_page_erase(addr);
     if (err_code != NRFX_SUCCESS) {
@@ -140,13 +140,13 @@ static int32_t ARM_Flash_EraseSector(uint32_t addr)
     return ARM_DRIVER_OK;
 }
 
-static int32_t ARM_Flash_EraseChip(void)
+int32_t ARM_Flash_EraseChip(void)
 {
     nrfx_nvmc_all_erase();
     return ARM_DRIVER_OK;
 }
 
-static ARM_FLASH_STATUS ARM_Flash_GetStatus(void)
+ARM_FLASH_STATUS ARM_Flash_GetStatus(void)
 {
     ARM_FLASH_STATUS status = {
         .busy = !nrfx_nvmc_write_done_check()
@@ -154,7 +154,7 @@ static ARM_FLASH_STATUS ARM_Flash_GetStatus(void)
     return status;
 }
 
-static ARM_FLASH_INFO * ARM_Flash_GetInfo(void)
+ARM_FLASH_INFO * ARM_Flash_GetInfo(void)
 {
     return &FlashInfo;
 }
