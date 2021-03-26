@@ -69,6 +69,7 @@ function(trusted_firmware_build)
 
   set(VENEERS_FILE ${TFM_BINARY_DIR}/secure_fw/s_veneers.o)
   set(TFM_API_NS_FILE ${TFM_BINARY_DIR}/app/libtfm_api_ns.a)
+  set(TFM_PLATFORM_NS_FILE ${TFM_BINARY_DIR}/platform/libplatform_ns.a)
   set(TFM_GENERATED_INCLUDES ${TFM_BINARY_DIR}/generated/interface/include)
 
   if(TFM_BL2)
@@ -86,6 +87,7 @@ function(trusted_firmware_build)
   set(BUILD_BYPRODUCTS
     ${VENEERS_FILE}
     ${TFM_API_NS_FILE}
+    ${TFM_PLATFORM_NS_FILE}
     ${TFM_GENERATED_INCLUDES}/psa_manifest/sid.h
     ${BL2_BIN_FILE}
     ${BL2_HEX_FILE}
@@ -177,6 +179,7 @@ function(trusted_firmware_build)
     PUBLIC
     zephyr_interface
     INTERFACE
+    ${TFM_PLATFORM_NS_FILE}
     ${TFM_API_NS_FILE}
     ${VENEERS_FILE}
     $<TARGET_FILE:tfm_api>
