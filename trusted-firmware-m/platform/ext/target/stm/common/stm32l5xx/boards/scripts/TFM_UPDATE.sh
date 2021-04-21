@@ -20,29 +20,27 @@ SCRIPTPATH=`dirname $SCRIPT`
 BINPATH="$SCRIPTPATH/bin"
 PATH="/C/Program Files/STMicroelectronics/STM32Cube/STM32CubeProgrammer/bin/":$PATH
 stm32programmercli="STM32_Programmer_CLI"
-external_loader="C:\PROGRA~1\STMicroelectronics\STM32Cube\STM32CubeProgrammer\bin\ExternalLoader\MX25LM51245G_STM32L562E-DK.stldr"
-connect_no_reset="-c port=SWD mode=UR -el $external_loader"
-connect="-c port=SWD mode=UR --hardRst -el $external_loader"
-
+connect_no_reset="-c port=SWD mode=HotPlug"
+connect="-c port=SWD mode=HotPlug --hardRst"
 echo "Write TFM_Appli Secure"
 # part ot be updated according to flash_layout.h
-slot0=
-slot1=
+slot0=0xc014000
+slot1=0xc038000
 slot2=
 slot3=
 its=
 sst=
 scratch=
 nvcounter=
-boot=
+boot=0x0c001000
 unused=
 
-$stm32programmercli $connect -d $BINPATH/tfm_s_signed.bin $slot0 -v
+$stm32programmercli $connect -d $SCRIPTPATH/../tfm_s_signed.bin $slot0 -v
 echo "TFM_Appli Secure Written"
 echo "Write TFM_Appli NonSecure"
-$stm32programmercli $connect -d $BINPATH/tfm_ns_signed.bin $slot1 -v
+$stm32programmercli $connect -d $SCRIPTPATH/../zephyr_ns_signed.bin $slot1 -v
 echo "TFM_Appli NonSecure Written"
 echo "Write TFM_SBSFU_Boot"
-$stm32programmercli $connect -d $BINPATH/bl2.bin $boot -v
+$stm32programmercli $connect -d $SCRIPTPATH/../mcuboot.bin $boot -v
 echo "TFM_SBSFU_Boot Written"
 echo "TFM_UPDATE Done"

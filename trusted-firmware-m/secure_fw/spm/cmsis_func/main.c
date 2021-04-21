@@ -1,17 +1,15 @@
 /*
- * Copyright (c) 2017-2021, Arm Limited. All rights reserved.
+ * Copyright (c) 2017-2020, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
  */
 
 #include "arch.h"
-#include "ffm/tfm_boot_data.h"
+#include "common/tfm_boot_data.h"
 #include "region.h"
 #include "spm_func.h"
-#include "tfm_hal_defs.h"
 #include "tfm_hal_platform.h"
-#include "tfm_hal_isolation.h"
 #include "tfm_irq_list.h"
 #include "tfm_nspm.h"
 #include "tfm_spm_hal.h"
@@ -63,8 +61,8 @@ static int32_t tfm_core_init(void)
      * Access to any peripheral should be performed after programming
      * the necessary security components such as PPC/SAU.
      */
-    hal_status = tfm_hal_set_up_static_boundaries();
-    if (hal_status != TFM_HAL_SUCCESS) {
+    plat_err = tfm_spm_hal_init_isolation_hw();
+    if (plat_err != TFM_PLAT_ERR_SUCCESS) {
         return TFM_ERROR_GENERIC;
     }
 
@@ -136,6 +134,12 @@ int main(void)
     if (tfm_spm_db_init() != SPM_ERR_OK) {
         tfm_core_panic();
     }
+
+#ifdef CONFIG_TFM_ENABLE_MEMORY_PROTECT
+    if (tfm_spm_hal_setup_isolation_hw() != TFM_PLAT_ERR_SUCCESS) {
+        tfm_core_panic();
+    }
+#endif /* CONFIG_TFM_ENABLE_MEMORY_PROTECT */
 
     tfm_spm_partition_set_state(TFM_SP_CORE_ID, SPM_PARTITION_STATE_RUNNING);
 

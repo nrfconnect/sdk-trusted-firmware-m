@@ -16,27 +16,22 @@
 #ifdef CONFIG_TFM_ENABLE_MEMORY_PROTECT
 #define MPU_REGION_VENEERS           0
 #define MPU_REGION_TFM_UNPRIV_CODE   1
-#define PARTITION_REGION_RO          3
-#define PARTITION_REGION_RW_STACK    4
-#define PARTITION_REGION_PERIPH      5
-#define PARTITION_REGION_SHARE       6
+#define MPU_REGION_TFM_UNPRIV_DATA   2
+#define PARTITION_REGION_RO          4
+#define PARTITION_REGION_RW_STACK    5
+#define PARTITION_REGION_PERIPH      6
+#define PARTITION_REGION_SHARE       7
 
 #if TFM_LVL == 2
-#define MPU_REGION_NS_STACK          2
+#define MPU_REGION_NS_STACK          3
 #elif TFM_LVL == 3
-#define MPU_REGION_NS_DATA           2
+#define MPU_REGION_NS_DATA           3
 #endif
-
-#ifdef TFM_SP_META_PTR_ENABLE
-#define MPU_REGION_SP_META_PTR       7
-#endif /* TFM_SP_META_PTR_ENABLE */
 
 REGION_DECLARE(Image$$, TFM_UNPRIV_CODE, $$RO$$Base);
 REGION_DECLARE(Image$$, TFM_UNPRIV_CODE, $$RO$$Limit);
-#ifdef TFM_SP_META_PTR_ENABLE
-REGION_DECLARE(Image$$, TFM_SP_META_PTR, $$RW$$Base);
-REGION_DECLARE(Image$$, TFM_SP_META_PTR, $$RW$$Limit);
-#endif
+REGION_DECLARE(Image$$, TFM_UNPRIV_DATA, $$RW$$Base);
+REGION_DECLARE(Image$$, TFM_UNPRIV_DATA, $$ZI$$Limit);
 #ifndef TFM_PSA_API
 REGION_DECLARE(Image$$, TFM_UNPRIV_SCRATCH, $$ZI$$Base);
 REGION_DECLARE(Image$$, TFM_UNPRIV_SCRATCH, $$ZI$$Limit);
@@ -150,13 +145,12 @@ enum tfm_hal_status_t tfm_hal_set_up_static_boundaries(void)
         return TFM_HAL_ERROR_GENERIC;
     }
 
-#ifdef TFM_SP_META_PTR_ENABLE
-    /* TFM partition metadata pointer region */
-    region_cfg.region_nr = MPU_REGION_SP_META_PTR;
+    /* TFM Core unprivileged data region */
+    region_cfg.region_nr = MPU_REGION_TFM_UNPRIV_DATA;
     region_cfg.region_base =
-        (uint32_t)&REGION_NAME(Image$$, TFM_SP_META_PTR, $$RW$$Base);
+        (uint32_t)&REGION_NAME(Image$$, TFM_UNPRIV_DATA, $$RW$$Base);
     region_cfg.region_limit =
-        (uint32_t)&REGION_NAME(Image$$, TFM_SP_META_PTR, $$RW$$Limit);
+        (uint32_t)&REGION_NAME(Image$$, TFM_UNPRIV_DATA, $$ZI$$Limit);
     region_cfg.region_attridx = MPU_ARMV8M_MAIR_ATTR_DATA_IDX;
     region_cfg.attr_access = MPU_ARMV8M_AP_RW_PRIV_UNPRIV;
     region_cfg.attr_sh = MPU_ARMV8M_SH_NONE;
@@ -164,7 +158,6 @@ enum tfm_hal_status_t tfm_hal_set_up_static_boundaries(void)
     if (mpu_armv8m_region_enable(&dev_mpu_s, &region_cfg) != MPU_ARMV8M_OK) {
         return TFM_HAL_ERROR_GENERIC;
     }
-#endif
 
 #if TFM_LVL == 3
     /* TFM Core unprivileged non-secure data region */

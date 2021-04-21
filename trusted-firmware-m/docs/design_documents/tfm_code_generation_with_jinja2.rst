@@ -62,16 +62,22 @@ Improvements over the current solution
 Example
 *******
 
-Below code snippet enumerates services in Secure Partitions:
+Below code snippet enumerates the secure function IDs:
 
 .. code-block::
 
-    {% for partition in partitions %}
-        {% if partition.manifest.services %}
-            {% for service in partition.manifest.services %}
-                {do something for the service}
-            {% endfor %}
+    {% for manifest in manifests %}
+        {% if manifest.attr.conditional %}
+    #ifdef {{manifest.attr.conditional}}
         {% endif %}
+        /******** {{manifest.manifest.tfm_partition_name}} ********/
+        {% for sec_func in manifest.manifest.secure_functions %}
+        {{'{'}}{{sec_func.tfm_symbol}}, {{sec_func.sfid}}{{'}'}},
+        {% endfor %}
+        {% if manifest.attr.conditional %}
+    #endif /* {{manifest.attr.conditional}} */
+        {% endif %}
+
     {% endfor %}
 
-*Copyright (c) 2019-2021, Arm Limited. All rights reserved.*
+*Copyright (c) 2019-2020, Arm Limited. All rights reserved.*

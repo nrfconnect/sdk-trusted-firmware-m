@@ -5,7 +5,7 @@
  *
  */
 
-#include "ffm/tfm_boot_data.h"
+#include "common/tfm_boot_data.h"
 #include "region.h"
 #include "spm_ipc.h"
 #include "tfm_hal_platform.h"

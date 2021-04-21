@@ -58,20 +58,24 @@ void tfm_arch_init_context(struct tfm_arch_ctx_t *p_actx,
                            void *param, uintptr_t pfn,
                            uintptr_t stk_btm, uintptr_t stk_top)
 {
+    /*
+     * For security consideration, set unused registers into ZERO;
+     * and only necessary registers are set here.
+     */
     struct tfm_state_context_t *p_stat_ctx=
             (struct tfm_state_context_t *)tfm_arch_seal_thread_stack(stk_top);
 
     /*
-     * Shift back SP to leave space for holding common state context
+     * Shift back SP to leave space for holding base context
      * since thread is kicked off through exception return.
      */
     p_stat_ctx--;
 
-    /* First the common state context - ZERO it before usage. */
+    /* State context is considerate at thread start.*/
     spm_memset(p_stat_ctx, 0, sizeof(*p_stat_ctx));
     tfm_arch_init_state_ctx(p_stat_ctx, param, pfn);
 
-    /* Then the architecture-specific context. */
+    /* Initialize architecture context */
     spm_memset(p_actx, 0, sizeof(*p_actx));
     tfm_arch_init_actx(p_actx, (uint32_t)p_stat_ctx, (uint32_t)stk_btm);
 }

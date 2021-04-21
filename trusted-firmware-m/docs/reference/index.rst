@@ -7,7 +7,6 @@ Reference
 
     changelog
     glossary
-    security
     */index
     /tools/index
 

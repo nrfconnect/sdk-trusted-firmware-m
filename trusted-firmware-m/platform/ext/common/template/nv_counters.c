@@ -43,12 +43,8 @@
 #error "TFM_NV_COUNTERS_SECTOR_SIZE must be defined in flash_layout.h"
 #endif
 
-#ifndef NV_COUNTERS_FLASH_DEV_NAME
-    #ifndef FLASH_DEV_NAME
-    #error "NV_COUNTERS_FLASH_DEV_NAME or FLASH_DEV_NAME must be defined in flash_layout.h"
-    #else
-    #define NV_COUNTERS_FLASH_DEV_NAME FLASH_DEV_NAME
-    #endif
+#ifndef FLASH_DEV_NAME
+#error "FLASH_DEV_NAME must be defined in flash_layout.h"
 #endif
 /* End of compilation time checks to be sure the defines are well defined */
 
@@ -70,7 +66,7 @@ struct nv_counters_t {
 };
 
 /* Import the CMSIS flash device driver */
-extern ARM_DRIVER_FLASH NV_COUNTERS_FLASH_DEV_NAME;
+extern ARM_DRIVER_FLASH FLASH_DEV_NAME;
 
 enum tfm_plat_err_t tfm_plat_init_nv_counter(void)
 {
@@ -78,7 +74,7 @@ enum tfm_plat_err_t tfm_plat_init_nv_counter(void)
     uint32_t i;
     struct nv_counters_t nv_counters = {{0}};
 
-    err = NV_COUNTERS_FLASH_DEV_NAME.Initialize(NULL);
+    err = FLASH_DEV_NAME.Initialize(NULL);
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
@@ -86,9 +82,8 @@ enum tfm_plat_err_t tfm_plat_init_nv_counter(void)
     /* Read the NV counter area to be able to erase the sector and write later
      * in the flash.
      */
-    err = NV_COUNTERS_FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_AREA_ADDR,
-                                              &nv_counters,
-                                              TFM_NV_COUNTERS_AREA_SIZE);
+    err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_AREA_ADDR, &nv_counters,
+                                  TFM_NV_COUNTERS_AREA_SIZE);
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
@@ -108,15 +103,14 @@ enum tfm_plat_err_t tfm_plat_init_nv_counter(void)
     }
 
     /* Erase sector before write in it */
-    err = NV_COUNTERS_FLASH_DEV_NAME.EraseSector(TFM_NV_COUNTERS_SECTOR_ADDR);
+    err = FLASH_DEV_NAME.EraseSector(TFM_NV_COUNTERS_SECTOR_ADDR);
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
 
     /* Write in flash the in-memory NV counter content after modification */
-    err = NV_COUNTERS_FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_AREA_ADDR,
-                                                 &nv_counters,
-                                                 TFM_NV_COUNTERS_AREA_SIZE);
+    err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_AREA_ADDR, &nv_counters,
+                                     TFM_NV_COUNTERS_AREA_SIZE);
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
@@ -136,7 +130,7 @@ enum tfm_plat_err_t tfm_plat_read_nv_counter(enum tfm_nv_counter_t counter_id,
 
     flash_addr = TFM_NV_COUNTERS_AREA_ADDR + (counter_id * NV_COUNTER_SIZE);
 
-    err = NV_COUNTERS_FLASH_DEV_NAME.ReadData(flash_addr, val, NV_COUNTER_SIZE);
+    err = FLASH_DEV_NAME.ReadData(flash_addr, val, NV_COUNTER_SIZE);
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
@@ -153,9 +147,8 @@ enum tfm_plat_err_t tfm_plat_set_nv_counter(enum tfm_nv_counter_t counter_id,
     /* Read the NV counter area to be able to erase the sector and write later
      * in the flash.
      */
-    err = NV_COUNTERS_FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_AREA_ADDR,
-                                              &nv_counters,
-                                              TFM_NV_COUNTERS_AREA_SIZE);
+    err = FLASH_DEV_NAME.ReadData(TFM_NV_COUNTERS_AREA_ADDR, &nv_counters,
+                                  TFM_NV_COUNTERS_AREA_SIZE);
     if (err != ARM_DRIVER_OK) {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
@@ -169,16 +162,15 @@ enum tfm_plat_err_t tfm_plat_set_nv_counter(enum tfm_nv_counter_t counter_id,
         }
 
         /* Erase sector before write in it */
-        err = NV_COUNTERS_FLASH_DEV_NAME.EraseSector(
-                                                TFM_NV_COUNTERS_SECTOR_ADDR);
+        err = FLASH_DEV_NAME.EraseSector(TFM_NV_COUNTERS_SECTOR_ADDR);
         if (err != ARM_DRIVER_OK) {
             return TFM_PLAT_ERR_SYSTEM_ERR;
         }
 
         /* Write in flash the in-memory NV counter content after modification */
-        err = NV_COUNTERS_FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_AREA_ADDR,
-                                                     &nv_counters,
-                                                     TFM_NV_COUNTERS_AREA_SIZE);
+        err = FLASH_DEV_NAME.ProgramData(TFM_NV_COUNTERS_AREA_ADDR,
+                                         &nv_counters,
+                                         TFM_NV_COUNTERS_AREA_SIZE);
         if (err != ARM_DRIVER_OK) {
             return TFM_PLAT_ERR_SYSTEM_ERR;
         }

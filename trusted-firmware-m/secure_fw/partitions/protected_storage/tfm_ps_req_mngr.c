@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021, Arm Limited. All rights reserved.
+ * Copyright (c) 2019-2020, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -17,6 +17,7 @@
 #ifdef TFM_PSA_API
 #include "psa/service.h"
 #include "psa_manifest/tfm_protected_storage.h"
+#include "flash_layout.h"
 #endif
 
 #ifndef TFM_PSA_API
@@ -359,6 +360,16 @@ static psa_status_t tfm_ps_get_support_ipc(void)
     return PSA_SUCCESS;
 }
 
+/*
+ * Fixme: Temporarily implement abort as infinite loop,
+ * will replace it later.
+ */
+static void tfm_abort(void)
+{
+    while (1)
+        ;
+}
+
 static void ps_signal_handle(psa_signal_t signal, ps_func_t pfn)
 {
     psa_status_t status;
@@ -376,7 +387,7 @@ static void ps_signal_handle(psa_signal_t signal, ps_func_t pfn)
         psa_reply(msg.handle, PSA_SUCCESS);
         break;
     default:
-        psa_panic();
+        tfm_abort();
     }
 }
 #endif /* !defined(TFM_PSA_API) */
@@ -387,7 +398,7 @@ psa_status_t tfm_ps_req_mngr_init(void)
     psa_signal_t signals = 0;
 
     if (tfm_ps_init() != PSA_SUCCESS) {
-        psa_panic();
+        tfm_abort();
     }
 
     while (1) {
@@ -404,7 +415,7 @@ psa_status_t tfm_ps_req_mngr_init(void)
             ps_signal_handle(TFM_PS_GET_SUPPORT_SIGNAL,
                              tfm_ps_get_support_ipc);
         } else {
-            psa_panic();
+            tfm_abort();
         }
     }
 #else
@@ -419,23 +430,24 @@ psa_status_t tfm_ps_req_mngr_init(void)
 psa_status_t ps_req_mngr_read_asset_data(uint8_t *out_data, uint32_t size)
 {
 #ifdef TFM_PSA_API
-    size_t num = 0;
+  size_t num = 0;
 
-    num = psa_read(msg.handle, 1, out_data, size);
-    if (num != size) {
-        return PSA_ERROR_PROGRAMMER_ERROR;
-    }
+  num = psa_read(msg.handle, 1, out_data, size);
+  if (num != size) {
+      return PSA_ERROR_PROGRAMMER_ERROR;
+  }
 #else /* TFM_PSA_API */
-    (void)tfm_memcpy(out_data, p_data, size);
+  (void)tfm_memcpy(out_data, p_data, size);
 #endif
-    return PSA_SUCCESS;
+  return PSA_SUCCESS;
 }
 
-void ps_req_mngr_write_asset_data(const uint8_t *in_data, uint32_t size)
+void ps_req_mngr_write_asset_data(const uint8_t *in_data,
+                                   uint32_t size)
 {
 #ifdef TFM_PSA_API
-    psa_write(msg.handle, 0, in_data, size);
+  psa_write(msg.handle, 0, in_data, size);
 #else /* TFM_PSA_API */
-    (void)tfm_memcpy(p_data, in_data, size);
+  (void)tfm_memcpy(p_data, in_data, size);
 #endif
 }

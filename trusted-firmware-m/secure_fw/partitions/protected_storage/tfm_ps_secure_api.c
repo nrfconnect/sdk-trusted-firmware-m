@@ -13,6 +13,7 @@
 
 #define IOVEC_LEN(x) (sizeof(x)/sizeof(x[0]))
 
+__attribute__((section("SFN")))
 psa_status_t psa_ps_set(psa_storage_uid_t uid,
                         size_t data_length,
                         const void *p_data,
@@ -56,6 +57,7 @@ psa_status_t psa_ps_set(psa_storage_uid_t uid,
     return status;
 }
 
+__attribute__((section("SFN")))
 psa_status_t psa_ps_get(psa_storage_uid_t uid,
                         size_t data_offset,
                         size_t data_size,
@@ -109,6 +111,7 @@ psa_status_t psa_ps_get(psa_storage_uid_t uid,
     return status;
 }
 
+__attribute__((section("SFN")))
 psa_status_t psa_ps_get_info(psa_storage_uid_t uid,
                              struct psa_storage_info_t *p_info)
 {
@@ -147,6 +150,7 @@ psa_status_t psa_ps_get_info(psa_storage_uid_t uid,
     return status;
 }
 
+__attribute__((section("SFN")))
 psa_status_t psa_ps_remove(psa_storage_uid_t uid)
 {
     psa_status_t status;
@@ -181,6 +185,7 @@ psa_status_t psa_ps_remove(psa_storage_uid_t uid)
     return status;
 }
 
+__attribute__((section("SFN")))
 psa_status_t psa_ps_create(psa_storage_uid_t uid, size_t size,
                            psa_storage_create_flags_t create_flags)
 {
@@ -191,6 +196,7 @@ psa_status_t psa_ps_create(psa_storage_uid_t uid, size_t size,
     return PSA_ERROR_NOT_SUPPORTED;
 }
 
+__attribute__((section("SFN")))
 psa_status_t psa_ps_set_extended(psa_storage_uid_t uid, size_t data_offset,
                                  size_t data_length, const void *p_data)
 {
@@ -202,6 +208,7 @@ psa_status_t psa_ps_set_extended(psa_storage_uid_t uid, size_t data_offset,
     return PSA_ERROR_NOT_SUPPORTED;
 }
 
+__attribute__((section("SFN")))
 uint32_t psa_ps_get_support(void)
 {
     /* Initialise support_flags to a sensible default, to avoid returning an

@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020-2021, Arm Limited. All rights reserved.
+# Copyright (c) 2020, Arm Limited. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -40,9 +40,9 @@ target_sources(tfm_s
     $<$<C_COMPILER_ID:IAR>:${CMAKE_CURRENT_SOURCE_DIR}/device/source/startup_fvp_sse300_mps2_s.c>
 )
 target_add_scatter_file(tfm_s
-    $<$<C_COMPILER_ID:ARMClang>:${CMAKE_SOURCE_DIR}/platform/ext/common/armclang/tfm_common_s.sct>
-    # $<$<C_COMPILER_ID:GNU>:${CMAKE_SOURCE_DIR}/platform/ext/common/gcc/tfm_common_s.ld>
-    $<$<C_COMPILER_ID:IAR>:${CMAKE_SOURCE_DIR}/platform/ext/common/iar/tfm_common_s.icf>
+    $<$<C_COMPILER_ID:ARMClang>:${CMAKE_BINARY_DIR}/generated/platform/ext/common/armclang/tfm_common_s.sct>
+    # $<$<C_COMPILER_ID:GNU>:${CMAKE_BINARY_DIR}/generated/platform/ext/common/gcc/tfm_common_s.ld>
+    $<$<C_COMPILER_ID:IAR>:${CMAKE_BINARY_DIR}/generated/platform/ext/common/iar/tfm_common_s.icf>
 )
 
 if(NS)
@@ -92,25 +92,26 @@ target_include_directories(platform_s
         native_drivers
         partition
         services/src
+        native_drivers
         ${PLATFORM_DIR}/..
 )
 
 target_sources(platform_s
     PRIVATE
+        device/source/system_core_init.c
+        device/source/device_definition.c
+        native_drivers/uart_cmsdk_drv.c
+        native_drivers/systimer_armv8-m_drv.c
+        target_cfg.c
+        cmsis_drivers/Driver_USART.c
         cmsis_drivers/Driver_Flash.c
+        native_drivers/mpc_sie_drv.c
+        native_drivers/ppc_sse300_drv.c
+        spm_hal.c
+        tfm_hal_isolation.c
+        native_drivers/mpu_armv8m_drv.c
         cmsis_drivers/Driver_MPC.c
         cmsis_drivers/Driver_SSE300_PPC.c
-        cmsis_drivers/Driver_USART.c
-        device/source/device_definition.c
-        device/source/system_core_init.c
-        native_drivers/mpc_sie_drv.c
-        native_drivers/mpu_armv8m_drv.c
-        native_drivers/ppc_sse300_drv.c
-        native_drivers/systimer_armv8-m_drv.c
-        native_drivers/uart_cmsdk_drv.c
-        spm_hal.c
-        target_cfg.c
-        tfm_hal_isolation.c
         ${CMAKE_SOURCE_DIR}/platform/ext/common/tfm_hal_isolation_mpu_v8m.c
         $<$<BOOL:${TFM_PARTITION_PLATFORM}>:${CMAKE_CURRENT_SOURCE_DIR}/plat_test.c>
         $<$<BOOL:${TFM_PARTITION_PLATFORM}>:${CMAKE_CURRENT_SOURCE_DIR}/services/src/tfm_platform_system.c>
@@ -130,12 +131,12 @@ target_compile_options(platform_s
 
 target_sources(platform_ns
     PRIVATE
-        cmsis_drivers/Driver_Flash.c
-        cmsis_drivers/Driver_USART.c
-        device/source/device_definition.c
         device/source/system_core_init.c
-        native_drivers/systimer_armv8-m_drv.c
+        device/source/device_definition.c
         native_drivers/uart_cmsdk_drv.c
+        native_drivers/systimer_armv8-m_drv.c
+        cmsis_drivers/Driver_USART.c
+        cmsis_drivers/Driver_Flash.c
         $<$<BOOL:${TFM_PARTITION_PLATFORM}>:${CMAKE_CURRENT_SOURCE_DIR}/plat_test.c>
         $<$<BOOL:${TFM_PARTITION_PLATFORM}>:${CMAKE_CURRENT_SOURCE_DIR}/services/src/tfm_platform_system.c>
 )
@@ -152,8 +153,10 @@ target_include_directories(platform_ns
         device/include
         device/source/armclang
         native_drivers
+        native_drivers/timer_cmsdk
         partition
         services/src
+        native_drivers
 )
 
 #========================= Platform BL2 =======================================#
@@ -161,12 +164,12 @@ target_include_directories(platform_ns
 if(BL2)
     target_sources(platform_bl2
         PRIVATE
-            cmsis_drivers/Driver_Flash.c
-            cmsis_drivers/Driver_USART.c
+            boot_hal.c
             device/source/device_definition.c
             device/source/system_core_init.c
+            cmsis_drivers/Driver_Flash.c
             native_drivers/uart_cmsdk_drv.c
-            boot_hal.c
+            cmsis_drivers/Driver_USART.c
     )
 
     target_include_directories(platform_bl2
@@ -180,6 +183,7 @@ if(BL2)
             native_drivers
             partition
             services/src
+            native_drivers
 
         PRIVATE
             .

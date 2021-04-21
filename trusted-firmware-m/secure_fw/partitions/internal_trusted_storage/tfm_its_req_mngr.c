@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2021, Arm Limited. All rights reserved.
+ * Copyright (c) 2019-2020, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -12,6 +12,7 @@
 #include "psa/storage_common.h"
 #include "tfm_internal_trusted_storage.h"
 #include "its_utils.h"
+#include "ps_object_defs.h"
 
 #ifdef TFM_PSA_API
 #include "psa/service.h"
@@ -284,6 +285,16 @@ static psa_status_t tfm_its_remove_ipc(void)
     return tfm_its_remove(msg.client_id, uid);
 }
 
+/*
+ * Fixme: Temporarily implement abort as infinite loop,
+ * will replace it later.
+ */
+static void tfm_abort(void)
+{
+    while (1)
+        ;
+}
+
 static void its_signal_handle(psa_signal_t signal, its_func_t pfn)
 {
     psa_status_t status;
@@ -305,7 +316,7 @@ static void its_signal_handle(psa_signal_t signal, its_func_t pfn)
         psa_reply(msg.handle, PSA_SUCCESS);
         break;
     default:
-        psa_panic();
+        tfm_abort();
     }
 }
 #endif /* !defined(TFM_PSA_API) */
@@ -316,7 +327,7 @@ psa_status_t tfm_its_req_mngr_init(void)
     psa_signal_t signals = 0;
 
     if (tfm_its_init() != PSA_SUCCESS) {
-        psa_panic();
+        tfm_abort();
     }
 
     while (1) {
@@ -330,7 +341,7 @@ psa_status_t tfm_its_req_mngr_init(void)
         } else if (signals & TFM_ITS_REMOVE_SIGNAL) {
             its_signal_handle(TFM_ITS_REMOVE_SIGNAL, tfm_its_remove_ipc);
         } else {
-            psa_panic();
+            tfm_abort();
         }
     }
 #else

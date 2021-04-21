@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020-2021, Arm Limited. All rights reserved.
+# Copyright (c) 2020, Arm Limited. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -12,9 +12,9 @@ endif()
 cmake_minimum_required(VERSION 3.15)
 cmake_policy(SET CMP0079 NEW)
 
-add_library(tfm_psa_rot_partition_its STATIC)
+add_library(tfm_partition_its STATIC)
 
-target_include_directories(tfm_psa_rot_partition_its
+target_include_directories(tfm_partition_its
     PRIVATE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
         ${CMAKE_BINARY_DIR}/generated/secure_fw/partitions/internal_trusted_storage
@@ -23,34 +23,30 @@ target_include_directories(tfm_psa_rot_partition_its
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/../protected_storage
 )
 
-target_sources(tfm_psa_rot_partition_its
+target_sources(tfm_partition_its
     PRIVATE
         tfm_its_req_mngr.c
         tfm_internal_trusted_storage.c
         its_utils.c
+        flash/its_flash.c
         flash/its_flash_nand.c
         flash/its_flash_nor.c
         flash/its_flash_ram.c
+        flash/its_flash_info_internal.c
+        flash/its_flash_info_external.c
         flash_fs/its_flash_fs.c
         flash_fs/its_flash_fs_dblock.c
         flash_fs/its_flash_fs_mblock.c
 )
 
-# The generated sources
-target_sources(tfm_psa_rot_partition_its
-    PRIVATE
-        $<$<BOOL:${TFM_PSA_API}>:
-            ${CMAKE_BINARY_DIR}/generated/secure_fw/partitions/internal_trusted_storage/auto_generated/intermedia_tfm_internal_trusted_storage.c>
-)
-
-target_link_libraries(tfm_psa_rot_partition_its
+target_link_libraries(tfm_partition_its
     PRIVATE
         tfm_secure_api
         platform_s
         psa_interface
 )
 
-target_compile_definitions(tfm_psa_rot_partition_its
+target_compile_definitions(tfm_partition_its
     PUBLIC
         $<$<BOOL:${PS_CREATE_FLASH_LAYOUT}>:PS_CREATE_FLASH_LAYOUT>
         $<$<BOOL:${PS_ENCRYPTION}>:PS_ENCRYPTION>
@@ -97,7 +93,7 @@ message(STATUS "----------- Display storage configuration - stop -------------")
 
 ############################ Secure API ########################################
 
-target_sources(tfm_sprt
+target_sources(tfm_secure_api
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/tfm_its_secure_api.c
 )
@@ -113,7 +109,7 @@ set_source_files_properties(tfm_its_secure_api.c
 
 target_link_libraries(tfm_partitions
     INTERFACE
-        tfm_psa_rot_partition_its
+        tfm_partition_its
 )
 
 target_compile_definitions(tfm_partition_defs

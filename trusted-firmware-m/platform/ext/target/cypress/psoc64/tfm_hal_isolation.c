@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020-2021, Arm Limited. All rights reserved.
+ * Copyright (c) 2020, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -15,18 +15,9 @@
 enum tfm_hal_status_t tfm_hal_set_up_static_boundaries(void)
 {
     Cy_PDL_Init(CY_DEVICE_CFG);
-
-    if (smpu_init_cfg() != TFM_PLAT_ERR_SUCCESS) {
-        return TFM_HAL_ERROR_GENERIC;
-    }
-
-    if (ppu_init_cfg() != TFM_PLAT_ERR_SUCCESS) {
-        return TFM_HAL_ERROR_GENERIC;
-    }
-
-    if (bus_masters_cfg() != TFM_PLAT_ERR_SUCCESS) {
-        return TFM_HAL_ERROR_GENERIC;
-    }
+    smpu_init_cfg();
+    ppu_init_cfg();
+    bus_masters_cfg();
 
     return TFM_HAL_SUCCESS;
 }

@@ -34,12 +34,12 @@ target_sources(${CC312_LIB_TARGET}
 )
 
 target_include_directories(${CC312_CDMPU_TARGET}
-    INTERFACE
+    PRIVATE
         .
 )
 
 target_sources(${CC312_CDMPU_TARGET}
-    INTERFACE
+    PRIVATE
         ccm_alt.c
         mbedtls_common.c
 )
