@@ -13,13 +13,8 @@ endif()
 
 set(CMAKE_SYSTEM_NAME Generic)
 
-find_program(CMAKE_C_COMPILER ${CROSS_COMPILE}-gcc)
-
-if(CMAKE_C_COMPILER STREQUAL "CMAKE_C_COMPILER-NOTFOUND")
-    message(FATAL_ERROR "Could not find compiler: '${CROSS_COMPILE}-gcc'")
-endif()
-
-set(CMAKE_ASM_COMPILER ${CMAKE_C_COMPILER})
+set(CMAKE_C_COMPILER ${CROSS_COMPILE}-gcc)
+set(CMAKE_ASM_COMPILER ${CROSS_COMPILE}-gcc)
 
 set(LINKER_VENEER_OUTPUT_FLAG -Wl,--cmse-implib,--out-implib=)
 set(COMPILER_CMSE_FLAG -mcmse)
