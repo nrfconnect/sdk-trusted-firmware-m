@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020, Arm Limited. All rights reserved.
+# Copyright (c) 2020-2021, Arm Limited. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -20,10 +20,13 @@
       "conditional": "PSA_API_TEST_IPC",
       "version_major": 0,
       "version_minor": 1,
-      "pid": 271,
+      "pid": 512,
       "linker_pattern": {
         "library_list":[
           "*client_partition.a"
+        ],
+        "object_list":[
+          "*intermedia_client_partition_psa.*"
         ]
       }
     },
@@ -36,10 +39,13 @@
       "conditional": "PSA_API_TEST_IPC",
       "version_major": 0,
       "version_minor": 1,
-      "pid": 272,
+      "pid": 513,
       "linker_pattern": {
         "library_list":[
           "*server_partition.a"
+        ],
+         "object_list":[
+          "*intermedia_server_partition_psa.*"
         ]
       }
     },
@@ -52,10 +58,13 @@
       "conditional": "PSA_API_TEST_IPC",
       "version_major": 0,
       "version_minor": 1,
-      "pid": 273,
+      "pid": 514,
       "linker_pattern": {
         "library_list":[
           "*driver_partition.a"
+        ],
+        "object_list":[
+          "*intermedia_driver_partition_psa.*"
         ]
       }
     }

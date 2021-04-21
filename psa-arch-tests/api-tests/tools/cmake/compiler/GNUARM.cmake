@@ -18,7 +18,11 @@
 set(CMAKE_SYSTEM_NAME Generic)
 set(CMKE_SYSTEM_PROCESSOR ARM)
 
-set(_C_TOOLCHAIN_NAME arm-none-eabi-gcc)
+if (DEFINED CROSS_COMPILE)
+	set(_C_TOOLCHAIN_NAME ${CROSS_COMPILE}-gcc)
+else()
+	set(_C_TOOLCHAIN_NAME arm-none-eabi-gcc)
+endif()
 
 if(WIN32)
 	if (NOT DEFINED GNUARM_PATH)
@@ -40,7 +44,7 @@ find_program(
 
 if(_C_TOOLCHAIN_PATH STREQUAL "_C_TOOLCHAIN_PATH-NOTFOUND")
         message(FATAL_ERROR "[PSA] : Couldn't find ${_C_TOOLCHAIN_NAME}."
-			    " Either put ${_C_TOOLCHAIN_NAME} on the PATH or set GNUARM_PATH set properly.")
+			    " Either put ${_C_TOOLCHAIN_NAME} on the PATH or set GNUARM_PATH or CROSS_COMPILE properly.")
 endif()
 
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
@@ -58,6 +62,6 @@ elseif(${CPU_ARCH} STREQUAL armv8m_bl)
 	set(TARGET_SWITCH "-march=armv8-m.base -mcmse")
 endif()
 
-set(CMAKE_C_FLAGS          "${TARGET_SWITCH}  -Wall -Werror -fdata-sections -ffunction-sections -mno-unaligned-access")
+set(CMAKE_C_FLAGS          "${TARGET_SWITCH} -g -Wall -Werror -Wextra -fdata-sections -ffunction-sections -mno-unaligned-access")
 set(CMAKE_ASM_FLAGS        "${TARGET_SWITCH} -mthumb")
 set(CMAKE_EXE_LINKER_FLAGS "-Xlinker --fatal-warnings -Xlinker --gc-sections -z max-page-size=0x400 -lgcc -lc -lnosys")
