@@ -10,23 +10,23 @@
 #include "test_framework.h"
 
 /* Service specific includes */
-#if defined(TFM_PARTITION_PROTECTED_STORAGE) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_PROTECTED_STORAGE
 #include "ps_ns_tests.h"
 #endif
-#if defined(TFM_PARTITION_INTERNAL_TRUSTED_STORAGE) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_INTERNAL_TRUSTED_STORAGE
 #include "its_ns_tests.h"
 #endif
-#if defined(TFM_PARTITION_CRYPTO) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_CRYPTO
 #include "crypto_ns_tests.h"
 #endif
-#if defined(TFM_PARTITION_INITIAL_ATTESTATION) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_INITIAL_ATTESTATION
 #include "attest_ns_tests.h"
 #include "qcbor_ns_tests.h"
 #ifndef SYMMETRIC_INITIAL_ATTESTATION
 #include "t_cose_ns_tests.h"
 #endif /* !SYMMETRIC_INITIAL_ATTESTATION */
 #endif
-#if defined(TFM_PARTITION_PLATFORM) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_PLATFORM
 #include "platform_ns_tests.h"
 #endif
 #include "core_ns_tests.h"
@@ -44,26 +44,26 @@
 static struct test_suite_t test_suites[] = {
     /* List test cases which are compliant with level 1 isolation */
 
-#if defined(TFM_PARTITION_PROTECTED_STORAGE) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_PROTECTED_STORAGE
     {&register_testsuite_ns_psa_ps_interface, 0, 0, 0},
 #endif
 
-#if defined(TFM_PARTITION_INTERNAL_TRUSTED_STORAGE) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_INTERNAL_TRUSTED_STORAGE
     /* Non-secure ITS test cases */
     {&register_testsuite_ns_psa_its_interface, 0, 0, 0},
 #endif
 
-#if defined(TFM_PARTITION_CRYPTO) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_CRYPTO
     /* Non-secure Crypto test cases */
     {&register_testsuite_ns_crypto_interface, 0, 0, 0},
 #endif
 
-#if defined(TFM_PARTITION_PLATFORM) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_PLATFORM
     /* Non-secure platform service test cases */
     {&register_testsuite_ns_platform_interface, 0, 0, 0},
 #endif
 
-#if defined(TFM_PARTITION_INITIAL_ATTESTATION) || defined(FORWARD_PROT_MSG)
+#ifdef TFM_PARTITION_INITIAL_ATTESTATION
     /* Non-secure initial attestation service test cases */
     {&register_testsuite_ns_attestation_interface, 0, 0, 0},
 

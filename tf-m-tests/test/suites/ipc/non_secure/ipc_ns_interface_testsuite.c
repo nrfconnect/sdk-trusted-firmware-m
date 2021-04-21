@@ -35,10 +35,6 @@ static void tfm_ipc_test_1009(struct test_result_t *ret);
 
 static void tfm_ipc_test_1010(struct test_result_t *ret);
 
-#ifdef TFM_IPC_ISOLATION_3_RETRIEVE_APP_MEM
-static void tfm_ipc_test_1011(struct test_result_t *ret);
-#endif
-
 static struct test_t ipc_veneers_tests[] = {
     {&tfm_ipc_test_1001, "TFM_IPC_TEST_1001",
      "Get PSA framework version", {TEST_PASSED}},
@@ -66,10 +62,6 @@ static struct test_t ipc_veneers_tests[] = {
 #endif
     {&tfm_ipc_test_1010, "TFM_IPC_TEST_1010",
      "Test psa_call with the status of PSA_ERROR_PROGRAMMER_ERROR", {TEST_PASSED}},
-#ifdef TFM_IPC_ISOLATION_3_RETRIEVE_APP_MEM
-    {&tfm_ipc_test_1011, "TFM_IPC_TEST_1011",
-     "Call APP RoT access another APP RoT memory test service", {TEST_PASSED}},
-#endif
 };
 
 void register_testsuite_ns_ipc_interface(struct test_suite_t *p_test_suite)
@@ -255,7 +247,6 @@ static void tfm_ipc_test_1006(struct test_result_t *ret)
 static void tfm_ipc_test_1007(struct test_result_t *ret)
 {
     psa_handle_t handle;
-    psa_status_t status;
     int test_result;
     struct psa_outvec outvecs[1] = {{&test_result, sizeof(test_result)}};
 
@@ -269,13 +260,10 @@ static void tfm_ipc_test_1007(struct test_result_t *ret)
         return;
     }
 
-    status = psa_call(handle, PSA_IPC_CALL, NULL, 0, outvecs, 1);
-    if (status == PSA_SUCCESS) {
-        ret->val = TEST_PASSED;
-    } else {
-        ret->val = TEST_FAILED;
-    }
+    psa_call(handle, PSA_IPC_CALL, NULL, 0, outvecs, 1);
 
+    /* The system should panic in psa_call. If runs here, the test fails. */
+    ret->val = TEST_FAILED;
     psa_close(handle);
 }
 #endif
@@ -372,36 +360,3 @@ static void tfm_ipc_test_1010(struct test_result_t *ret)
 
     psa_close(handle);
 }
-
-#ifdef TFM_IPC_ISOLATION_3_RETRIEVE_APP_MEM
-/**
- * \brief Call IPC_CLIENT_TEST_RETRIEVE_APP_MEM_SID RoT Service
- * to run the ARoT access another ARoT mem test.
- */
-static void tfm_ipc_test_1011(struct test_result_t *ret)
-{
-    psa_handle_t handle;
-    psa_status_t status;
-    int test_result;
-    struct psa_outvec outvecs[1] = {{&test_result, sizeof(test_result)}};
-
-    handle = psa_connect(IPC_CLIENT_TEST_RETRIEVE_APP_MEM_SID,
-                         IPC_CLIENT_TEST_RETRIEVE_APP_MEM_VERSION);
-    if (handle > 0) {
-        TEST_LOG("Connect success!\r\n");
-    } else {
-        TEST_LOG("The RoT Service has refused the connection!\r\n");
-        ret->val = TEST_FAILED;
-        return;
-    }
-
-    status = psa_call(handle, PSA_IPC_CALL, NULL, 0, outvecs, 1);
-    if (status == PSA_SUCCESS) {
-        ret->val = TEST_PASSED;
-    } else {
-        ret->val = TEST_FAILED;
-    }
-
-    psa_close(handle);
-}
-#endif

@@ -12,9 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void test_failed(const struct test_t *p_test)
+static void test_failed(const struct test_result_t *ret)
 {
-    const struct test_result_t *ret = &p_test->ret;
     printf_set_color(RED);
     if (ret->info_msg != 0) {
         TEST_LOG("  %s", ret->info_msg);
@@ -27,7 +26,7 @@ static void test_failed(const struct test_t *p_test)
         }
     }
 
-    TEST_LOG("  TEST: %s - FAILED!\r\n", p_test->name);
+    TEST_LOG("  TEST FAILED!\r\n");
 }
 
 static void print_error(const char *err_msg)
@@ -125,11 +124,11 @@ enum test_suite_err_t run_testsuite(struct test_suite_t *test_suite)
         /* Executes the test */
         p_test->test(&p_test->ret);
         if (p_test->ret.val == TEST_FAILED) {
-            test_failed(p_test);
+            test_failed(&p_test->ret);
             failed_tests++;
         } else {
             printf_set_color(GREEN);
-            TEST_LOG("  TEST: %s - PASSED!\r\n", p_test->name);
+            TEST_LOG("  TEST PASSED!\r\n");
         }
 
         /* Sets pointer to the next test */

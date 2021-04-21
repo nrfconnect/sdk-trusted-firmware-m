@@ -1,13 +1,9 @@
 #-------------------------------------------------------------------------------
-# Copyright (c) 2020-2021, Arm Limited. All rights reserved.
+# Copyright (c) 2020, Arm Limited. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
 #-------------------------------------------------------------------------------
-
-if(NOT TFM_PARTITION_INITIAL_ATTESTATION)
-    return()
-endif()
 
 cmake_policy(SET CMP0079 NEW)
 
@@ -32,7 +28,7 @@ target_compile_definitions(tfm_test_suite_qcbor_ns
 
 target_link_libraries(tfm_test_suite_qcbor_ns
     PRIVATE
-        tfm_test_framework_ns
+        tfm_test_framework
         tfm_qcbor_test
 )
 

@@ -30,8 +30,8 @@ target_compile_definitions(tfm_test_suite_multi_core_ns
 
 target_link_libraries(tfm_test_suite_multi_core_ns
     PRIVATE
-        tfm_test_framework_ns
-        tfm_api_ns
+        tfm_test_framework
+        psa_api_ns
 )
 
 target_link_libraries(tfm_ns_tests
@@ -39,7 +39,7 @@ target_link_libraries(tfm_ns_tests
         tfm_test_suite_multi_core_ns
 )
 
-target_compile_definitions(tfm_ns_interface
+target_compile_definitions(psa_interface
     INTERFACE
         TFM_MULTI_CORE_TEST
 )
