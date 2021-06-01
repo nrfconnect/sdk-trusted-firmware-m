@@ -18,6 +18,7 @@
 #include "tfm_spm_hal.h"
 #include "tfm_spm_log.h"
 #include "tfm_version.h"
+#include "hw_unique_key.h"
 
 /*
  * Avoids the semihosting issue
@@ -149,6 +150,10 @@ int main(void)
     tfm_spm_seal_psp_stacks();
 
     fih_delay_init();
+
+    if (!hw_unique_key_are_any_written()) {
+        hw_unique_key_write_random();
+    }
 
     FIH_CALL(tfm_core_init, fih_rc);
     if (fih_not_eq(fih_rc, fih_int_encode(TFM_SUCCESS))) {
