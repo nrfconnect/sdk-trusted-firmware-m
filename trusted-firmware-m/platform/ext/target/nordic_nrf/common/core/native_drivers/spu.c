@@ -75,12 +75,14 @@ void spu_clear_events(void)
 void spu_regions_reset_all_secure(void)
 {
     for (size_t i = 0; i < NUM_FLASH_SECURE_ATTRIBUTION_REGIONS ; i++) {
-        nrf_spu_flashregion_set(NRF_SPU, i,
-            1 /* Secure */,
-            NRF_SPU_MEM_PERM_READ
-            | NRF_SPU_MEM_PERM_WRITE
-            | NRF_SPU_MEM_PERM_EXECUTE,
-            0 /* No lock */);
+        if(!(NRF_SPU->FLASHREGION[i].PERM & SPU_FLASHREGION_PERM_SECATTR_Msk)) {
+            nrf_spu_flashregion_set(NRF_SPU, i,
+                1 /* Secure */,
+                NRF_SPU_MEM_PERM_READ
+                | NRF_SPU_MEM_PERM_WRITE
+                | NRF_SPU_MEM_PERM_EXECUTE,
+                0 /* No lock */);
+        }
     }
 
     for (size_t i = 0; i < NUM_SRAM_SECURE_ATTRIBUTION_REGIONS ; i++) {
