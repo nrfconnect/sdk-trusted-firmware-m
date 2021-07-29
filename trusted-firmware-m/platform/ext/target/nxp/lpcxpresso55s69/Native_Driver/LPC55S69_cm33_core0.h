@@ -11,7 +11,7 @@
 **
 **     Reference manual:    LPC55S6x/LPC55S2x/LPC552x User manual(UM11126) Rev.1.3  16 May 2019
 **     Version:             rev. 1.1, 2019-05-16
-**     Build:               b200311
+**     Build:               b200928
 **
 **     Abstract:
 **         CMSIS Peripheral Access Layer for LPC55S69_cm33_core0
@@ -5242,6 +5242,8 @@ typedef struct {
   /** Array initializer of CASPER peripheral base pointers */
   #define CASPER_BASE_PTRS                         { CASPER }
 #endif
+/** Interrupt vectors for the CASPER peripheral type */
+#define CASPER_IRQS                              { CASER_IRQn }
 
 /*!
  * @}
@@ -21209,6 +21211,44 @@ typedef struct {
 
 /*! @name FMCCR - FMC configuration register */
 /*! @{ */
+#define SYSCON_FMCCR_FETCHCFG_MASK               (0x3U)
+#define SYSCON_FMCCR_FETCHCFG_SHIFT              (0U)
+/*! FETCHCFG - Instruction fetch configuration.
+ *  0b00..Instruction fetches from flash are not buffered.
+ *  0b01..One buffer is used for all instruction fetches.
+ *  0b10..All buffers may be used for instruction fetches.
+ */
+#define SYSCON_FMCCR_FETCHCFG(x)                 (((uint32_t)(((uint32_t)(x)) << SYSCON_FMCCR_FETCHCFG_SHIFT)) & SYSCON_FMCCR_FETCHCFG_MASK)
+#define SYSCON_FMCCR_DATACFG_MASK                (0xCU)
+#define SYSCON_FMCCR_DATACFG_SHIFT               (2U)
+/*! DATACFG - Data read configuration.
+ *  0b00..Data accesses from flash are not buffered.
+ *  0b01..One buffer is used for all data accesses.
+ *  0b10..All buffers can be used for data accesses.
+ */
+#define SYSCON_FMCCR_DATACFG(x)                  (((uint32_t)(((uint32_t)(x)) << SYSCON_FMCCR_DATACFG_SHIFT)) & SYSCON_FMCCR_DATACFG_MASK)
+#define SYSCON_FMCCR_ACCEL_MASK                  (0x10U)
+#define SYSCON_FMCCR_ACCEL_SHIFT                 (4U)
+/*! ACCEL - Acceleration enable.
+ *  0b0..Flash acceleration is disabled.
+ *  0b1..Flash acceleration is enabled.
+ */
+#define SYSCON_FMCCR_ACCEL(x)                    (((uint32_t)(((uint32_t)(x)) << SYSCON_FMCCR_ACCEL_SHIFT)) & SYSCON_FMCCR_ACCEL_MASK)
+#define SYSCON_FMCCR_PREFEN_MASK                 (0x20U)
+#define SYSCON_FMCCR_PREFEN_SHIFT                (5U)
+/*! PREFEN - Prefetch enable.
+ *  0b0..No instruction prefetch is performed.
+ *  0b1..Instruction prefetch is enabled.
+ */
+#define SYSCON_FMCCR_PREFEN(x)                   (((uint32_t)(((uint32_t)(x)) << SYSCON_FMCCR_PREFEN_SHIFT)) & SYSCON_FMCCR_PREFEN_MASK)
+#define SYSCON_FMCCR_PREFOVR_MASK                (0x40U)
+#define SYSCON_FMCCR_PREFOVR_SHIFT               (6U)
+/*! PREFOVR - Prefetch override.
+ *  0b0..Any previously initiated prefetch will be completed.
+ *  0b1..Any previously initiated prefetch will be aborted, and the next flash line following the current
+ *       execution address will be prefetched if not already buffered.
+ */
+#define SYSCON_FMCCR_PREFOVR(x)                  (((uint32_t)(((uint32_t)(x)) << SYSCON_FMCCR_PREFOVR_SHIFT)) & SYSCON_FMCCR_PREFOVR_MASK)
 #define SYSCON_FMCCR_FLASHTIM_MASK               (0xF000U)
 #define SYSCON_FMCCR_FLASHTIM_SHIFT              (12U)
 /*! FLASHTIM - Flash memory access time.
@@ -21221,6 +21261,9 @@ typedef struct {
  *  0b0110..7 system clocks flash access time (for system clock rates up to 77 MHz).
  *  0b0111..8 system clocks flash access time (for system clock rates up to 88 MHz).
  *  0b1000..9 system clocks flash access time (for system clock rates up to 100 MHz).
+ *  0b1001..10 system clocks flash access time (for system clock rates up to 115 MHz).
+ *  0b1010..11 system clocks flash access time (for system clock rates up to 130 MHz).
+ *  0b1011..12 system clocks flash access time (for system clock rates up to 150 MHz).
  */
 #define SYSCON_FMCCR_FLASHTIM(x)                 (((uint32_t)(((uint32_t)(x)) << SYSCON_FMCCR_FLASHTIM_SHIFT)) & SYSCON_FMCCR_FLASHTIM_MASK)
 /*! @} */

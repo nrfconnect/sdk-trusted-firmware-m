@@ -1,7 +1,7 @@
 /*
 ** ###################################################################
 **     Version:             rev. 1.1, 2019-05-16
-**     Build:               b200317
+**     Build:               b200707
 **
 **     Abstract:
 **         Chip specific module features.
@@ -146,6 +146,8 @@
 #define FSL_FEATURE_LPADC_TEMP_PARAMETER_B (313.7f)
 /* @brief Temperature sensor parameter Alpha. */
 #define FSL_FEATURE_LPADC_TEMP_PARAMETER_ALPHA (11.5f)
+/* @brief the buffer size of temperature sensor. */
+#define FSL_FEATURE_LPADC_TEMP_SENS_BUFFER_SIZE (4U)
 
 /* CASPER module features */
 
@@ -245,7 +247,7 @@
 
 /* @brief I2S support dual channel transfer. */
 #define FSL_FEATURE_I2S_SUPPORT_SECONDARY_CHANNEL (0)
-/* @brief I2S has DMIC interconnection. */
+/* @brief I2S has DMIC interconnection */
 #define FSL_FEATURE_FLEXCOMM_I2S_HAS_DMIC_INTERCONNECTION (0)
 
 /* IOCON module features */
@@ -273,6 +275,13 @@
 /* @brief Has WAKEINT_CTRL register. */
 #define FSL_FEATURE_PLU_HAS_WAKEINT_CTRL_REG (1)
 
+/* PMC module features */
+
+/* @brief UTICK does not support PD configure. */
+#define FSL_FEATURE_UTICK_HAS_NO_PDCFG (1)
+/* @brief WDT OSC does not support PD configure. */
+#define FSL_FEATURE_WWDT_HAS_NO_PDCFG (1)
+
 /* POWERLIB module features */
 
 /* @brief Powerlib API is different with other LPC series devices. */
@@ -289,6 +298,10 @@
 #define FSL_FEATURE_PUF_HAS_KEYSLOTS (4)
 /* @brief the shift status value */
 #define FSL_FEATURE_PUF_HAS_SHIFT_STATUS (1)
+
+/* RTC module features */
+
+/* No feature definitions */
 
 /* SCT module features */
 
@@ -332,6 +345,10 @@
 /* @brief Starter register discontinuous. */
 #define FSL_FEATURE_SYSCON_STARTER_DISCONTINUOUS (1)
 
+/* SYSCTL1 module features */
+
+/* No feature definitions */
+
 /* USB module features */
 
 /* @brief Size of the USB dedicated RAM */
@@ -372,16 +389,22 @@
 /* @brief USBHSH version */
 #define FSL_FEATURE_USBHSH_VERSION (300)
 
-/* UTICK module features */
+/* USBPHY module features */
 
-/* @brief UTICK does not support PD configure. */
-#define FSL_FEATURE_UTICK_HAS_NO_PDCFG (1)
+/* @brief Size of the USB dedicated RAM */
+#define FSL_FEATURE_USBPHY_USB_RAM (0x00004000)
+/* @brief Base address of the USB dedicated RAM */
+#define FSL_FEATURE_USBPHY_USB_RAM_BASE_ADDRESS (0x40100000)
+/* @brief USBHSD version */
+#define FSL_FEATURE_USBPHY_VERSION (300)
+/* @brief Number of the endpoint in USB HS */
+#define FSL_FEATURE_USBPHY_EP_NUM (6)
 
 /* WWDT module features */
 
+/* @brief Has no RESET register. */
+#define FSL_FEATURE_WWDT_HAS_NO_RESET (1)
 /* @brief WWDT does not support oscillator lock. */
 #define FSL_FEATURE_WWDT_HAS_NO_OSCILLATOR_LOCK (1)
-/* @brief WWDT does not support power down configure */
-#define FSL_FEATURE_WWDT_HAS_NO_PDCFG (1)
 
 #endif /* _LPC55S69_cm33_core1_FEATURES_H_ */

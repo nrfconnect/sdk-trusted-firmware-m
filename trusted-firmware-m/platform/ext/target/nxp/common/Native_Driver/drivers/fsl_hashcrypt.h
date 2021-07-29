@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2019 NXP
+ * Copyright 2017-2020 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -26,9 +26,9 @@ enum _hashcrypt_status
  */
 /*! @name Driver version */
 /*@{*/
-/*! @brief HASHCRYPT driver version. Version 2.1.0.
+/*! @brief HASHCRYPT driver version. Version 2.1.4.
  *
- * Current version: 2.1.0
+ * Current version: 2.1.4
  *
  * Change log:
  * - Version 2.0.0
@@ -43,14 +43,22 @@ enum _hashcrypt_status
  *   - Add SHA context switch support
  * - Version 2.1.0
  *   - Update the register name and macro to align with new header.
+ * - Version 2.1.1
+ *   - Fix MISRA C-2012.
+ * - Version 2.1.2
+ *   - Support loading AES input data from unaligned address.
+ * - Version 2.1.3
+ *   - Fix MISRA C-2012.
+ * - Version 2.1.4
+ *   - Fix context switch cannot work when switching from AES.
  */
-#define FSL_HASHCRYPT_DRIVER_VERSION (MAKE_VERSION(2, 1, 0))
+#define FSL_HASHCRYPT_DRIVER_VERSION (MAKE_VERSION(2, 1, 4))
 /*@}*/
 
 /*! @brief Algorithm definitions correspond with the values for Mode field in Control register !*/
-#define HASHCRYPT_MODE_SHA1 0x1
+#define HASHCRYPT_MODE_SHA1   0x1
 #define HASHCRYPT_MODE_SHA256 0x2
-#define HASHCRYPT_MODE_AES 0x4
+#define HASHCRYPT_MODE_AES    0x4
 
 /*! @brief Algorithm used for Hashcrypt operation */
 typedef enum _hashcrypt_algo_t
@@ -72,9 +80,9 @@ typedef enum _hashcrypt_algo_t
  */
 
 /*! AES block size in bytes */
-#define HASHCRYPT_AES_BLOCK_SIZE 16
-#define AES_ENCRYPT 0
-#define AES_DECRYPT 1
+#define HASHCRYPT_AES_BLOCK_SIZE 16U
+#define AES_ENCRYPT              0
+#define AES_DECRYPT              1
 
 /*! @brief AES mode */
 typedef enum _hashcrypt_aes_mode_t

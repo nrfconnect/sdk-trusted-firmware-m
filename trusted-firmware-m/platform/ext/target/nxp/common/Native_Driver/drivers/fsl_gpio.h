@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2016, Freescale Semiconductor, Inc.
- * Copyright 2016-2018 NXP
+ * Copyright 2016-2020 NXP
  * All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
@@ -24,8 +24,8 @@
 
 /*! @name Driver version */
 /*@{*/
-/*! @brief LPC GPIO driver version 2.1.3. */
-#define FSL_GPIO_DRIVER_VERSION (MAKE_VERSION(2, 1, 4))
+/*! @brief LPC GPIO driver version. */
+#define FSL_GPIO_DRIVER_VERSION (MAKE_VERSION(2, 1, 7))
 /*@}*/
 
 /*! @brief LPC GPIO direction definition */
@@ -50,10 +50,10 @@ typedef struct _gpio_pin_config
 
 #if (defined(FSL_FEATURE_GPIO_HAS_INTERRUPT) && FSL_FEATURE_GPIO_HAS_INTERRUPT)
 #define GPIO_PIN_INT_LEVEL 0x00U
-#define GPIO_PIN_INT_EDGE 0x01U
+#define GPIO_PIN_INT_EDGE  0x01U
 
 #define PINT_PIN_INT_HIGH_OR_RISE_TRIGGER 0x00U
-#define PINT_PIN_INT_LOW_OR_FALL_TRIGGER 0x01U
+#define PINT_PIN_INT_LOW_OR_FALL_TRIGGER  0x01U
 
 /*! @brief GPIO Pin Interrupt enable mode */
 typedef enum _gpio_pin_enable_mode
@@ -114,13 +114,13 @@ void GPIO_PortInit(GPIO_Type *base, uint32_t port);
  *
  * This is an example to define an input pin or output pin configuration:
  * @code
- * // Define a digital input pin configuration,
+ * Define a digital input pin configuration,
  * gpio_pin_config_t config =
  * {
  *   kGPIO_DigitalInput,
  *   0,
  * }
- * //Define a digital output pin configuration,
+ * Define a digital output pin configuration,
  * gpio_pin_config_t config =
  * {
  *   kGPIO_DigitalOutput,
@@ -268,7 +268,7 @@ static inline uint32_t GPIO_PortMaskedRead(GPIO_Type *base, uint32_t port)
 
 #if defined(FSL_FEATURE_GPIO_HAS_INTERRUPT) && FSL_FEATURE_GPIO_HAS_INTERRUPT
 /*!
- * @brief Configures the gpio pin interrupt.
+ * @brief Set the configuration of pin interrupt.
  *
  * @param base GPIO base pointer.
  * @param port GPIO port number

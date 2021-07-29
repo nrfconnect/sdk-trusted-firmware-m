@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2019 NXP
+ * Copyright 2018-2020 NXP
  * All rights reserved.
  *
  *
@@ -23,9 +23,9 @@
  */
 /*! @name Driver version */
 /*@{*/
-/*! @brief CASPER driver version. Version 2.0.5.
+/*! @brief CASPER driver version. Version 2.2.1.
  *
- * Current version: 2.0.5
+ * Current version: 2.2.1
  *
  * Change log:
  * - Version 2.0.0
@@ -42,8 +42,25 @@
  *     This driver is very specific and requires -fno-strict-aliasing.
  * - Version 2.0.5
  *   - Fix sign-compare warning.
+ * - Version 2.0.6
+ *   - Fix IAR Pa082 warning.
+ * - Version 2.0.7
+ *   - Fix MISRA-C 2012 issue.
+ * - Version 2.0.8
+ *   - Add feature macro for CASPER_RAM_OFFSET.
+ * - Version 2.0.9
+ *   - Remove unused function Jac_oncurve().
+ *   - Fix ECC384 build.
+ * - Version 2.0.10
+ *   - Fix MISRA-C 2012 issue.
+ * - Version 2.1.0
+ *   - Add ECC NIST P-521 elliptic curve.
+ * - Version 2.2.0
+ *   - Rework driver to support multiple curves at once.
+ * - Version 2.2.1
+ *   - Fix MISRA-C 2012 issue.
  */
-#define FSL_CASPER_DRIVER_VERSION (MAKE_VERSION(2, 0, 5))
+#define FSL_CASPER_DRIVER_VERSION (MAKE_VERSION(2, 2, 1))
 /*@}*/
 
 /*! @brief CASPER operation
@@ -76,26 +93,34 @@ typedef enum _casper_operation
     kCASPER_OpCompareFast = 0x19,  /*! Compare two arrays, stopping on 1st !=*/
 } casper_operation_t;
 
-#define CASPER_CP 1
-#define CASPER_CP_CTRL0 (0x0 >> 2)
-#define CASPER_CP_CTRL1 (0x4 >> 2)
-#define CASPER_CP_LOADER (0x8 >> 2)
-#define CASPER_CP_STATUS (0xC >> 2)
+/*! @brief Algorithm used for CASPER operation */
+typedef enum _casper_algo_t
+{
+    kCASPER_ECC_P256 = 0x01, /*!< ECC_P256*/
+    kCASPER_ECC_P384 = 0x02, /*!< ECC_P384 */
+    kCASPER_ECC_P521 = 0x03, /*!< ECC_P521 */
+} casper_algo_t;
+
+#define CASPER_CP          1
+#define CASPER_CP_CTRL0    (0x0 >> 2)
+#define CASPER_CP_CTRL1    (0x4 >> 2)
+#define CASPER_CP_LOADER   (0x8 >> 2)
+#define CASPER_CP_STATUS   (0xC >> 2)
 #define CASPER_CP_INTENSET (0x10 >> 2)
 #define CASPER_CP_INTENCLR (0x14 >> 2)
-#define CASPER_CP_INTSTAT (0x18 >> 2)
-#define CASPER_CP_AREG (0x20 >> 2)
-#define CASPER_CP_BREG (0x24 >> 2)
-#define CASPER_CP_CREG (0x28 >> 2)
-#define CASPER_CP_DREG (0x2C >> 2)
-#define CASPER_CP_RES0 (0x30 >> 2)
-#define CASPER_CP_RES1 (0x34 >> 2)
-#define CASPER_CP_RES2 (0x38 >> 2)
-#define CASPER_CP_RES3 (0x3C >> 2)
-#define CASPER_CP_MASK (0x60 >> 2)
-#define CASPER_CP_REMASK (0x64 >> 2)
-#define CASPER_CP_LOCK (0x80 >> 2)
-#define CASPER_CP_ID (0xFFC >> 2)
+#define CASPER_CP_INTSTAT  (0x18 >> 2)
+#define CASPER_CP_AREG     (0x20 >> 2)
+#define CASPER_CP_BREG     (0x24 >> 2)
+#define CASPER_CP_CREG     (0x28 >> 2)
+#define CASPER_CP_DREG     (0x2C >> 2)
+#define CASPER_CP_RES0     (0x30 >> 2)
+#define CASPER_CP_RES1     (0x34 >> 2)
+#define CASPER_CP_RES2     (0x38 >> 2)
+#define CASPER_CP_RES3     (0x3C >> 2)
+#define CASPER_CP_MASK     (0x60 >> 2)
+#define CASPER_CP_REMASK   (0x64 >> 2)
+#define CASPER_CP_LOCK     (0x80 >> 2)
+#define CASPER_CP_ID       (0xFFC >> 2)
 /* mcr (cp,  opc1, value, CRn, CRm, opc2) */
 #define CASPER_Wr32b(value, off) __arm_mcr(CASPER_CP, 0, value, ((off >> 4)), (off), 0)
 /* mcrr(coproc, opc1, value, CRm) */
@@ -108,20 +133,7 @@ typedef enum _casper_operation
 /*  it will be slower by a bit. */
 /*  The file is compiled with N_bitlen passed in as number of bits of the RSA key */
 /*  #define N_bitlen 2048 */
-#define N_wordlen_max (4096 / 32)
-
-#define CASPER_ECC_P256 1
-#define CASPER_ECC_P384 0
-
-#if CASPER_ECC_P256
-#define N_bitlen 256
-#endif /* CASPER_ECC_P256 */
-
-#if CASPER_ECC_P384
-#define N_bitlen 384
-#endif /* CASPER_ECC_P256 */
-
-#define NUM_LIMBS (N_bitlen / 32)
+#define N_wordlen_max (4096U / 32U)
 
 enum
 {
@@ -129,7 +141,7 @@ enum
     kCASPER_RamOffset_Base     = (N_wordlen_max + 8u),
     kCASPER_RamOffset_TempBase = (2u * N_wordlen_max + 16u),
     kCASPER_RamOffset_Modulus  = (kCASPER_RamOffset_TempBase + N_wordlen_max + 4u),
-    kCASPER_RamOffset_M64      = 1022,
+    kCASPER_RamOffset_M64      = 1022U,
 };
 
 /*! @} */
@@ -196,7 +208,15 @@ void CASPER_ModExp(CASPER_Type *base,
                    uint32_t pubE,
                    uint8_t *plaintext);
 
-void CASPER_ecc_init(void);
+/*!
+ * @brief Initialize prime modulus mod in Casper memory .
+ *
+ * Set the prime modulus mod in Casper memory and set N_wordlen
+ * according to selected algorithm.
+ *
+ * @param curve elliptic curve algoritm
+ */
+void CASPER_ecc_init(casper_algo_t curve);
 
 /*!
  * @brief Performs ECC secp256r1 point single scalar multiplication
@@ -297,6 +317,56 @@ void CASPER_ECC_SECP384R1_MulAdd(CASPER_Type *base,
                                  uint32_t X2[12],
                                  uint32_t Y2[12],
                                  uint32_t scalar2[12]);
+
+/*!
+ * @brief Performs ECC secp521r1 point single scalar multiplication
+ *
+ * This function performs ECC secp521r1 point single scalar multiplication
+ * [resX; resY] = scalar * [X; Y]
+ * Coordinates are affine in normal form, little endian.
+ * Scalars are little endian.
+ * All arrays are little endian byte arrays, uint32_t type is used
+ * only to enforce the 32-bit alignment (0-mod-4 address).
+ *
+ * @param base CASPER base address
+ * @param[out] resX Output X affine coordinate in normal form, little endian.
+ * @param[out] resY Output Y affine coordinate in normal form, little endian.
+ * @param X Input X affine coordinate in normal form, little endian.
+ * @param Y Input Y affine coordinate in normal form, little endian.
+ * @param scalar Input scalar integer, in normal form, little endian.
+ */
+void CASPER_ECC_SECP521R1_Mul(
+    CASPER_Type *base, uint32_t resX[18], uint32_t resY[18], uint32_t X[18], uint32_t Y[18], uint32_t scalar[18]);
+
+/*!
+ * @brief Performs ECC secp521r1 point double scalar multiplication
+ *
+ * This function performs ECC secp521r1 point double scalar multiplication
+ * [resX; resY] = scalar1 * [X1; Y1] + scalar2 * [X2; Y2]
+ * Coordinates are affine in normal form, little endian.
+ * Scalars are little endian.
+ * All arrays are little endian byte arrays, uint32_t type is used
+ * only to enforce the 32-bit alignment (0-mod-4 address).
+ *
+ * @param base CASPER base address
+ * @param[out] resX Output X affine coordinate.
+ * @param[out] resY Output Y affine coordinate.
+ * @param X1 Input X1 affine coordinate.
+ * @param Y1 Input Y1 affine coordinate.
+ * @param scalar1 Input scalar1 integer.
+ * @param X2 Input X2 affine coordinate.
+ * @param Y2 Input Y2 affine coordinate.
+ * @param scalar2 Input scalar2 integer.
+ */
+void CASPER_ECC_SECP521R1_MulAdd(CASPER_Type *base,
+                                 uint32_t resX[18],
+                                 uint32_t resY[18],
+                                 uint32_t X1[18],
+                                 uint32_t Y1[18],
+                                 uint32_t scalar1[18],
+                                 uint32_t X2[18],
+                                 uint32_t Y2[18],
+                                 uint32_t scalar2[18]);
 
 void CASPER_ECC_equal(int *res, uint32_t *op1, uint32_t *op2);
 void CASPER_ECC_equal_to_zero(int *res, uint32_t *op1);
