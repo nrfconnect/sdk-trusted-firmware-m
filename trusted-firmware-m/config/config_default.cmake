@@ -168,7 +168,14 @@ set(MBEDCRYPTO_PATH                     "DOWNLOAD"  CACHE PATH      "Path to Mbe
 set(MBEDCRYPTO_VERSION                  "mbedtls-2.26.0" CACHE STRING "The version of Mbed Crypto to use")
 set(MBEDCRYPTO_GIT_REMOTE               "https://github.com/ARMmbed/mbedtls.git" CACHE STRING "The URL (or path) to retrieve MbedTLS from.")
 set(MBEDCRYPTO_BUILD_TYPE               "${CMAKE_BUILD_TYPE}" CACHE STRING "Build type of Mbed Crypto library")
-set(TFM_MBEDCRYPTO_CONFIG_PATH          "${CMAKE_SOURCE_DIR}/lib/ext/mbedcrypto/mbedcrypto_config/tfm_mbedcrypto_config_default.h" CACHE PATH "Config to use for Mbed Crypto")
+# Below is the cache type for TFM_MBEDCRYPTO_CONFIG_PATH.
+# This is intended to be controlled by an external build system to support relative path.
+# Relative paths can be supported with one of:
+# - set(TFM_MBEDCRYPTO_CONFIG_TYPE "STRING" CACHE INTERNAL "Internal setting")
+# - -DTFM_MBEDCRYPTO_CONFIG_TYPE=STRING
+# before config_default.cmake is loaded.
+set(TFM_MBEDCRYPTO_CONFIG_TYPE          "PATH" CACHE STRING "Type of the *_MBEDCRYPTO_CONFIG_PATH variables, used internally")
+set(TFM_MBEDCRYPTO_CONFIG_PATH          "${CMAKE_SOURCE_DIR}/lib/ext/mbedcrypto/mbedcrypto_config/tfm_mbedcrypto_config_default.h" CACHE ${TFM_MBEDCRYPTO_CONFIG_TYPE} "Config to use for Mbed Crypto")
 set(TFM_MBEDCRYPTO_PLATFORM_EXTRA_CONFIG_PATH "" CACHE PATH "Config to append to standard Mbed Crypto config, used by platforms to cnfigure feature support")
 
 set(TFM_TEST_REPO_PATH                  "DOWNLOAD"  CACHE PATH      "Path to TFM-TEST repo (or DOWNLOAD to fetch automatically")
