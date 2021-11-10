@@ -102,6 +102,9 @@ set(ITS_VALIDATE_METADATA_FROM_FLASH    ON          CACHE BOOL      "Validate fi
 set(ITS_MAX_ASSET_SIZE                  "512"       CACHE STRING    "The maximum asset size to be stored in the Internal Trusted Storage area")
 set(ITS_NUM_ASSETS                      "10"        CACHE STRING    "The maximum number of assets to be stored in the Internal Trusted Storage area")
 set(ITS_BUF_SIZE                        ""          CACHE STRING    "Size of the ITS internal data transfer buffer (defaults to ITS_MAX_ASSET_SIZE if not set)")
+set(TFM_ITS_ENCRYPTED                   OFF         CACHE BOOL      "Enable authenticated encryption of ITS files using platform specific APIs")
+set(TFM_ITS_AUTH_TAG_LENGTH             "16"        CACHE STRING    "The size of the authentication tag used when authentication/encryption of ITS files is enabled ")
+set(TFM_ITS_ENC_NONCE_LENGTH            "16"        CACHE STRING    "The size of the nonce used when ITS file encryption is enabled")
 
 set(TFM_PARTITION_CRYPTO                ON          CACHE BOOL      "Enable Crypto partition")
 # CRYPTO_ENGINE_BUF_SIZE needs to be >8KB for EC signing by attest module.
