@@ -18,6 +18,10 @@
 #include "its_utils.h"
 #include "tfm_sp_log.h"
 
+#ifdef TFM_ITS_ENCRYPTED
+#include "its_crypto_interface.h"
+#endif
+
 #ifdef TFM_PARTITION_PROTECTED_STORAGE
 #include "ps_object_defs.h"
 #endif
@@ -36,8 +40,18 @@
 static uint8_t asset_data[ITS_UTILS_ALIGN(ITS_BUF_SIZE,
                                           ITS_FLASH_MAX_ALIGNMENT)];
 
+#ifdef TFM_ITS_ENCRYPTED
+
+/* Buffer to store the encrypted asset data before it is stored in the
+ * filesystem.
+ */
+static uint8_t enc_asset_data[ITS_UTILS_ALIGN(ITS_BUF_SIZE,
+                                              ITS_FLASH_MAX_ALIGNMENT)];
+
+#endif
+
 static uint8_t g_fid[ITS_FILE_ID_SIZE];
-static struct its_file_info_t g_file_info;
+static struct its_flash_fs_file_info_t g_file_info;
 
 static its_flash_fs_ctx_t fs_ctx_its;
 static struct its_flash_fs_config_t fs_cfg_its = {
@@ -237,7 +251,21 @@ psa_status_t tfm_its_set(int32_t client_id,
     psa_status_t status;
     size_t write_size;
     size_t offset;
-    uint32_t flags;
+    uint8_t *buffer_pnt = asset_data;
+
+#ifdef TFM_ITS_ENCRYPTED
+    /* The PS may also encrypt the data so we don't encrypt it's content. Thus
+     * the limitations regarding the ITS encryption are not present.
+     */
+    if (client_id != TFM_SP_PS) {
+        /* When encryption is enabled the whole file needs to fit in the
+         * global buffer.
+         */
+        if(data_length > sizeof(asset_data)){
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+    }
+#endif
 
     /* Check that the UID is valid */
     if (uid == TFM_ITS_INVALID_UID) {
@@ -272,29 +300,54 @@ psa_status_t tfm_its_set(int32_t client_id,
     }
 
     offset = 0;
-    flags = (uint32_t)create_flags |
-            ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE;
+    /* Populate the file info for the new file */
+    g_file_info.size_max = data_length;
+    g_file_info.flags = (uint32_t)create_flags |
+                        ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE;
+
 
     /* Iteratively read data from the caller and write it to the filesystem, in
      * chunks no larger than the size of the asset_data buffer.
      */
     do {
-        /* Write as much of the data as will fit in the asset_data buffer */
         write_size = ITS_UTILS_MIN(data_length, sizeof(asset_data));
 
         /* Read asset data from the caller */
         (void)its_req_mngr_read(asset_data, write_size);
 
+#ifdef TFM_ITS_ENCRYPTED
+        if (client_id != TFM_SP_PS) {
+            /* When encryption is used, the while loop will execute only once
+            * since we enforce the data_length to be smaller than the asset_data
+            * buffer at the start of the function.
+            */
+            status = tfm_its_crypt_file(&g_file_info,
+                                        g_fid,
+                                        sizeof(g_fid),
+                                        asset_data,
+                                        write_size,
+                                        enc_asset_data,
+                                        sizeof(enc_asset_data),
+                                        true);
+
+            if (status != PSA_SUCCESS) {
+                return status;
+            }
+
+            buffer_pnt = enc_asset_data;
+        }
+#endif
+
         /* Write to the file in the file system */
-        status = its_flash_fs_file_write(get_fs_ctx(client_id), g_fid, flags,
-                                         data_length, write_size, offset,
-                                         asset_data);
+        status = its_flash_fs_file_write(get_fs_ctx(client_id), g_fid,
+                                         &g_file_info, write_size, offset,
+                                         buffer_pnt);
         if (status != PSA_SUCCESS) {
             return status;
         }
 
         /* Do not create or truncate after the first iteration */
-        flags &= ~(ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE);
+        g_file_info.flags &= ~(ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE);
 
         offset += write_size;
         data_length -= write_size;
@@ -311,6 +364,9 @@ psa_status_t tfm_its_get(int32_t client_id,
 {
     psa_status_t status;
     size_t read_size;
+    /* The data size of the required file, this will be equal to the data_size
+     * argument when ITS encryption is not enabled */
+    size_t f_data_size;
 
 #ifdef TFM_PARTITION_TEST_PS
     /* The PS test partition can call tfm_its_get() through PS code. Treat it
@@ -329,6 +385,17 @@ psa_status_t tfm_its_get(int32_t client_id,
     /* Set file id */
     tfm_its_get_fid(client_id, uid, g_fid);
 
+#ifdef TFM_ITS_ENCRYPTED
+    /* The PS may also encrypt the data so we don't encrypt it's content. Thus
+     * the limitations regarding the ITS encryption are not present.
+     */
+    if (client_id != TFM_SP_PS) {
+        if (data_size > sizeof(asset_data)) {
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+    }
+#endif
+
     /* Read file info */
     status = its_flash_fs_file_get_info(get_fs_ctx(client_id), g_fid,
                                         &g_file_info);
@@ -336,14 +403,16 @@ psa_status_t tfm_its_get(int32_t client_id,
         return status;
     }
 
+    f_data_size = g_file_info.size_current;
+
     /* Boundary check the incoming request */
-    if (data_offset > g_file_info.size_current) {
+    if (data_offset > f_data_size) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
     /* Copy the object data only from within the file boundary */
     data_size = ITS_UTILS_MIN(data_size,
-                              g_file_info.size_current - data_offset);
+                              f_data_size - data_offset);
 
     /* Update the size of the output data */
     *p_data_length = data_size;
@@ -355,6 +424,42 @@ psa_status_t tfm_its_get(int32_t client_id,
         /* Read as much of the data as will fit in the asset_data buffer */
         read_size = ITS_UTILS_MIN(data_size, sizeof(asset_data));
 
+#ifdef TFM_ITS_ENCRYPTED
+    if (client_id != TFM_SP_PS) {
+        if ( g_file_info.size_max > sizeof(enc_asset_data) ){
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+
+        /* When encryption is enabled we need to read the whole file */
+        status = its_flash_fs_file_read(get_fs_ctx(client_id),
+                                        g_fid,
+                                        g_file_info.size_max,
+                                        0,
+                                        enc_asset_data);
+        if (status != PSA_SUCCESS) {
+            *p_data_length = 0;
+            return status;
+        }
+
+        status = tfm_its_crypt_file(&g_file_info,
+                                    g_fid,
+                                    sizeof(g_fid),
+                                    enc_asset_data,
+                                    g_file_info.size_max,
+                                    asset_data,
+                                    sizeof(asset_data),
+                                    false);
+
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+
+        tfm_memcpy(asset_data, asset_data + data_offset, data_size);
+        tfm_memset(asset_data + data_size,
+                   0,
+                   g_file_info.size_max - data_size);
+
+    } else {
         /* Read file data from the filesystem */
         status = its_flash_fs_file_read(get_fs_ctx(client_id), g_fid, read_size,
                                         data_offset, asset_data);
@@ -362,6 +467,17 @@ psa_status_t tfm_its_get(int32_t client_id,
             *p_data_length = 0;
             return status;
         }
+
+    }
+#else
+        /* Read file data from the filesystem */
+        status = its_flash_fs_file_read(get_fs_ctx(client_id), g_fid, read_size,
+                                        data_offset, asset_data);
+        if (status != PSA_SUCCESS) {
+            *p_data_length = 0;
+            return status;
+        }
+#endif
 
         /* Write asset data to the caller */
         its_req_mngr_write(asset_data, read_size);
