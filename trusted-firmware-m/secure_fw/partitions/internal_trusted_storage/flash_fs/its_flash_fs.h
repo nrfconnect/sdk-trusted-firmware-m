@@ -42,6 +42,17 @@ extern "C" {
 /* Invalid block index */
 #define ITS_BLOCK_INVALID_ID 0xFFFFFFFFU
 
+/* TODO: Add documentation here */
+typedef struct{
+    const uint8_t *fid;
+    uint8_t *data;
+    size_t data_size;
+#ifdef TFM_ITS_ENCRYPT
+    uint8_t nonce[TFM_ITS_ENC_NONCE_SIZE];
+    uint8_t tag[TFM_ITS_ENC_TAG_SIZE];
+#endif
+} its_file_t;
+
 /**
  * \struct its_flash_fs_config_t
  *
@@ -173,6 +184,11 @@ struct its_file_info_t {
     size_t size_max;     /*!< The maximum size of the flash file data in bytes.
                           */
     uint32_t flags;      /*!< Flags set when the file was created */
+#ifdef TFM_ITS_ENCRYPT
+    size_t plaintext_size; /*!< The plaintext size can be less than the encrypted size */
+    uint8_t nonce[TFM_ITS_ENC_NONCE_SIZE];
+    uint8_t tag[TFM_ITS_ENC_TAG_SIZE];
+#endif
 };
 
 /**
@@ -256,8 +272,7 @@ psa_status_t its_flash_fs_file_get_info(its_flash_fs_ctx_t *fs_ctx,
  */
 psa_status_t its_flash_fs_file_write(its_flash_fs_ctx_t *fs_ctx,
                                      const uint8_t *fid,
-                                     uint32_t flags,
-                                     size_t max_size,
+                                     struct its_file_info_t *file_info,
                                      size_t data_size,
                                      size_t offset,
                                      const uint8_t *data);

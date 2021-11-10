@@ -237,13 +237,17 @@ psa_status_t its_flash_fs_file_get_info(struct its_flash_fs_ctx_t *fs_ctx,
     info->size_current = tmp_metadata.cur_size;
     info->flags = tmp_metadata.flags & ITS_FLASH_FS_USER_FLAGS_MASK;
 
+#ifdef TFM_ITS_ENCRYPT
+    tfm_memcpy(info->nonce, tmp_metadata.nonce, TFM_ITS_ENC_NONCE_SIZE);
+    tfm_memcpy(info->tag, tmp_metadata.tag, TFM_ITS_ENC_TAG_SIZE);
+#endif
+
     return PSA_SUCCESS;
 }
 
-psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
+psa_status_t its_flash_fs_file_write(its_flash_fs_ctx_t *fs_ctx,
                                      const uint8_t *fid,
-                                     uint32_t flags,
-                                     size_t max_size,
+                                     struct its_file_info_t *file_info,
                                      size_t data_size,
                                      size_t offset,
                                      const uint8_t *data)
@@ -258,13 +262,13 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
     bool use_spare;
 
     /* Do not permit the user to pass filesystem-internal flags */
-    if (flags & ITS_FLASH_FS_INTERNAL_FLAGS_MASK) {
+    if (file_info->flags & ITS_FLASH_FS_INTERNAL_FLAGS_MASK) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
 #if (ITS_FLASH_MAX_ALIGNMENT != 1)
     /* Set the max_size to be aligned with the flash program unit */
-    max_size = ITS_UTILS_ALIGN(max_size, fs_ctx->cfg->program_unit);
+    file_info->size_max = ITS_UTILS_ALIGN(file_info->size_max, fs_ctx->cfg->program_unit);
 #endif
 
     /* Check if the file already exists */
@@ -276,13 +280,13 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
             return PSA_ERROR_DOES_NOT_EXIST;
         }
 
-        if (flags & ITS_FLASH_FS_FLAG_TRUNCATE) {
-            if (file_meta.max_size == max_size) {
+        if (file_info->flags & ITS_FLASH_FS_FLAG_TRUNCATE) {
+            if (file_meta.max_size == file_info->size_max) {
                 /* Truncate and reuse the existing file, which is already the
                  * correct size.
                  */
                 file_meta.cur_size = 0;
-                file_meta.flags = flags;
+                file_meta.flags = file_info->flags;
                 new_idx = old_idx;
             } else {
                 /* Mark the existing file to be deleted in this block update. It
@@ -304,7 +308,7 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
         }
     } else if (err == PSA_ERROR_DOES_NOT_EXIST) {
         /* The create flag must be supplied to create a new file */
-        if (!(flags & ITS_FLASH_FS_FLAG_CREATE)) {
+        if (!(file_info->flags & ITS_FLASH_FS_FLAG_CREATE)) {
             return PSA_ERROR_DOES_NOT_EXIST;
         }
     } else {
@@ -314,7 +318,7 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
     /* If the existing file was not reused, then a new one must be reserved */
     if (new_idx == ITS_METADATA_INVALID_INDEX) {
         /* Check that the file's maximum size is valid */
-        if (max_size > fs_ctx->cfg->max_file_size) {
+        if (file_info->size_max > fs_ctx->cfg->max_file_size) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
 
@@ -323,7 +327,7 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
 
         /* Try to reserve a new file based on the input parameters */
         err = its_flash_fs_mblock_reserve_file(fs_ctx, fid, use_spare,
-                                               max_size, flags, &new_idx,
+                                               file_info->size_max, file_info->flags, &new_idx,
                                                &file_meta, &block_meta);
         if (err != PSA_SUCCESS) {
             return err;
@@ -370,6 +374,11 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
     if (err != PSA_SUCCESS) {
         return PSA_ERROR_GENERIC_ERROR;
     }
+
+#ifdef TFM_ITS_ENCRYPT
+        tfm_memcpy(file_meta.nonce, file_info->nonce, sizeof(file_info->nonce));
+        tfm_memcpy(file_meta.tag, file_info->tag, sizeof(file_info->tag));
+#endif
 
     /* Write file metadata in the scratch metadata block */
     err = its_flash_fs_mblock_update_scratch_file_meta(fs_ctx, new_idx,

@@ -35,6 +35,23 @@
 static uint8_t asset_data[ITS_UTILS_ALIGN(ITS_BUF_SIZE,
                                           ITS_FLASH_MAX_ALIGNMENT)];
 
+#ifdef TFM_ITS_ENCRYPT
+
+#if ITS_BUF_SIZE != ITS_MAX_ASSET_SIZE
+#error "ITS_BUF_SIZE needs to be equal to the ITS_MAX_ASSET_SIZE when ITS encryption is enabled"
+#endif
+/* Buffer to store the encrypted asset data before it is stored in the filesystem.
+ * Note: size must be aligned to the max flash program unit to meet the
+ * alignment requirement of the filesystem.
+ */
+static uint8_t enc_asset_data[ITS_UTILS_ALIGN(ITS_MAX_ASSET_SIZE,
+                                              ITS_FLASH_MAX_ALIGNMENT)];
+
+/* The aad consist of the file id, the flags (uint32_t) and the data length(size_t) */
+static uint8_t g_enc_aad[ITS_FILE_ID_SIZE + sizeof(uint32_t) + sizeof(size_t)];
+static uint32_t g_enc_counter = 0;
+#endif
+
 static uint8_t g_fid[ITS_FILE_ID_SIZE];
 static struct its_file_info_t g_file_info;
 
@@ -65,6 +82,50 @@ static its_flash_fs_ctx_t *get_fs_ctx(int32_t client_id)
     return &fs_ctx_its;
 #endif
 }
+
+#ifdef TFM_ITS_ENCRYPT
+static psa_status_t tfm_its_fill_enc_add(uint8_t *add,
+                                         size_t add_size,
+                                         uint8_t *fid,
+                                         size_t fid_size,
+                                         uint32_t flags,
+                                         size_t data_size)
+
+{
+    size_t  offset = 0;
+    if(add_size < fid_size + sizeof(flags) + sizeof(data_size)){
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    tfm_memset(add, 0x0, add_size);
+    tfm_memcpy(add, fid, fid_size);
+    offset+= fid_size;
+    tfm_memcpy(add + offset, &flags, sizeof(flags));
+    offset+= sizeof(flags);
+    tfm_memcpy(add + offset, &data_size, sizeof(data_size));
+
+    return PSA_SUCCESS;
+}
+
+static psa_status_t tfm_its_fill_enc_nonce(uint8_t *nonce,
+                                           size_t nonce_size,
+                                           uint8_t *fid,
+                                           size_t fid_size,
+                                           uint32_t counter)
+
+{
+    if( nonce_size < fid_size + sizeof(counter)){
+        return PSA_ERROR_BUFFER_TOO_SMALL;
+    }
+
+    tfm_memset(nonce, 0x0, nonce_size);
+    tfm_memcpy(nonce, fid, fid_size);
+    tfm_memcpy(nonce + fid_size, &counter, sizeof(counter));
+
+    return PSA_SUCCESS;
+}
+
+#endif
 
 /**
  * \brief Maps a pair of client id and uid to a file id.
@@ -235,6 +296,8 @@ psa_status_t tfm_its_set(int32_t client_id,
     size_t write_size;
     size_t offset;
     uint32_t flags;
+    uint8_t *buffer_pnt = asset_data;
+    struct its_file_info_t f_info = {0};
 
     /* Check that the UID is valid */
     if (uid == TFM_ITS_INVALID_UID) {
@@ -247,6 +310,14 @@ psa_status_t tfm_its_set(int32_t client_id,
                          PSA_STORAGE_FLAG_NO_REPLAY_PROTECTION)) {
         return PSA_ERROR_NOT_SUPPORTED;
     }
+
+#ifdef TFM_ITS_ENCRYPT
+        struct tfm_hal_its_aead_ctx aead_ctx = {0};
+
+        if(data_length > sizeof(asset_data)){
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+#endif
 
     /* Set file id */
     tfm_its_get_fid(client_id, uid, g_fid);
@@ -272,20 +343,91 @@ psa_status_t tfm_its_set(int32_t client_id,
     flags = (uint32_t)create_flags |
             ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE;
 
+    /* Populate the file info for the new file */
+    f_info.size_max = data_length;
+    f_info.flags = flags;
+
     /* Iteratively read data from the caller and write it to the filesystem, in
      * chunks no larger than the size of the asset_data buffer.
      */
     do {
-        /* Write as much of the data as will fit in the asset_data buffer */
         write_size = ITS_UTILS_MIN(data_length, sizeof(asset_data));
 
         /* Read asset data from the caller */
         (void)its_req_mngr_read(asset_data, write_size);
 
+#ifdef TFM_ITS_ENCRYPT
+        status = tfm_its_fill_enc_add(g_enc_aad,
+                                      sizeof(g_enc_aad),
+                                      g_fid,
+                                      sizeof(g_fid),
+                                      flags,
+                                      data_length);
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        status = tfm_its_fill_enc_nonce(f_info.nonce,
+                                        sizeof(f_info.nonce),
+                                        g_fid,
+                                        sizeof(g_fid),
+                                        g_enc_counter);
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        g_enc_counter++;
+
+        status = tfm_hal_its_aead_set_deriv_label(&aead_ctx,
+                                                  g_fid,
+                                                  sizeof(g_fid));
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        status = tfm_hal_its_aead_set_nonce(&aead_ctx,
+                                            f_info.nonce,
+                                            sizeof(f_info.nonce));
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        status = tfm_hal_its_aead_set_aad(&aead_ctx,
+                                          g_enc_aad,
+                                          sizeof(g_enc_aad));
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        status = tfm_hal_its_aead_set_tag(&aead_ctx,
+                                          f_info.tag,
+                                          sizeof(f_info.tag));
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        size_t  output_size = 0;
+        status = tfm_hal_its_aead_encrypt(&aead_ctx,
+                                          asset_data,
+                                          sizeof(asset_data),
+                                          enc_asset_data,
+                                          sizeof(enc_asset_data),
+                                          &output_size);
+
+        if( status != PSA_SUCCESS || output_size < data_length){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        f_info.plaintext_size = data_length;
+        f_info.size_max = output_size;
+        buffer_pnt = enc_asset_data;
+
+#endif
+
         /* Write to the file in the file system */
-        status = its_flash_fs_file_write(get_fs_ctx(client_id), g_fid, flags,
-                                         data_length, write_size, offset,
-                                         asset_data);
+        status = its_flash_fs_file_write(get_fs_ctx(client_id), g_fid,
+                                         &f_info, write_size, offset,
+                                         buffer_pnt);
         if (status != PSA_SUCCESS) {
             return status;
         }
@@ -308,6 +450,9 @@ psa_status_t tfm_its_get(int32_t client_id,
 {
     psa_status_t status;
     size_t read_size;
+    /* The data size of the required file, this will be equal to the data_size
+     * argument when ITS encryption is not enabled */
+    size_t f_data_size;
 
 #ifdef TFM_PARTITION_TEST_PS
     /* The PS test partition can call tfm_its_get() through PS code. Treat it
@@ -326,6 +471,14 @@ psa_status_t tfm_its_get(int32_t client_id,
     /* Set file id */
     tfm_its_get_fid(client_id, uid, g_fid);
 
+#ifdef TFM_ITS_ENCRYPT
+        struct tfm_hal_its_aead_ctx aead_ctx = {0};
+
+        if(data_size > sizeof(asset_data)){
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+#endif
+
     /* Read file info */
     status = its_flash_fs_file_get_info(get_fs_ctx(client_id), g_fid,
                                         &g_file_info);
@@ -333,14 +486,20 @@ psa_status_t tfm_its_get(int32_t client_id,
         return status;
     }
 
+#ifdef TFM_ITS_ENCRYPT
+    f_data_size = g_file_info.plaintext_size;
+#else
+    f_data_size = g_file_info.size_current;
+#endif
+
     /* Boundary check the incoming request */
-    if (data_offset > g_file_info.size_current) {
+    if (data_offset > f_data_size) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
     /* Copy the object data only from within the file boundary */
     data_size = ITS_UTILS_MIN(data_size,
-                              g_file_info.size_current - data_offset);
+                              f_data_size - data_offset);
 
     /* Update the size of the output data */
     *p_data_length = data_size;
@@ -352,6 +511,74 @@ psa_status_t tfm_its_get(int32_t client_id,
         /* Read as much of the data as will fit in the asset_data buffer */
         read_size = ITS_UTILS_MIN(data_size, sizeof(asset_data));
 
+#ifdef TFM_ITS_ENCRYPT
+        if ( g_file_info.size_max < sizeof(enc_asset_data) ){
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+
+        /* When encryption is enabled we need to read the whole file */
+        status = its_flash_fs_file_read(get_fs_ctx(client_id), g_fid, g_file_info.size_max,
+                                        0, enc_asset_data);
+        if (status != PSA_SUCCESS) {
+            *p_data_length = 0;
+            return status;
+        }
+
+        status = tfm_its_fill_enc_add(g_enc_aad,
+                                      sizeof(g_enc_aad),
+                                      g_fid,
+                                      sizeof(g_fid),
+                                      g_file_info.flags,
+                                      g_file_info.size_max);
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        status = tfm_hal_its_aead_set_deriv_label(&aead_ctx,
+                                                  g_fid,
+                                                  sizeof(g_fid));
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        status = tfm_hal_its_aead_set_nonce(&aead_ctx,
+                                            g_file_info.nonce,
+                                            sizeof(g_file_info.nonce));
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        status = tfm_hal_its_aead_set_aad(&aead_ctx,
+                                          g_enc_aad,
+                                          sizeof(g_enc_aad));
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        status = tfm_hal_its_aead_set_tag(&aead_ctx,
+                                          g_file_info.tag,
+                                          sizeof(g_file_info.tag));
+        if( status != PSA_SUCCESS ){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+        size_t output_size = 0;
+        status = tfm_hal_its_aead_decrypt(&aead_ctx,
+                                          enc_asset_data,
+                                          g_file_info.size_max,
+                                          asset_data,
+                                          sizeof(asset_data),
+                                          &output_size);
+
+        if( status != PSA_SUCCESS || output_size != g_file_info.plaintext_size){
+            return PSA_ERROR_GENERIC_ERROR;
+        }
+
+
+        tfm_memcpy(asset_data, asset_data + data_offset, data_size);
+        tfm_memset(asset_data + data_size, 0x0, g_file_info.plaintext_size - data_size);
+
+#else
         /* Read file data from the filesystem */
         status = its_flash_fs_file_read(get_fs_ctx(client_id), g_fid, read_size,
                                         data_offset, asset_data);
@@ -359,6 +586,7 @@ psa_status_t tfm_its_get(int32_t client_id,
             *p_data_length = 0;
             return status;
         }
+#endif
 
         /* Write asset data to the caller */
         its_req_mngr_write(asset_data, read_size);

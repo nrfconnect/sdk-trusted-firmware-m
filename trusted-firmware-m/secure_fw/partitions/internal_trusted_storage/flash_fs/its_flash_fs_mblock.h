@@ -97,6 +97,16 @@ struct its_block_meta_t {
 };
 #undef _T2
 
+#ifdef TFM_ITS_ENCRYPT
+    #define _T3_ENC_META \
+    size_t plaintext_size; /*!< The plaintext size can be less than the encrypted size */ \
+    uint8_t nonce[TFM_ITS_ENC_NONCE_SIZE]; \
+    uint8_t tag[TFM_ITS_ENC_TAG_SIZE];
+#else
+    #define _T3_ENC_META \
+    uint8_t empty[0];
+#endif
+
 /*!
  * \struct its_file_meta_t
  *
@@ -115,7 +125,8 @@ struct its_block_meta_t {
                                     */ \
     size_t max_size;               /*!< Maximum size of this file */ \
     uint32_t flags;                /*!< Flags set when the file was created */ \
-    uint8_t id[ITS_FILE_ID_SIZE];  /*!< ID of this file */
+    uint8_t id[ITS_FILE_ID_SIZE];  /*!< ID of this file */ \
+    _T3_ENC_META
 
 struct its_file_meta_t {
     _T3

@@ -44,6 +44,7 @@ target_sources(platform_s
     PRIVATE
         target_cfg.c
         ../core/nrfx/mdk/system_nrf5340_application.c
+        $<$<BOOL:${TFM_ITS_ENCRYPT}>:${CMAKE_CURRENT_SOURCE_DIR}/tfm_hal_its_encryption.c>
 )
 
 target_compile_definitions(platform_s
@@ -51,6 +52,12 @@ target_compile_definitions(platform_s
         NRF5340_XXAA_APPLICATION
 )
 
+target_compile_definitions(platform_s
+    PUBLIC
+        $<$<BOOL:${TFM_ITS_ENCRYPT}>:TFM_ITS_ENCRYPT>
+        $<$<BOOL:${TFM_ITS_ENCRYPT}>:TFM_ITS_ENC_NONCE_SIZE=${TFM_ITS_ENC_NONCE_SIZE}>
+        $<$<BOOL:${TFM_ITS_ENCRYPT}>:TFM_ITS_ENC_TAG_SIZE=${TFM_ITS_ENC_TAG_SIZE}>
+)
 #========================= Platform Non-Secure ================================#
 
 target_include_directories(platform_ns

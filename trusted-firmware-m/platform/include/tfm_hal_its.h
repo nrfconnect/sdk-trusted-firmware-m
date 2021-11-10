@@ -15,6 +15,7 @@
 #include "Driver_Flash.h"
 #include "flash_layout.h"
 #include "tfm_hal_defs.h"
+#include "psa/crypto.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,6 +73,52 @@ extern ARM_DRIVER_FLASH TFM_HAL_ITS_FLASH_DRIVER;
  */
 enum tfm_hal_status_t
 tfm_hal_its_fs_info(struct tfm_hal_its_fs_info_t *fs_info);
+
+#ifdef TFM_ITS_ENCRYPT
+
+struct tfm_hal_its_aead_ctx{
+    uint8_t *deriv_label;
+    size_t deriv_label_size;
+    uint8_t *aad;
+    size_t aad_size;
+    uint8_t *nonce;
+    size_t nonce_size;
+    uint8_t *tag;
+    size_t tag_size;
+};
+
+/* TODO: Change the description */
+psa_status_t tfm_hal_its_aead_set_deriv_label(struct tfm_hal_its_aead_ctx *ctx,
+                                              uint8_t *deriv_label,
+                                              size_t deriv_label_size);
+
+psa_status_t tfm_hal_its_aead_set_nonce(struct tfm_hal_its_aead_ctx *ctx,
+                                        uint8_t *nonce,
+                                        size_t nonce_size);
+
+psa_status_t tfm_hal_its_aead_set_aad(struct tfm_hal_its_aead_ctx *ctx,
+                                      uint8_t *aad,
+                                      size_t aad_size);
+
+psa_status_t tfm_hal_its_aead_set_tag(struct tfm_hal_its_aead_ctx *ctx,
+                                      uint8_t *tag,
+                                      size_t tag_size);
+
+psa_status_t tfm_hal_its_aead_encrypt(struct tfm_hal_its_aead_ctx *ctx,
+                                      uint8_t *plaintext,
+                                      size_t plaintext_size,
+                                      uint8_t *ciphertext,
+                                      size_t ciphertext_size,
+                                      size_t *ciphertext_output);
+
+psa_status_t tfm_hal_its_aead_decrypt(struct tfm_hal_its_aead_ctx *ctx,
+                                      uint8_t *ciphertext,
+                                      size_t ciphertext_size,
+                                      uint8_t *plaintext,
+                                      size_t plaintext_size,
+                                      size_t *plaintext_output);
+
+#endif
 
 #ifdef __cplusplus
 }
