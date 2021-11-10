@@ -142,6 +142,14 @@ struct its_block_meta_t {
 };
 #undef _T2
 
+#ifdef TFM_ITS_ENCRYPTED
+    #define _T3_AUTH_ENC_META \
+    uint8_t nonce[TFM_ITS_ENC_NONCE_LENGTH]; \
+    uint8_t tag[TFM_ITS_AUTH_TAG_LENGTH];
+#else
+    #define _T3_AUTH_ENC_META
+#endif
+
 /*!
  * \struct its_file_meta_t
  *
@@ -160,7 +168,8 @@ struct its_block_meta_t {
                                     */ \
     size_t max_size;               /*!< Maximum size of this file */ \
     uint32_t flags;                /*!< Flags set when the file was created */ \
-    uint8_t id[ITS_FILE_ID_SIZE];  /*!< ID of this file */
+    uint8_t id[ITS_FILE_ID_SIZE];  /*!< ID of this file */ \
+    _T3_AUTH_ENC_META
 
 struct its_file_meta_t {
     _T3
