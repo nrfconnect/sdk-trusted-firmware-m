@@ -8,10 +8,12 @@
 #include "platform_sp.h"
 
 #include "tfm_platform_system.h"
-#include "tfm_plat_nv_counters.h"
 #include "tfm_secure_api.h"
 #include "psa_manifest/pid.h"
 #include "load/partition_defs.h"
+
+#ifndef TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED
+#include "tfm_plat_nv_counters.h"
 
 #define NV_COUNTER_ID_SIZE  sizeof(enum tfm_nv_counter_t)
 
@@ -32,6 +34,8 @@ static const int32_t nv_counter_access_map[NV_COUNTER_MAP_SIZE] = {
 #endif
               };
 
+#endif /* TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED */
+
 #ifdef TFM_PSA_API
 #include "psa_manifest/tfm_platform.h"
 #include "psa/client.h"
@@ -44,6 +48,7 @@ static const int32_t nv_counter_access_map[NV_COUNTER_MAP_SIZE] = {
 typedef enum tfm_platform_err_t (*plat_func_t)(const psa_msg_t *msg);
 #endif
 
+#ifndef TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED
 /*
  * \brief Verifies ownership of a nv_counter resource to a partition id.
  *
@@ -73,6 +78,7 @@ static bool nv_counter_access_grant(int32_t client_id,
     }
     return false;
 }
+#endif /* TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED */
 
 enum tfm_platform_err_t platform_sp_system_reset(void)
 {
@@ -112,6 +118,9 @@ enum tfm_platform_err_t
 platform_sp_nv_counter_read(psa_invec  *in_vec,  uint32_t num_invec,
                             psa_outvec *out_vec, uint32_t num_outvec)
 {
+#ifdef TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED
+    return PSA_ERROR_NOT_SUPPORTED;
+#else
     enum tfm_plat_err_t err;
     enum tfm_nv_counter_t counter_id;
     uint32_t counter_size;
@@ -139,12 +148,16 @@ platform_sp_nv_counter_read(psa_invec  *in_vec,  uint32_t num_invec,
     }
 
     return TFM_PLATFORM_ERR_SUCCESS;
+#endif /* TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED */
 }
 
 enum tfm_platform_err_t
 platform_sp_nv_counter_increment(psa_invec  *in_vec,  uint32_t num_invec,
                                  psa_outvec *out_vec, uint32_t num_outvec)
 {
+#ifdef TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED
+    return PSA_ERROR_NOT_SUPPORTED;
+#else
     enum tfm_plat_err_t err;
     enum tfm_nv_counter_t counter_id;
     int32_t client_id, status;
@@ -170,6 +183,7 @@ platform_sp_nv_counter_increment(psa_invec  *in_vec,  uint32_t num_invec,
     }
 
     return TFM_PLATFORM_ERR_SUCCESS;
+#endif /* TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED */
 }
 
 #else /* TFM_PSA_API */
@@ -185,6 +199,9 @@ platform_sp_system_reset_ipc(const psa_msg_t *msg)
 static enum tfm_platform_err_t
 platform_sp_nv_counter_ipc(const psa_msg_t *msg)
 {
+#ifdef TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED
+    return PSA_ERROR_NOT_SUPPORTED;
+#else
     enum tfm_plat_err_t err = TFM_PLAT_ERR_SYSTEM_ERR;
     size_t in_len = PSA_MAX_IOVEC, out_len = PSA_MAX_IOVEC, num = 0;
 
@@ -248,6 +265,7 @@ platform_sp_nv_counter_ipc(const psa_msg_t *msg)
         return TFM_PLATFORM_ERR_SYSTEM_ERROR;
     }
     return TFM_PLATFORM_ERR_SUCCESS;
+#endif /* TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED */
 }
 
 static enum tfm_platform_err_t
@@ -342,6 +360,7 @@ static void platform_signal_handle(psa_signal_t signal, plat_func_t pfn)
 
 enum tfm_platform_err_t platform_sp_init(void)
 {
+#ifndef TFM_PLATFORM_NV_COUNTER_MODULE_DISABLED
     /* Initialise the non-volatile counters */
     enum tfm_plat_err_t err;
     err = tfm_plat_init_nv_counter();
@@ -352,6 +371,8 @@ enum tfm_platform_err_t platform_sp_init(void)
         return TFM_PLATFORM_ERR_SYSTEM_ERROR;
 #endif
     }
+#endif /* TFM_PLATFORM_MODULE_NV_COUNTER_DISABELD */
+
 #ifdef TFM_PSA_API
     psa_signal_t signals = 0;
 
