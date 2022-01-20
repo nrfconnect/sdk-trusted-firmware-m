@@ -7,6 +7,9 @@
 
 cmake_policy(SET CMP0079 NEW)
 
+# When using nrf_security we don't need these build scripts
+return()
+
 if(BL2)
     add_library(bl2_crypto_hw STATIC)
 endif()
