@@ -115,7 +115,7 @@
 
 /* Check invalid configs. */
 #if CRYPTO_NV_SEED && defined(CRYPTO_HW_ACCELERATOR)
-#error "Invalid config: CRYPTO_NV_SEED AND CRYPTO_HW_ACCELERATOR!"
+//#error "Invalid config: CRYPTO_NV_SEED AND CRYPTO_HW_ACCELERATOR!"
 #endif
 
 #if (!CRYPTO_NV_SEED) && (!defined(CRYPTO_HW_ACCELERATOR))
