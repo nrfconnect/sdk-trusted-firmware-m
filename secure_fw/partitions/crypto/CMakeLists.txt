@@ -199,13 +199,3 @@ target_link_libraries(crypto_service_mbedcrypto
     PUBLIC
         crypto_service_mbedcrypto_config
 )
-
-target_link_libraries(crypto_service_mbedtls
-    PRIVATE
-        platform_s
-)
-
-target_link_libraries(crypto_service_mbedx509
-    PRIVATE
-        platform_s
-)
