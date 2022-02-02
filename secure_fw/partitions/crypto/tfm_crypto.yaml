@@ -481,7 +481,7 @@
       "version_policy": "STRICT"
     },
   ],
-  "dependencies": [
+  "weak_dependencies": [
     "TFM_INTERNAL_TRUSTED_STORAGE_SERVICE"
   ]
 }
