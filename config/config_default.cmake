@@ -53,6 +53,8 @@ set(TFM_PXN_ENABLE                      OFF         CACHE BOOL      "Use Privile
 
 set(TFM_EXCEPTION_INFO_DUMP             OFF         CACHE BOOL      "On fatal errors in the secure firmware, capture info about the exception. Print the info if the SPM log level is sufficient.")
 
+set(CONFIG_TFM_HALT_ON_CORE_PANIC       OFF         CACHE BOOL       "On fatal errors in the secure firmware, halt instead of rebooting.")
+
 set(CONFIG_TFM_SPE_FP                   0           CACHE STRING    "FP ABI type in SPE: 0-software, 1-hybird, 2-hardware")
 set(CONFIG_TFM_LAZY_STACKING_SPE        OFF         CACHE BOOL      "Disable lazy stacking from SPE")
 
