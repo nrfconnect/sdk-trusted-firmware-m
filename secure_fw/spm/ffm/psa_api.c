@@ -964,11 +964,15 @@ void tfm_spm_partition_psa_eoi(psa_signal_t irq_signal)
 
 void tfm_spm_partition_psa_panic(void)
 {
+#ifdef CONFIG_TFM_HALT_ON_CORE_PANIC
+    tfm_hal_system_halt();
+#else
     /*
      * PSA FF recommends that the SPM causes the system to restart when a secure
      * partition panics.
      */
     tfm_hal_system_reset();
+#endif
 }
 
 void tfm_spm_partition_irq_enable(psa_signal_t irq_signal)
