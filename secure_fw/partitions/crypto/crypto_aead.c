@@ -30,7 +30,7 @@ psa_status_t tfm_crypto_aead_encrypt(psa_invec in_vec[],
 #else
     psa_status_t status = PSA_SUCCESS;
 
-    CRYPTO_IN_OUT_LEN_VALIDATE(in_len, 1, 3, out_len, 0, 1);
+    CRYPTO_IN_OUT_LEN_VALIDATE(in_len, 1, 3, out_len, 1, 1);
 
     if ((in_vec[0].len != sizeof(struct tfm_crypto_pack_iovec))) {
         return PSA_ERROR_PROGRAMMER_ERROR;
@@ -133,8 +133,8 @@ psa_status_t tfm_crypto_aead_encrypt_setup(psa_invec in_vec[],
     psa_algorithm_t alg = iov->alg;
     mbedtls_svc_key_id_t encoded_key;
 
-    /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    /* Set the output handle to invalid, before allocation */
+    *handle_out = TFM_CRYPTO_INVALID_HANDLE;
 
     /* Allocate the operation context in the secure world */
     status = tfm_crypto_operation_alloc(TFM_CRYPTO_AEAD_OPERATION,
@@ -144,6 +144,7 @@ psa_status_t tfm_crypto_aead_encrypt_setup(psa_invec in_vec[],
         return status;
     }
 
+    /* Update the output handle to the allocated operation */
     *handle_out = handle;
 
     status = tfm_crypto_encode_id_and_owner(key_id, &encoded_key);
@@ -188,8 +189,8 @@ psa_status_t tfm_crypto_aead_decrypt_setup(psa_invec in_vec[],
     psa_algorithm_t alg = iov->alg;
     mbedtls_svc_key_id_t encoded_key;
 
-    /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    /* Set the output handle to invalid, before allocation */
+    *handle_out = TFM_CRYPTO_INVALID_HANDLE;
 
     /* Allocate the operation context in the secure world */
     status = tfm_crypto_operation_alloc(TFM_CRYPTO_AEAD_OPERATION,
@@ -199,6 +200,7 @@ psa_status_t tfm_crypto_aead_decrypt_setup(psa_invec in_vec[],
         return status;
     }
 
+    /* Update the output handle to the allocated operation */
     *handle_out = handle;
 
     status = tfm_crypto_encode_id_and_owner(key_id, &encoded_key);
@@ -238,11 +240,10 @@ psa_status_t tfm_crypto_aead_abort(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_AEAD_OPERATION,
@@ -257,11 +258,11 @@ psa_status_t tfm_crypto_aead_abort(psa_invec in_vec[],
 
     if (status != PSA_SUCCESS) {
         /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
+        (void)tfm_crypto_operation_release(handle);
         return status;
     }
 
-    return tfm_crypto_operation_release(handle_out);
+    return tfm_crypto_operation_release(handle);
 #endif /* TFM_CRYPTO_AEAD_MODULE_DISABLED */
 }
 
@@ -283,15 +284,14 @@ psa_status_t tfm_crypto_aead_finish(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     uint8_t *ciphertext = out_vec[2].base;
     size_t ciphertext_size = out_vec[2].len;
     uint8_t *tag = out_vec[1].base;
     size_t tag_size = out_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Initialise tag and ciphertext lengths to zero */
     out_vec[1].len = 0;
@@ -310,7 +310,7 @@ psa_status_t tfm_crypto_aead_finish(psa_invec in_vec[],
                              tag, tag_size, &out_vec[1].len);
     if (status == PSA_SUCCESS) {
         /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
+        (void)tfm_crypto_operation_release(handle);
     }
 
     return status;
@@ -335,13 +335,12 @@ psa_status_t tfm_crypto_aead_generate_nonce(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     uint8_t *nonce = out_vec[1].base;
     size_t nonce_size = out_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Initialise nonce length to zero */
     out_vec[1].len = 0;
@@ -354,11 +353,16 @@ psa_status_t tfm_crypto_aead_generate_nonce(psa_invec in_vec[],
         return status;
     }
 
-    return psa_aead_generate_nonce(operation,
-                                   nonce,
-                                   nonce_size,
-                                   &out_vec[1].len);
+    status = psa_aead_generate_nonce(operation,
+                                     nonce,
+                                     nonce_size,
+                                     &out_vec[1].len);
+    if(status != PSA_SUCCESS) {
+        /* Release the operation context, ignore if the operation fails. */
+        (void)tfm_crypto_operation_release(handle);
+    }
 
+    return status;
 #endif /* TFM_CRYPTO_AEAD_MODULE_DISABLED */
 }
 
@@ -380,13 +384,12 @@ psa_status_t tfm_crypto_aead_set_nonce(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     const uint8_t *nonce = in_vec[1].base;
     size_t nonce_size = in_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_AEAD_OPERATION,
@@ -396,8 +399,13 @@ psa_status_t tfm_crypto_aead_set_nonce(psa_invec in_vec[],
         return status;
     }
 
-    return psa_aead_set_nonce(operation, nonce, nonce_size);
+    status = psa_aead_set_nonce(operation, nonce, nonce_size);
+    if(status != PSA_SUCCESS) {
+        /* Release the operation context, ignore if the operation fails. */
+        (void)tfm_crypto_operation_release(handle);
+    }
 
+    return status;
 #endif /* TFM_CRYPTO_AEAD_MODULE_DISABLED */
 }
 
@@ -419,13 +427,12 @@ psa_status_t tfm_crypto_aead_set_lengths(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     size_t ad_length = iov->ad_length;
     size_t plaintext_length = iov->plaintext_length;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_AEAD_OPERATION,
@@ -435,8 +442,13 @@ psa_status_t tfm_crypto_aead_set_lengths(psa_invec in_vec[],
         return status;
     }
 
-   return psa_aead_set_lengths(operation, ad_length, plaintext_length);
+    status = psa_aead_set_lengths(operation, ad_length, plaintext_length);
+    if(status != PSA_SUCCESS) {
+        /* Release the operation context, ignore if the operation fails. */
+        (void)tfm_crypto_operation_release(handle);
+    }
 
+    return status;
 #endif /* TFM_CRYPTO_AEAD_MODULE_DISABLED */
 }
 
@@ -458,15 +470,14 @@ psa_status_t tfm_crypto_aead_update(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     const uint8_t *input = in_vec[1].base;
     size_t input_length = in_vec[1].len;
     uint8_t *output = out_vec[1].base;
     size_t output_size = out_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_AEAD_OPERATION,
@@ -476,9 +487,14 @@ psa_status_t tfm_crypto_aead_update(psa_invec in_vec[],
         return status;
     }
 
-    return psa_aead_update(operation, input, input_length,
-                           output, output_size, &out_vec[1].len);
+    status = psa_aead_update(operation, input, input_length,
+                             output, output_size, &out_vec[1].len);
+    if(status != PSA_SUCCESS) {
+        /* Release the operation context, ignore if the operation fails. */
+        (void)tfm_crypto_operation_release(handle);
+    }
 
+    return status;
 #endif /* TFM_CRYPTO_AEAD_MODULE_DISABLED */
 }
 
@@ -500,13 +516,12 @@ psa_status_t tfm_crypto_aead_update_ad(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     const uint8_t *input = in_vec[1].base;
     size_t input_length = in_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_AEAD_OPERATION,
@@ -516,8 +531,13 @@ psa_status_t tfm_crypto_aead_update_ad(psa_invec in_vec[],
         return status;
     }
 
-    return psa_aead_update_ad(operation, input, input_length);
+    status = psa_aead_update_ad(operation, input, input_length);
+    if(status != PSA_SUCCESS) {
+        /* Release the operation context, ignore if the operation fails. */
+        (void)tfm_crypto_operation_release(handle);
+    }
 
+    return status;
 #endif /* TFM_CRYPTO_AEAD_MODULE_DISABLED */
 }
 
@@ -539,15 +559,14 @@ psa_status_t tfm_crypto_aead_verify(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     const uint8_t *tag = in_vec[1].base;
     size_t tag_length = in_vec[1].len;
     uint8_t *plaintext = out_vec[1].base;
     size_t plaintext_size = out_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_AEAD_OPERATION,
@@ -561,10 +580,8 @@ psa_status_t tfm_crypto_aead_verify(psa_invec in_vec[],
                              plaintext, plaintext_size, &out_vec[1].len,
                              tag, tag_length);
 
-    if (status == PSA_SUCCESS) {
-        /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
-    }
+    /* Release the operation context, ignore if the operation fails. */
+    (void)tfm_crypto_operation_release(handle);
 
     return status;
 #endif /* TFM_CRYPTO_AEAD_MODULE_DISABLED */
