@@ -38,24 +38,18 @@ psa_status_t tfm_crypto_mac_sign_setup(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     psa_key_id_t key_id = iov->key_id;
     psa_algorithm_t alg = iov->alg;
     mbedtls_svc_key_id_t encoded_key;
 
-    /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
-
     /* Allocate the operation context in the secure world */
     status = tfm_crypto_operation_alloc(TFM_CRYPTO_MAC_OPERATION,
-                                        &handle,
+                                        handle,
                                         (void **)&operation);
     if (status != PSA_SUCCESS) {
         return status;
     }
-
-    *handle_out = handle;
 
     status = tfm_crypto_encode_id_and_owner(key_id, &encoded_key);
     if (status != PSA_SUCCESS) {
@@ -71,7 +65,7 @@ psa_status_t tfm_crypto_mac_sign_setup(psa_invec in_vec[],
 
 exit:
     /* Release the operation context, ignore if the operation fails. */
-    (void)tfm_crypto_operation_release(handle_out);
+    (void)tfm_crypto_operation_release(handle);
     return status;
 #endif /* TFM_CRYPTO_MAC_MODULE_DISABLED */
 }
@@ -94,24 +88,21 @@ psa_status_t tfm_crypto_mac_verify_setup(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     psa_key_id_t key_id = iov->key_id;
     psa_algorithm_t alg = iov->alg;
     mbedtls_svc_key_id_t encoded_key;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Allocate the operation context in the secure world */
     status = tfm_crypto_operation_alloc(TFM_CRYPTO_MAC_OPERATION,
-                                        &handle,
+                                        handle,
                                         (void **)&operation);
     if (status != PSA_SUCCESS) {
         return status;
     }
-
-    *handle_out = handle;
 
     status = tfm_crypto_encode_id_and_owner(key_id, &encoded_key);
     if (status != PSA_SUCCESS) {
@@ -127,7 +118,7 @@ psa_status_t tfm_crypto_mac_verify_setup(psa_invec in_vec[],
 
 exit:
     /* Release the operation context, ignore if the operation fails. */
-    (void)tfm_crypto_operation_release(handle_out);
+    (void)tfm_crypto_operation_release(handle);
     return status;
 #endif /* TFM_CRYPTO_MAC_MODULE_DISABLED */
 }
@@ -150,13 +141,12 @@ psa_status_t tfm_crypto_mac_update(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
     const uint8_t *input = in_vec[1].base;
+    uint32_t * const handle = out_vec[0].base;
     size_t input_length = in_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_MAC_OPERATION,
@@ -166,7 +156,13 @@ psa_status_t tfm_crypto_mac_update(psa_invec in_vec[],
         return status;
     }
 
-    return psa_mac_update(operation, input, input_length);
+    status = psa_mac_update(operation, input, input_length);
+    if(status != PSA_SUCCESS)
+    {
+        (void)tfm_crypto_operation_release(handle);
+    }
+
+    return status;
 #endif /* TFM_CRYPTO_MAC_MODULE_DISABLED */
 }
 
@@ -188,13 +184,15 @@ psa_status_t tfm_crypto_mac_sign_finish(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     uint8_t *mac = out_vec[1].base;
     size_t mac_size = out_vec[1].len;
 
+    /* Initialise mac_length to zero */
+    out_vec[1].len = 0;
+
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_MAC_OPERATION,
@@ -205,12 +203,12 @@ psa_status_t tfm_crypto_mac_sign_finish(psa_invec in_vec[],
     }
 
     status = psa_mac_sign_finish(operation, mac, mac_size, &out_vec[1].len);
-    if (status == PSA_SUCCESS) {
-        /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
-    } else {
+    if (status != PSA_SUCCESS) {
         out_vec[1].len = 0;
     }
+
+    /* Release the operation context on positive and negative results */
+    (void)tfm_crypto_operation_release(handle);
 
     return status;
 #endif /* TFM_CRYPTO_MAC_MODULE_DISABLED */
@@ -234,13 +232,12 @@ psa_status_t tfm_crypto_mac_verify_finish(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     const uint8_t *mac = in_vec[1].base;
     size_t mac_length = in_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_MAC_OPERATION,
@@ -251,10 +248,9 @@ psa_status_t tfm_crypto_mac_verify_finish(psa_invec in_vec[],
     }
 
     status = psa_mac_verify_finish(operation, mac, mac_length);
-    if (status == PSA_SUCCESS) {
-        /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
-    }
+
+    /* Release the operation context on positive and negative results */
+    (void)tfm_crypto_operation_release(handle);
 
     return status;
 #endif /* TFM_CRYPTO_MAC_MODULE_DISABLED */
@@ -278,11 +274,10 @@ psa_status_t tfm_crypto_mac_abort(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_MAC_OPERATION,
@@ -297,11 +292,11 @@ psa_status_t tfm_crypto_mac_abort(psa_invec in_vec[],
 
     if (status != PSA_SUCCESS) {
         /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
+        (void)tfm_crypto_operation_release(handle);
         return status;
     }
 
-    return tfm_crypto_operation_release(handle_out);
+    return tfm_crypto_operation_release(handle);
 #endif /* TFM_CRYPTO_MAC_MODULE_DISABLED */
 }
 
