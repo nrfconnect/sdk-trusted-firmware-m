@@ -106,7 +106,7 @@ psa_status_t tfm_crypto_key_attributes_to_client(
  * \return Return values as described in \ref psa_status_t
  */
 psa_status_t tfm_crypto_operation_alloc(enum tfm_crypto_operation_type type,
-                                        uint32_t *handle,
+                                        uint32_t * const handle,
                                         void **ctx);
 /**
  * \brief Release an operation context in the backend
@@ -115,19 +115,19 @@ psa_status_t tfm_crypto_operation_alloc(enum tfm_crypto_operation_type type,
  *
  * \return Return values as described in \ref psa_status_t
  */
-psa_status_t tfm_crypto_operation_release(uint32_t *handle);
+psa_status_t tfm_crypto_operation_release(uint32_t * const handle);
 /**
  * \brief Look up an operation context in the backend for the corresponding
  *        frontend operation
  *
  * \param[in]  type   Type of the operation context to look up
- * \param[in]  handle Handle of the context to lookup
+ * \param[in]  handle Pointer to the handle Handle of the context to lookup
  * \param[out] ctx    Double pointer to the corresponding context
  *
  * \return Return values as described in \ref psa_status_t
  */
 psa_status_t tfm_crypto_operation_lookup(enum tfm_crypto_operation_type type,
-                                         uint32_t handle,
+                                         uint32_t * const handle,
                                          void **ctx);
 /**
  * \brief Encodes the input key id and owner to output key
