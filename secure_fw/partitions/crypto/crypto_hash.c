@@ -83,13 +83,12 @@ psa_status_t tfm_crypto_hash_update(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     const uint8_t *input = in_vec[1].base;
     size_t input_length = in_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_HASH_OPERATION,
@@ -99,7 +98,14 @@ psa_status_t tfm_crypto_hash_update(psa_invec in_vec[],
         return status;
     }
 
-    return psa_hash_update(operation, input, input_length);
+    status = psa_hash_update(operation, input, input_length);
+    if (status != PSA_SUCCESS)
+    {
+        /* Release the operation context, ignore if the operation fails. */
+        (void)tfm_crypto_operation_release(handle);
+    }
+
+    return status;
 #endif /* TFM_CRYPTO_HASH_MODULE_DISABLED */
 }
 
@@ -121,13 +127,12 @@ psa_status_t tfm_crypto_hash_finish(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     uint8_t *hash = out_vec[1].base;
     size_t hash_size = out_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_HASH_OPERATION,
@@ -138,12 +143,12 @@ psa_status_t tfm_crypto_hash_finish(psa_invec in_vec[],
     }
 
     status = psa_hash_finish(operation, hash, hash_size, &out_vec[1].len);
-    if (status == PSA_SUCCESS) {
-        /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
-    } else {
+    if (status != PSA_SUCCESS) {
         out_vec[1].len = 0;
     }
+
+    /* Release the operation context, regardless if it fails or not. */
+    (void)tfm_crypto_operation_release(handle);
 
     return status;
 #endif /* TFM_CRYPTO_HASH_MODULE_DISABLED */
@@ -167,13 +172,12 @@ psa_status_t tfm_crypto_hash_verify(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
     const uint8_t *hash = in_vec[1].base;
     size_t hash_length = in_vec[1].len;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_HASH_OPERATION,
@@ -184,10 +188,9 @@ psa_status_t tfm_crypto_hash_verify(psa_invec in_vec[],
     }
 
     status = psa_hash_verify(operation, hash, hash_length);
-    if (status == PSA_SUCCESS) {
-        /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
-    }
+
+    /* Release the operation context, ignore if the operation fails. */
+    (void)tfm_crypto_operation_release(handle);
 
     return status;
 #endif /* TFM_CRYPTO_HASH_MODULE_DISABLED */
@@ -211,11 +214,10 @@ psa_status_t tfm_crypto_hash_abort(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t handle = iov->op_handle;
-    uint32_t *handle_out = out_vec[0].base;
+    uint32_t * const handle = out_vec[0].base;
 
     /* Init the handle in the operation with the one passed from the iov */
-    *handle_out = iov->op_handle;
+    *handle = iov->op_handle;
 
     /* Look up the corresponding operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_HASH_OPERATION,
@@ -229,11 +231,11 @@ psa_status_t tfm_crypto_hash_abort(psa_invec in_vec[],
     status = psa_hash_abort(operation);
     if (status != PSA_SUCCESS) {
         /* Release the operation context, ignore if the operation fails. */
-        (void)tfm_crypto_operation_release(handle_out);
+        (void)tfm_crypto_operation_release(handle);
         return status;
     }
 
-    return tfm_crypto_operation_release(handle_out);
+    return tfm_crypto_operation_release(handle);
 #endif /* TFM_CRYPTO_HASH_MODULE_DISABLED */
 }
 
@@ -256,8 +258,10 @@ psa_status_t tfm_crypto_hash_clone(psa_invec in_vec[],
         return PSA_ERROR_PROGRAMMER_ERROR;
     }
     const struct tfm_crypto_pack_iovec *iov = in_vec[0].base;
-    uint32_t source_handle = iov->op_handle;
-    uint32_t *target_handle = out_vec[0].base;
+    uint32_t * const source_handle = out_vec[0].base;;
+    uint32_t * const target_handle = out_vec[0].base;
+
+    *source_handle = iov->op_handle;
 
     /* Look up the corresponding source operation context */
     status = tfm_crypto_operation_lookup(TFM_CRYPTO_HASH_OPERATION,
@@ -267,6 +271,9 @@ psa_status_t tfm_crypto_hash_clone(psa_invec in_vec[],
         return status;
     }
 
+    /* Set the target handle to invalid for allocation */
+    *target_handle = TFM_CRYPTO_INVALID_HANDLE;
+
     /* Allocate the target operation context in the secure world */
     status = tfm_crypto_operation_alloc(TFM_CRYPTO_HASH_OPERATION,
                                         target_handle,
@@ -275,7 +282,14 @@ psa_status_t tfm_crypto_hash_clone(psa_invec in_vec[],
         return status;
     }
 
-    return psa_hash_clone(source_operation, target_operation);
+    status = psa_hash_clone(source_operation, target_operation);
+    if (status != PSA_SUCCESS)
+    {
+        /* Release the operation context, ignore if the operation fails. */
+        (void)tfm_crypto_operation_release(target_handle);
+    }
+
+    return status;
 #endif /* TFM_CRYPTO_HASH_MODULE_DISABLED */
 }
 
