@@ -96,7 +96,7 @@ psa_status_t tfm_crypto_init_alloc(void)
 }
 
 psa_status_t tfm_crypto_operation_alloc(enum tfm_crypto_operation_type type,
-                                        uint32_t *handle,
+                                        uint32_t * const handle,
                                         void **ctx)
 {
     uint32_t i = 0;
@@ -133,7 +133,7 @@ psa_status_t tfm_crypto_operation_alloc(enum tfm_crypto_operation_type type,
     return PSA_ERROR_NOT_PERMITTED;
 }
 
-psa_status_t tfm_crypto_operation_release(uint32_t *handle)
+psa_status_t tfm_crypto_operation_release(uint32_t * const handle)
 {
     uint32_t h_val = *handle;
     int32_t partition_id = 0;
@@ -161,7 +161,7 @@ psa_status_t tfm_crypto_operation_release(uint32_t *handle)
 }
 
 psa_status_t tfm_crypto_operation_lookup(enum tfm_crypto_operation_type type,
-                                         uint32_t handle,
+                                         uint32_t * const handle,
                                          void **ctx)
 {
     int32_t partition_id = 0;
@@ -172,16 +172,17 @@ psa_status_t tfm_crypto_operation_lookup(enum tfm_crypto_operation_type type,
         return status;
     }
 
-    if ( (handle != TFM_CRYPTO_INVALID_HANDLE) &&
-         (handle <= TFM_CRYPTO_CONC_OPER_NUM) &&
-         (operation[handle - 1].in_use == TFM_CRYPTO_IN_USE) &&
-         (operation[handle - 1].type == type) &&
-         (operation[handle - 1].owner == partition_id)) {
+    if ( (*handle != TFM_CRYPTO_INVALID_HANDLE) &&
+         (*handle <= TFM_CRYPTO_CONC_OPER_NUM) &&
+         (operation[*handle - 1].in_use == TFM_CRYPTO_IN_USE) &&
+         (operation[*handle - 1].type == type) &&
+         (operation[*handle - 1].owner == partition_id)) {
 
-        *ctx = (void *) &(operation[handle - 1].operation);
+        *ctx = (void *) &(operation[*handle - 1].operation);
         return PSA_SUCCESS;
     }
 
+    *handle = TFM_CRYPTO_INVALID_HANDLE;
     return PSA_ERROR_BAD_STATE;
 }
 /*!@}*/
