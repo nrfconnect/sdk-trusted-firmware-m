@@ -6,6 +6,13 @@
  */
 #include "cmsis.h"
 #include "exception_info.h"
+#include "tfm_platform_core_api.h"
+
+void C_HardFault_Handler(void)
+{
+    /* Inform TF-M core that isolation boundary has been violated */
+    tfm_access_violation_handler();
+}
 
 __attribute__((naked)) void HardFault_Handler(void)
 {
@@ -16,7 +23,16 @@ __attribute__((naked)) void HardFault_Handler(void)
      * Returning from this exception could allow a pending NS exception to be
      * taken, so the current solution is not to return.
      */
-    __ASM volatile("b    .");
+    __ASM volatile(
+        "bl        C_HardFault_Handler     \n"
+        "b         .                       \n"
+    );
+}
+
+void C_MemManage_Handler(void)
+{
+    /* Inform TF-M core that isolation boundary has been violated */
+    tfm_access_violation_handler();
 }
 
 __attribute__((naked)) void MemManage_Handler(void)
@@ -28,7 +44,16 @@ __attribute__((naked)) void MemManage_Handler(void)
      * raised. Returning from this exception could allow a pending NS exception
      * to be taken, so the current solution is not to return.
      */
-    __ASM volatile("b    .");
+    __ASM volatile(
+        "bl        C_MemManage_Handler     \n"
+        "b         .                       \n"
+    );
+}
+
+void C_BusFault_Handler(void)
+{
+    /* Inform TF-M core that isolation boundary has been violated */
+    tfm_access_violation_handler();
 }
 
 __attribute__((naked)) void BusFault_Handler(void)
@@ -40,7 +65,16 @@ __attribute__((naked)) void BusFault_Handler(void)
      * Returning from this exception could allow a pending NS exception to be
      * taken, so the current solution is not to return.
      */
-    __ASM volatile("b    .");
+    __ASM volatile(
+        "bl        C_BusFault_Handler      \n"
+        "b         .                       \n"
+    );
+}
+
+void C_SecureFault_Handler(void)
+{
+    /* Inform TF-M core that isolation boundary has been violated */
+    tfm_access_violation_handler();
 }
 
 __attribute__((naked)) void SecureFault_Handler(void)
@@ -52,11 +86,24 @@ __attribute__((naked)) void SecureFault_Handler(void)
      * Returning from this exception could allow a pending NS exception to be
      * taken, so the current solution is not to return.
      */
-    __ASM volatile("b    .");
+    __ASM volatile(
+        "bl        C_SecureFault_Handler   \n"
+        "b         .                       \n"
+    );
+}
+
+void C_UsageFault_Handler(void)
+{
+    /* Inform TF-M core that isolation boundary has been violated */
+    tfm_access_violation_handler();
 }
 
 __attribute__((naked)) void UsageFault_Handler(void)
 {
     EXCEPTION_INFO(EXCEPTION_TYPE_USAGEFAULT);
-    __ASM volatile("b    .");
+
+    __ASM volatile(
+        "bl        C_UsageFault_Handler   \n"
+        "b         .                      \n"
+    );
 }
