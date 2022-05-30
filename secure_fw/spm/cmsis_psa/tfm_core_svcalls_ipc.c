@@ -214,5 +214,5 @@ __attribute__ ((naked)) void tfm_core_handler_mode(void)
 
 void tfm_access_violation_handler(void)
 {
-    tfm_hal_system_halt();
+    tfm_core_panic();
 }
