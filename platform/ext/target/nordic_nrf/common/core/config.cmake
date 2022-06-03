@@ -22,3 +22,8 @@ set(PLATFORM_SLIH_IRQ_TEST_SUPPORT      ON          CACHE BOOL    "Platform supp
 set(PLATFORM_FLIH_IRQ_TEST_SUPPORT      ON          CACHE BOOL    "Platform supports FLIH IRQ tests")
 
 set(NRF_HW_INIT_RESET_ON_BOOT OFF CACHE BOOL "Initialize internal architecture state at boot")
+set(NRF_HW_INIT_NRF_PERIPHERALS OFF CACHE BOOL "Initialize nRF peripherals at boot")
+
+if (NRF_HW_INIT_NRF_PERIPHERALS AND NOT NRF_HW_INIT_RESET_ON_BOOT)
+        message(FATAL_ERROR "NRF_HW_INIT_PERIPHERALS_ON_BOOT depends on NRF_HW_INIT_RESET_ON_BOOT")
+endif()
