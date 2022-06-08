@@ -20,10 +20,6 @@ extern "C" {
 #define PS_KEY_LEN_BYTES  16
 #define PS_TAG_LEN_BYTES  16
 #define PS_IV_LEN_BYTES   12
-/* The key label consists of the uid + client_id, thus the length of it is:
- * sizeof(psa_storage_uid_t) + sizeof(int32_t).
- */
-#define PS_KEY_LABEL_LEN_BYTES 12
 
 /* Union containing crypto policy implementations. The ref member provides the
  * reference implementation. Further members can be added to the union to
@@ -31,7 +27,6 @@ extern "C" {
  */
 union ps_crypto_t {
     struct {
-        uint8_t key_label[PS_KEY_LABEL_LEN_BYTES]; /*!< Key label value */
         uint8_t tag[PS_TAG_LEN_BYTES]; /*!< MAC value of AEAD object */
         uint8_t iv[PS_IV_LEN_BYTES];   /*!< IV value of AEAD object */
         psa_storage_uid_t uid;         /*!< UID for key label */
