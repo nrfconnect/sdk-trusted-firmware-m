@@ -22,7 +22,6 @@
 #include "tfm_hal_spm_logdev.h"
 #include "load/partition_defs.h"
 #include "psa/client.h"
-#include "tfm_hal_platform.h"
 
 /* MSP bottom (higher address) */
 REGION_DECLARE(Image$$, ARM_LIB_STACK, $$ZI$$Limit);
@@ -263,5 +262,7 @@ __attribute__ ((naked)) void tfm_core_handler_mode(void)
 
 void tfm_access_violation_handler(void)
 {
-    tfm_hal_system_halt();
+    while (1) {
+        ;
+    }
 }
