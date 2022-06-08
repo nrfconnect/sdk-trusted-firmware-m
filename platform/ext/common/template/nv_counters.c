@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2022, Arm Limited. All rights reserved.
+ * Copyright (c) 2018-2021, Arm Limited. All rights reserved.
  *
  * SPDX-License-Identifier: BSD-3-Clause
  *
@@ -41,7 +41,6 @@ enum tfm_plat_err_t tfm_plat_init_nv_counter(void)
     return init_otp_nv_counters_flash();
 }
 
-#if defined(BL2) || defined(BL1)
 static enum tfm_plat_err_t read_nv_counter_otp(enum tfm_otp_element_id_t id,
                                                uint32_t size, uint8_t *val)
 {
@@ -75,9 +74,7 @@ static enum tfm_plat_err_t read_nv_counter_otp(enum tfm_otp_element_id_t id,
 
     return TFM_PLAT_ERR_SUCCESS;
 }
-#endif /* BL2 || BL1 */
 
-#ifdef TFM_PARTITION_PROTECTED_STORAGE
 static enum tfm_plat_err_t read_nv_counter_flash(enum flash_nv_counter_id_t counter_id,
                                                  uint32_t size, uint8_t *val)
 {
@@ -97,7 +94,6 @@ static enum tfm_plat_err_t read_nv_counter_flash(enum flash_nv_counter_id_t coun
 
     return TFM_PLAT_ERR_SUCCESS;
 }
-#endif /* TFM_PARTITION_PROTECTED_STORAGE */
 
 enum tfm_plat_err_t tfm_plat_read_nv_counter(enum tfm_nv_counter_t counter_id,
                                              uint32_t size, uint8_t *val)
@@ -135,7 +131,6 @@ enum tfm_plat_err_t tfm_plat_read_nv_counter(enum tfm_nv_counter_t counter_id,
     }
 }
 
-#if defined(BL2) || defined(BL1)
 static enum tfm_plat_err_t set_nv_counter_otp(enum tfm_otp_element_id_t id,
                                               uint32_t value)
 {
@@ -168,9 +163,7 @@ static enum tfm_plat_err_t set_nv_counter_otp(enum tfm_otp_element_id_t id,
 
     return TFM_PLAT_ERR_SUCCESS;
 }
-#endif /* BL2 || BL1 */
 
-#ifdef TFM_PARTITION_PROTECTED_STORAGE
 static enum tfm_plat_err_t set_nv_counter_flash(enum flash_nv_counter_id_t counter_id,
                                                 uint32_t value)
 {
@@ -205,7 +198,6 @@ static enum tfm_plat_err_t set_nv_counter_flash(enum flash_nv_counter_id_t count
 
     return TFM_PLAT_ERR_SUCCESS;
 }
-#endif /* TFM_PARTITION_PROTECTED_STORAGE */
 
 enum tfm_plat_err_t tfm_plat_set_nv_counter(enum tfm_nv_counter_t counter_id,
                                             uint32_t value)
