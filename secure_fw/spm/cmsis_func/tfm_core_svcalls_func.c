@@ -110,5 +110,5 @@ uint32_t tfm_core_svc_handler(uint32_t *msp, uint32_t *psp, uint32_t exc_return)
 
 void tfm_access_violation_handler(void)
 {
-    tfm_core_panic();
+    tfm_hal_system_halt();
 }
