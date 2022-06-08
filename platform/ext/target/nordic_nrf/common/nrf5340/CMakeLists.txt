@@ -88,7 +88,6 @@ if(BL2)
     target_compile_definitions(platform_bl2
         PUBLIC
             NRF5340_XXAA_APPLICATION
-            NRF_SKIP_FICR_NS_COPY_TO_RAM
     )
 endif()
 
