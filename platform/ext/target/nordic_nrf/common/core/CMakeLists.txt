@@ -74,7 +74,7 @@ target_sources(platform_s
         ${CMAKE_SOURCE_DIR}/platform/ext/common/tfm_hal_nvic.c
         $<$<BOOL:${TFM_ITS_ENCRYPTED}>:${CMAKE_CURRENT_SOURCE_DIR}/tfm_hal_its_encryption.c>
     PUBLIC
-        plat_test.c
+        $<$<OR:$<BOOL:${TFM_S_REG_TEST}>,$<BOOL:${TFM_NS_REG_TEST}>>:${CMAKE_CURRENT_SOURCE_DIR}/plat_test.c>
 )
 
 if (NRF_HW_INIT_RESET_ON_BOOT)
@@ -127,7 +127,7 @@ target_sources(platform_ns
         cmsis_drivers/Driver_USART.c
         ${HAL_NORDIC_PATH}/nrfx/drivers/src/nrfx_uarte.c
         nrfx_glue.c
-        plat_test.c
+        $<$<OR:$<BOOL:${TFM_S_REG_TEST}>,$<BOOL:${TFM_NS_REG_TEST}>>:${CMAKE_CURRENT_SOURCE_DIR}/plat_test.c>
 )
 
 target_include_directories(platform_ns
