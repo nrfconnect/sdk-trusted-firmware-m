@@ -24,6 +24,7 @@
 #include <spu.h>
 #include <nrfx.h>
 #include <hal/nrf_gpio.h>
+#include <nrfx_compat.h>
 
 #define PIN_XL1 0
 #define PIN_XL2 1

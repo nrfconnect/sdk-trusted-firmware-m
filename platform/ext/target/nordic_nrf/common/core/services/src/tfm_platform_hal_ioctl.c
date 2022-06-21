@@ -12,6 +12,7 @@
 #include <tfm_read_ranges.h>
 
 #include <hal/nrf_gpio.h>
+#include <nrfx_compat.h>
 
 enum tfm_platform_err_t
 tfm_platform_hal_read_service(const psa_invec  *in_vec,
