@@ -238,7 +238,7 @@ psa_status_t tfm_crypto_key_derivation_set_capacity(psa_invec in_vec[],
 #else
     psa_status_t status;
 
-    CRYPTO_IN_OUT_LEN_VALIDATE(in_len, 1, 1, out_len, 0, 0);
+    CRYPTO_IN_OUT_LEN_VALIDATE(in_len, 1, 1, out_len, 1, 1);
 
     if ((in_vec[0].len != sizeof(struct tfm_crypto_pack_iovec)) ||
         (out_vec[0].len != sizeof(size_t))) {
@@ -261,7 +261,7 @@ psa_status_t tfm_crypto_key_derivation_set_capacity(psa_invec in_vec[],
     }
 
     status = psa_key_derivation_set_capacity(operation, capacity);
-    if (status != PSA_SUCCESS)
+    if (status != PSA_SUCCESS && status != PSA_ERROR_INVALID_ARGUMENT)
     {
         /* Release the operation context, ignore if the operation fails. */
         (void)tfm_crypto_operation_release(handle);
@@ -331,7 +331,7 @@ psa_status_t tfm_crypto_key_derivation_output_bytes(psa_invec in_vec[],
 #else
     psa_status_t status;
 
-    CRYPTO_IN_OUT_LEN_VALIDATE(in_len, 1, 1, out_len, 0, 1);
+    CRYPTO_IN_OUT_LEN_VALIDATE(in_len, 1, 1, out_len, 2, 2);
 
     if ((in_vec[0].len != sizeof(struct tfm_crypto_pack_iovec)) ||
         (out_vec[0].len != sizeof(size_t))) {
