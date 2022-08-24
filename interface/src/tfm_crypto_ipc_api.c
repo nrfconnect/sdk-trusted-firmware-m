@@ -1413,7 +1413,7 @@ psa_status_t psa_key_derivation_get_capacity(
     };
 
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
+        {.base = (uint32_t *) &(operation->handle), .len = sizeof(uint32_t)},
         {.base = capacity, .len = sizeof(size_t)},
     };
 
