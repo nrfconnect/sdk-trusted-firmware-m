@@ -30,7 +30,7 @@ psa_status_t tfm_crypto_aead_encrypt(psa_invec in_vec[],
 #else
     psa_status_t status = PSA_SUCCESS;
 
-    CRYPTO_IN_OUT_LEN_VALIDATE(in_len, 1, 3, out_len, 1, 1);
+    CRYPTO_IN_OUT_LEN_VALIDATE(in_len, 1, 3, out_len, 0, 1);
 
     if ((in_vec[0].len != sizeof(struct tfm_crypto_pack_iovec))) {
         return PSA_ERROR_PROGRAMMER_ERROR;
