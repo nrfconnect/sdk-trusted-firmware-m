@@ -34,6 +34,12 @@
         "output": "interface/include/tfm_veneers.h"
     },
     {
+        "name": "Secure Veneers functions file",
+        "short_name": "tfm_veneers_functions",
+        "template": "tools/templates/veneer_function_names.template",
+        "output": "tools/tfm_veneers_functions.txt"
+    },
+    {
         "name": "Secure IRQ handlers",
         "short_name": "tfm_secure_irq_handlers",
         "template": "secure_fw/spm/cmsis_func/tfm_secure_irq_handlers.inc.template",
