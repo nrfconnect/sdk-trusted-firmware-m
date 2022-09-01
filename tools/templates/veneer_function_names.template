@@ -1,0 +1,5 @@
+{% for partition in partitions %}
+{% for function in partition.manifest.secure_functions%}
+{{function.signal.lower()}}
+{% endfor %}
+{% endfor %}
