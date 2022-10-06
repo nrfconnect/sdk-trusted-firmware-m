@@ -39,3 +39,5 @@ endif()
 # Platform-specific configurations
 set(CONFIG_TFM_USE_TRUSTZONE            ON)
 set(TFM_MULTI_CORE_TOPOLOGY             OFF)
+
+set(NRF_SECURE_UART_INSTANCE            1           CACHE STRING  "The UART instance number to use for secure UART")
