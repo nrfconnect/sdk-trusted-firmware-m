@@ -84,6 +84,9 @@ set(CONFIG_TFM_HALT_ON_CORE_PANIC       OFF         CACHE BOOL       "On fatal e
 
 set(CONFIG_TFM_STACK_WATERMARKS         OFF         CACHE BOOL      "Whether to pre-fill partition stacks with a set value to help determine stack usage")
 
+set(PROJECT_CONFIG_HEADER_FILE          "${CMAKE_SOURCE_DIR}/config/config_base.h" CACHE FILEPATH "User defined header file for TF-M config")
+
+set(CONFIG_TFM_LOG_SHARE_UART           OFF         CACHE BOOL      "Allow TF-M and the non-secure application to share the UART instance. TF-M will use it while it is booting, after which the non-secure application will use it until an eventual fatal error is handled and logged by TF-M. Logging from TF-M will therefore otherwise be suppressed")
 ############################ Platform ##########################################
 
 set(NUM_MAILBOX_QUEUE_SLOT              1           CACHE BOOL      "Number of mailbox queue slots")

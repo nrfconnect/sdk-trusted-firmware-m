@@ -24,6 +24,7 @@
 #include "load/partition_defs.h"
 #include "psa/client.h"
 #include "tfm_hal_platform.h"
+#include "uart_stdout.h"
 
 #ifdef PLATFORM_SVC_HANDLERS
 extern int32_t platform_svc_handlers(uint8_t svc_num,
@@ -165,6 +166,10 @@ uint32_t tfm_core_svc_handler(uint32_t *msp, uint32_t exc_return,
     case TFM_SVC_SPM_INIT:
         exc_return = tfm_spm_init();
         tfm_arch_check_msp_sealing();
+
+#if defined(CONFIG_TFM_LOG_SHARE_UART)
+        stdio_uninit();
+#endif
         /* The following call does not return */
         tfm_arch_free_msp_and_exc_ret(SPM_BOOT_STACK_BOTTOM, exc_return);
         break;
