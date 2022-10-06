@@ -61,7 +61,7 @@ set(CONFIG_TFM_LAZY_STACKING            OFF         CACHE BOOL      "Enable/disa
 
 set(CONFIG_TFM_DOORBELL_API             ON          CACHE BOOL      "Enable the doorbell APIs")
 
-set(CONFIG_TFM_LOG_SHARE_UART           OFF         CACHE BOOL      "Allow TF-M and the non-secure application to share the UART instance. TF-M will use ut during its boot, after which the non-secure application will use it until an eventual fatal error is handled and logged by TF-M. Logging from TF-M will therefore otherwise be suppressed")
+set(CONFIG_TFM_LOG_SHARE_UART           OFF         CACHE BOOL      "Allow TF-M and the non-secure application to share the UART instance. TF-M will use it while it is booting, after which the non-secure application will use it until an eventual fatal error is handled and logged by TF-M. Logging from TF-M will therefore otherwise be suppressed")
 ############################ Platform ##########################################
 
 set(TFM_MULTI_CORE_TOPOLOGY             OFF         CACHE BOOL      "Whether to build for a dual-cpu architecture")
