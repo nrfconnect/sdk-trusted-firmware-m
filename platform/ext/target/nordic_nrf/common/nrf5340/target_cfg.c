@@ -615,8 +615,13 @@ enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
     NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_SPU));
 
 #ifdef SECURE_UART1
+#if NRF_SECURE_UART_INSTANCE == 0
+    /* UARTE0 is a secure peripheral, so its IRQ has to target S state */
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE0));
+#elif NRF_SECURE_UART_INSTANCE == 1
     /* UARTE1 is a secure peripheral, so its IRQ has to target S state */
     NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE1));
+#endif
 #endif
 
     return TFM_PLAT_ERR_SUCCESS;
@@ -712,11 +717,19 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
      * - TWISx
      * - UARTEx
      */
+
+    /* When UART0 is a secure peripheral we need to leave Serial-Box 0 as Secure.
+     * The UART Driver will configure it as non-secure when it uninitializes.
+     */
+#if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 0)
     spu_peripheral_config_non_secure((uint32_t)NRF_SPIM0, false);
-#ifndef SECURE_UART1
-    /* UART1 is a secure peripheral, so we need to leave Serial-Box 1 as Secure */
+#endif
+
+    /* When UART1 is a secure peripheral we need to leave Serial-Box 1 as Secure */
+#if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 1)
     spu_peripheral_config_non_secure((uint32_t)NRF_SPIM1, false);
 #endif
+
     spu_peripheral_config_non_secure((uint32_t)NRF_SPIM4, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_SPIM2, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_SPIM3, false);
