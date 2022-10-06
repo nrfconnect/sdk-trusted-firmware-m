@@ -27,3 +27,5 @@ set(NRF_HW_INIT_NRF_PERIPHERALS OFF CACHE BOOL "Initialize nRF peripherals at bo
 if (NRF_HW_INIT_NRF_PERIPHERALS AND NOT NRF_HW_INIT_RESET_ON_BOOT)
         message(FATAL_ERROR "NRF_HW_INIT_PERIPHERALS_ON_BOOT depends on NRF_HW_INIT_RESET_ON_BOOT")
 endif()
+
+set(NRF_SECURE_UART_INSTANCE            1           CACHE STRING  "The UART instance number to use for secure UART")
