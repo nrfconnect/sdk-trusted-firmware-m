@@ -70,11 +70,17 @@ target_sources(platform_s
         native_drivers/spu.c
         spm_hal.c
         tfm_hal_isolation.c
+        attest_hal.c
         tfm_hal_platform_common.c
         ${CMAKE_SOURCE_DIR}/platform/ext/common/tfm_hal_nvic.c
         $<$<BOOL:${TFM_ITS_ENCRYPTED}>:${CMAKE_CURRENT_SOURCE_DIR}/tfm_hal_its_encryption.c>
     PUBLIC
         plat_test.c
+)
+
+target_link_libraries(platform_s
+    PRIVATE
+        tfm_sprt
 )
 
 if (NRF_HW_INIT_RESET_ON_BOOT)

@@ -27,3 +27,4 @@ set(NRF_HW_INIT_NRF_PERIPHERALS OFF CACHE BOOL "Initialize nRF peripherals at bo
 if (NRF_HW_INIT_NRF_PERIPHERALS AND NOT NRF_HW_INIT_RESET_ON_BOOT)
         message(FATAL_ERROR "NRF_HW_INIT_PERIPHERALS_ON_BOOT depends on NRF_HW_INIT_RESET_ON_BOOT")
 endif()
+set(PLATFORM_DEFAULT_ATTEST_HAL        OFF          CACHE BOOL      "Use default attest hal implementation." FORCE)
