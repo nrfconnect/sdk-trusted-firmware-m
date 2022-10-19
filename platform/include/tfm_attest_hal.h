@@ -52,6 +52,20 @@ enum tfm_security_lifecycle_t {
 enum tfm_security_lifecycle_t tfm_attest_hal_get_security_lifecycle(void);
 
 /**
+ * \brief Update the security lifecycle in OTP
+ *
+ * Check if this is valid transition according to the current state and update
+ * the OTP to transition into the new state.
+ *
+ * \param slc Must be the same or the successor state of the current one.
+ *
+ * \retval 0 Update was successful.
+ * \retval -EREADLCS    Error on reading the current state
+ * \retval -EINVALIDLCS Invalid next state
+ */
+int tfm_attest_update_security_lifecycle_otp(enum tfm_security_lifecycle_t slc);
+
+/**
  * \brief Retrieve the verification service indicator for initial attestation.
  *
  * It is used by relying party to locate a validation service for the token.
