@@ -51,12 +51,8 @@ struct iovec_params_t {
 #endif
 
 REGION_DECLARE_T(Image$$, TFM_SECURE_STACK, $$ZI$$Base, uint32_t);
-REGION_DECLARE_T(Image$$, TFM_SECURE_STACK, $$ZI$$Limit, struct iovec_args_t)[];
-
-static uint32_t *tfm_secure_stack_seal =
-    ((uint32_t *)&REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Limit)[-1]) - 2;
-
-REGION_DECLARE_T(Image$$, ER_INITIAL_PSP_SEAL, $$ZI$$Base, uint32_t)[];
+REGION_DECLARE_T(Image$$, TFM_SECURE_STACK, $$ZI$$Limit, struct iovec_args_t *);
+REGION_DECLARE_T(Image$$, ER_INITIAL_PSP_SEAL, $$ZI$$Base, uint32_t *);
 
 /*
  * Function to seal the psp stacks for Function model of TF-M.
@@ -80,6 +76,7 @@ void tfm_spm_seal_psp_stacks(void)
      *                                      |                         |
      * Image$$TFM_SECURE_STACK$$ZI$$Base->  +-------------------------+
      */
+    uint32_t *tfm_secure_stack_seal = ((uint32_t *)&REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Limit)[-1]) - 2;
     *(tfm_secure_stack_seal) = TFM_STACK_SEAL_VALUE;
     *(tfm_secure_stack_seal + 1) = TFM_STACK_SEAL_VALUE;
 
@@ -508,6 +505,7 @@ static enum tfm_status_e tfm_start_partition(
      * So the memory area, that can actually be used as stack by the partitions
      * starts at a lower address.
      */
+    uint32_t *tfm_secure_stack_seal = ((uint32_t *)&REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Limit)[-1]) - 2;
     partition_psp = (uint32_t) tfm_secure_stack_seal;
     partition_psplim =
         (uint32_t)&REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Base);
