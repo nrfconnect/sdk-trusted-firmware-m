@@ -1413,7 +1413,6 @@ psa_status_t psa_key_derivation_get_capacity(
     };
 
     psa_outvec out_vec[] = {
-        {.base = (uint32_t *) &(operation->handle), .len = sizeof(uint32_t)},
         {.base = capacity, .len = sizeof(size_t)},
     };
 
@@ -1439,7 +1438,6 @@ psa_status_t psa_key_derivation_output_bytes(
     };
 
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
         {.base = output, .len = output_length},
     };
 
@@ -1466,12 +1464,8 @@ psa_status_t psa_key_derivation_input_key(
         {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-    };
-
-    status = API_DISPATCH(tfm_crypto_key_derivation_input_key,
-                          TFM_CRYPTO_KEY_DERIVATION_INPUT_KEY);
+    status = API_DISPATCH_NO_OUTVEC(tfm_crypto_key_derivation_input_key,
+                                    TFM_CRYPTO_KEY_DERIVATION_INPUT_KEY);
 
     return status;
 }
@@ -1518,12 +1512,8 @@ psa_status_t psa_key_derivation_key_agreement(
         {.base = peer_key, .len = peer_key_length},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-    };
-
-    status = API_DISPATCH(tfm_crypto_key_derivation_key_agreement,
-                          TFM_CRYPTO_KEY_DERIVATION_KEY_AGREEMENT);
+    status = API_DISPATCH_NO_OUTVEC(tfm_crypto_key_derivation_key_agreement,
+                                    TFM_CRYPTO_KEY_DERIVATION_KEY_AGREEMENT);
 
     return status;
 }
@@ -1762,12 +1752,8 @@ psa_status_t psa_key_derivation_set_capacity(
         {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-    };
-
-    status = API_DISPATCH(tfm_crypto_key_derivation_set_capacity,
-                          TFM_CRYPTO_KEY_DERIVATION_SET_CAPACITY);
+    status = API_DISPATCH_NO_OUTVEC(tfm_crypto_key_derivation_set_capacity,
+                                    TFM_CRYPTO_KEY_DERIVATION_SET_CAPACITY);
     return status;
 }
 
@@ -1789,12 +1775,8 @@ psa_status_t psa_key_derivation_input_bytes(
         {.base = data, .len = data_length},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-    };
-
-    status = API_DISPATCH(tfm_crypto_key_derivation_input_bytes,
-                          TFM_CRYPTO_KEY_DERIVATION_INPUT_BYTES);
+    status = API_DISPATCH_NO_OUTVEC(tfm_crypto_key_derivation_input_bytes,
+                                    TFM_CRYPTO_KEY_DERIVATION_INPUT_BYTES);
     return status;
 }
 
@@ -1815,7 +1797,6 @@ psa_status_t psa_key_derivation_output_key(
     };
 
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
         {.base = key, .len = sizeof(psa_key_id_t)}
     };
 
