@@ -133,6 +133,13 @@ psa_status_t tfm_crypto_aead_encrypt_setup(psa_invec in_vec[],
     psa_algorithm_t alg = iov->alg;
     mbedtls_svc_key_id_t encoded_key;
 
+    if (handle != TFM_CRYPTO_INVALID_HANDLE)
+    {
+        status = PSA_ERROR_BAD_STATE;
+        *handle_out = handle;
+        goto exit;
+    }
+
     /* Set the output handle to invalid, before allocation */
     *handle_out = TFM_CRYPTO_INVALID_HANDLE;
 
@@ -188,6 +195,13 @@ psa_status_t tfm_crypto_aead_decrypt_setup(psa_invec in_vec[],
     psa_key_id_t key_id = iov->key_id;
     psa_algorithm_t alg = iov->alg;
     mbedtls_svc_key_id_t encoded_key;
+
+    if (handle != TFM_CRYPTO_INVALID_HANDLE)
+    {
+        status = PSA_ERROR_BAD_STATE;
+        *handle_out = handle;
+        goto exit;
+    }
 
     /* Set the output handle to invalid, before allocation */
     *handle_out = TFM_CRYPTO_INVALID_HANDLE;
