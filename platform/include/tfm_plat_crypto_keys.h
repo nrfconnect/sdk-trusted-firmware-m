@@ -8,12 +8,19 @@
 #ifndef __TFM_PLAT_CRYPTO_KEYS_H__
 #define __TFM_PLAT_CRYPTO_KEYS_H__
 
+
+#include <stddef.h>
 #include <stdint.h>
 #include "psa/crypto.h"
 #include "tfm_plat_defs.h"
+#include "tfm_mbedcrypto_include.h"
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+#error "MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER must be selected in Mbed TLS config file"
 #endif
 
 /**
