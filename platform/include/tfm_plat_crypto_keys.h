@@ -12,8 +12,6 @@
  *       SoC.
  */
 
-#define MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
-
 #include "tfm_mbedcrypto_include.h"
 
 #include "tfm_plat_defs.h"
@@ -23,6 +21,10 @@
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+
+#ifndef MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+#error "MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER must be selected in Mbed TLS config file"
 #endif
 
 /**
