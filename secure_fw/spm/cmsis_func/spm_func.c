@@ -50,16 +50,13 @@ struct iovec_params_t {
 #error Multi core is not supported by Function mode
 #endif
 
-REGION_DECLARE(Image$$, TFM_SECURE_STACK, $$ZI$$Base);
-REGION_DECLARE(Image$$, TFM_SECURE_STACK, $$ZI$$Limit);
-REGION_DECLARE_T(Image$$, ER_INITIAL_PSP_SEAL, $$ZI$$Base, uint32_t)[2];
+REGION_DECLARE_T(Image$$, TFM_SECURE_STACK, $$ZI$$Base, uint32_t);
+REGION_DECLARE_T(Image$$, TFM_SECURE_STACK, $$ZI$$Limit, struct iovec_args_t)[];
 
-static inline uint32_t *tfm_secure_stack_iovec_get(void)
-{
-    uint32_t secure_stack_limit = (uint32_t)&REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Limit);
+static uint32_t *tfm_secure_stack_seal =
+    ((uint32_t *)&REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Limit)[-1]) - 2;
 
-    return (uint32_t *)(secure_stack_limit - sizeof(struct iovec_args_t));
-}
+REGION_DECLARE_T(Image$$, ER_INITIAL_PSP_SEAL, $$ZI$$Base, uint32_t)[];
 
 /*
  * Function to seal the psp stacks for Function model of TF-M.
@@ -83,8 +80,6 @@ void tfm_spm_seal_psp_stacks(void)
      *                                      |                         |
      * Image$$TFM_SECURE_STACK$$ZI$$Base->  +-------------------------+
      */
-    uint32_t *tfm_secure_stack_seal = tfm_secure_stack_iovec_get() - 2;
-
     *(tfm_secure_stack_seal) = TFM_STACK_SEAL_VALUE;
     *(tfm_secure_stack_seal + 1) = TFM_STACK_SEAL_VALUE;
 
@@ -92,11 +87,11 @@ void tfm_spm_seal_psp_stacks(void)
      * Seal the ER_INITIAL_PSP by writing the seal value to the reserved
      * region.
      */
-    uint32_t *arm_lib_stack_seal_base =
-        (uint32_t *)&REGION_NAME(Image$$, ER_INITIAL_PSP_SEAL, $$ZI$$Base);
+    uint32_t *arm_lib_stck_seal_base =
+        ((uint32_t *)&REGION_NAME(Image$$, ER_INITIAL_PSP_SEAL, $$ZI$$Base)[-1]) - 2;
 
-    *(arm_lib_stack_seal_base) = TFM_STACK_SEAL_VALUE;
-    *(arm_lib_stack_seal_base + 1) = TFM_STACK_SEAL_VALUE;
+    *(arm_lib_stck_seal_base) = TFM_STACK_SEAL_VALUE;
+    *(arm_lib_stck_seal_base + 1) = TFM_STACK_SEAL_VALUE;
 }
 
 /*
@@ -393,10 +388,8 @@ static enum tfm_status_e check_irq_partition_state(
  */
 static struct iovec_args_t *get_iovec_args_stack_address(uint32_t partition_idx)
 {
-    (void)partition_idx;
-
     /* Save the iovecs on the common stack. */
-    return (struct iovec_args_t *)tfm_secure_stack_iovec_get();
+    return &REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Limit)[-1];
 }
 
 /**
@@ -515,8 +508,6 @@ static enum tfm_status_e tfm_start_partition(
      * So the memory area, that can actually be used as stack by the partitions
      * starts at a lower address.
      */
-    uint32_t *tfm_secure_stack_seal = tfm_secure_stack_iovec_get() - 2;
-
     partition_psp = (uint32_t) tfm_secure_stack_seal;
     partition_psplim =
         (uint32_t)&REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Base);
@@ -666,7 +657,7 @@ static enum tfm_status_e tfm_return_from_partition(uint32_t *excReturn)
             (uint32_t)REGION_NAME(Image$$, ER_INITIAL_PSP, $$ZI$$Base);
         tfm_arch_set_psplim(psp_stack_bottom);
 
-        iovec_args = get_iovec_args_stack_address(return_partition_idx);
+        iovec_args = &REGION_NAME(Image$$, TFM_SECURE_STACK, $$ZI$$Limit)[-1];
 
         for (i = 0; i < curr_part_data->iovec_args.out_len; ++i) {
             curr_part_data->orig_outvec[i].len = iovec_args->out_vec[i].len;
