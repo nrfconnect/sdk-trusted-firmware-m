@@ -33,7 +33,6 @@
 
 
 #include "tfm_plat_defs.h"
-#include "region_defs.h"
 
 #if NRF_SECURE_UART_INSTANCE == 0
 #define TFM_DRIVER_STDIO    Driver_USART0
@@ -55,10 +54,10 @@ struct memory_region_limits {
     uint32_t secondary_partition_base;
     uint32_t secondary_partition_limit;
 #endif /* BL2 */
-#ifdef NRF_NS_STORAGE_PARTITION_START
+#ifdef NRF_NS_STORAGE
     uint32_t non_secure_storage_partition_base;
     uint32_t non_secure_storage_partition_limit;
-#endif /* NRF_NS_STORAGE_PARTITION_START */
+#endif /* NRF_NS_STORAGE */
 };
 
 /**
