@@ -19,7 +19,6 @@
 #include "tfm_version.h"
 #include "tfm_plat_otp.h"
 #include "tfm_plat_provisioning.h"
-#include "uart_stdout.h"
 
 /*
  * Avoids the semihosting issue
@@ -229,10 +228,6 @@ int c_main(void)
 #ifdef TFM_CORE_DEBUG
     /* Jumps to non-secure code */
     SPMLOG_DBGMSG("\033[1;34mJumping to non-secure code...\033[0m\r\n");
-#endif
-
-#if defined(CONFIG_TFM_LOG_SHARE_UART)
-    stdio_uninit();
 #endif
 
     jump_to_ns_code();

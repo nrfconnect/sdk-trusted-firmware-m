@@ -24,7 +24,6 @@
 #include "load/partition_defs.h"
 #include "psa/client.h"
 #include "tfm_hal_platform.h"
-#include "uart_stdout.h"
 
 /* MSP bottom (higher address) */
 REGION_DECLARE(Image$$, ARM_LIB_STACK, $$ZI$$Limit);
@@ -169,9 +168,6 @@ uint32_t tfm_core_svc_handler(uint32_t *msp, uint32_t exc_return,
     switch (svc_number) {
     case TFM_SVC_SPM_INIT:
         exc_return = tfm_spm_init();
-#if defined(CONFIG_TFM_LOG_SHARE_UART)
-        stdio_uninit();
-#endif
         /* The following call does not return */
         tfm_arch_free_msp_and_exc_ret(
             (uint32_t)&REGION_NAME(Image$$, ARM_LIB_STACK, $$ZI$$Limit),

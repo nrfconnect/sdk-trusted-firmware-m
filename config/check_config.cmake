@@ -51,8 +51,6 @@ tfm_invalid_config(TEST_PSA_API STREQUAL "PROTECTED_STORAGE" AND NOT TFM_PARTITI
 tfm_invalid_config(TEST_PSA_API STREQUAL "STORAGE" AND NOT TFM_PARTITION_INTERNAL_TRUSTED_STORAGE)
 tfm_invalid_config(TEST_PSA_API STREQUAL "STORAGE" AND NOT TFM_PARTITION_PROTECTED_STORAGE)
 
-tfm_invalid_config(CONFIG_TFM_LOG_SHARE_UART AND NOT SECURE_UART1)
-
 ########################## FPU ################################################
 
 tfm_invalid_config(NOT (CONFIG_TFM_FP STREQUAL "soft" OR CONFIG_TFM_FP STREQUAL "hard"))

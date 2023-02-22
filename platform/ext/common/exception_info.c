@@ -9,7 +9,6 @@
 #include "exception_info.h"
 #include "tfm_spm_log.h"
 #include "tfm_core_utils.h"
-#include "uart_stdout.h"
 
 struct exception_info_t {
     uint32_t EXC_RETURN;        /* EXC_RETURN value in LR. */
@@ -176,10 +175,6 @@ static void dump_exception_info_t(bool stack_error,
 static void dump_error(uint32_t error_type)
 {
     bool stack_error = false;
-
-#if defined(CONFIG_TFM_LOG_SHARE_UART)
-    stdio_init();
-#endif
 
     SPMLOG_ERRMSG("FATAL ERROR: ");
     switch (error_type) {
