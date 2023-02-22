@@ -81,14 +81,6 @@ add_subdirectory(tools)
 add_subdirectory(secure_fw)
 
 if(NS OR TFM_S_REG_TEST OR TFM_NS_REG_TEST OR TEST_BL2 OR TEST_BL1_1 OR TEST_BL1_2)
-    # Replace the path of the tf-m-tests repo with the literal
-    # "TFM_TEST_REPO_PATH" in C preprocessor macro expansions to
-    # prevent host file path information from leaking into __FILE__
-    # macros and breaking reproducible builds.
-    add_compile_options(
-      -fmacro-prefix-map=${TFM_TEST_REPO_PATH}=TFM_TEST_REPO_PATH
-      )
-
     add_subdirectory(${TFM_TEST_REPO_PATH} ${CMAKE_CURRENT_BINARY_DIR}/tf-m-tests)
 endif()
 
