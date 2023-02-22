@@ -22,7 +22,6 @@
  */
 
 #include "tfm_plat_config.h"
-#include "hw_init.h"
 
     .syntax unified
     .arch   armv8-m.main
@@ -125,30 +124,6 @@ __Vectors:
     .globl  Reset_Handler
     .type   Reset_Handler, %function
 Reset_Handler:
-
-/* If the ARM core status registers and system blocks are not in their initial
- * reset values then reset these first before booting.
- */
-#ifdef NRF_HW_INIT_RESET_ON_BOOT
-    movs r0, #0
-
-    /* Reset CONTROL register */
-    msr CONTROL, r0
-    isb
-
-    /* Clear SPLIM registers */
-    msr MSPLIM, r0
-    msr PSPLIM, r0
-
-    /* Disable MPU */
-    ldr r1, =_SCS_MPU_CTRL
-    str r0, [r1]
-    dsb
-
-    /* Initialize core architecture registers and system blocks */
-    bl hw_init_reset_on_boot
-#endif /* NRF_HW_INIT_RESET_ON_BOOT */
-
 /*  Firstly it copies data from read only memory to RAM. There are two schemes
  *  to copy. One can copy more than one sections. Another can only copy
  *  one section.  The former scheme needs more instructions and read-only

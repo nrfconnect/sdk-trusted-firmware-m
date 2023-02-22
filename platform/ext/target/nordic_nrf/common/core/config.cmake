@@ -20,5 +20,3 @@ set(NULL_POINTER_EXCEPTION_DETECTION    FALSE       CACHE BOOL
 
 set(PLATFORM_SLIH_IRQ_TEST_SUPPORT      ON          CACHE BOOL    "Platform supports SLIH IRQ tests")
 set(PLATFORM_FLIH_IRQ_TEST_SUPPORT      ON          CACHE BOOL    "Platform supports FLIH IRQ tests")
-
-set(NRF_HW_INIT_RESET_ON_BOOT OFF CACHE BOOL "Initialize internal architecture state at boot")

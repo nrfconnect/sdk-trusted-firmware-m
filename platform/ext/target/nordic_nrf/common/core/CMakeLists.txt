@@ -77,18 +77,6 @@ target_sources(platform_s
         plat_test.c
 )
 
-if (NRF_HW_INIT_RESET_ON_BOOT)
-    target_sources(platform_s
-        PRIVATE
-            hw_init.c
-    )
-
-    target_compile_definitions(platform_s
-        PUBLIC
-            NRF_HW_INIT_RESET_ON_BOOT
-    )
-endif()
-
 if(TFM_PARTITION_PLATFORM)
     target_sources(platform_s
         PRIVATE
