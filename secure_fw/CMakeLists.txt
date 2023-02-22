@@ -47,28 +47,10 @@ target_compile_options(tfm_s
         ${COMPILER_CP_FLAG}
 )
 
-# This is a workaround to add debug symbols for the veneer functions of the
-# secure part of TF-M. The problem is that the linker strips away the debug
-# section of the functions called by a veneer function. The root cause is not
-# fully clear, but might be a bug in the linker as it removes the debug
-# sections with the reason of being unused but keeps the actual .text section
-# of the functions. To work around this we instruct the linker to expilicitly
-# keep the, "unused" functions.
-if(EXISTS ${CMAKE_BINARY_DIR}/generated/tools/tfm_veneers_functions.txt)
-    file(STRINGS ${CMAKE_BINARY_DIR}/generated/tools/tfm_veneers_functions.txt veneer_functions)
-else()
-    set(veneer_functions "")
-endif()
-
-foreach(function ${veneer_functions})
-    list(APPEND veneer_link_options -Wl,--undefined=${function})
-endforeach()
-
 target_link_options(tfm_s
     PRIVATE
         --entry=Reset_Handler
-        $<$<C_COMPILER_ID:GNU>:-Wl,-Map=${CMAKE_BINARY_DIR}/bin/tfm_s.map> 
-        $<$<C_COMPILER_ID:GNU>:${veneer_link_options}>
+        $<$<C_COMPILER_ID:GNU>:-Wl,-Map=${CMAKE_BINARY_DIR}/bin/tfm_s.map>
         $<$<C_COMPILER_ID:ARMClang>:--map>
         $<$<C_COMPILER_ID:IAR>:--map\;${CMAKE_BINARY_DIR}/bin/tfm_s.map>
     PUBLIC
