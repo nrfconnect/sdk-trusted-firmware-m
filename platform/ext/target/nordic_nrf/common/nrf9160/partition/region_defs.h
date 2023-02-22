@@ -20,8 +20,6 @@
 
 #include "flash_layout.h"
 
-#define CRYPTO_STACK_SIZE       (0x2000)
-
 #define BL2_HEAP_SIZE           (0x00001000)
 #define BL2_MSP_STACK_SIZE      (0x00001800)
 
