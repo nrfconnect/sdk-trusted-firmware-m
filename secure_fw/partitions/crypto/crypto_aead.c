@@ -97,9 +97,15 @@ psa_status_t tfm_crypto_aead_interface(psa_invec in_vec[],
         status = tfm_crypto_operation_lookup(TFM_CRYPTO_AEAD_OPERATION,
                                              iov->op_handle,
                                              (void **)&operation);
-        if ((sid == TFM_CRYPTO_AEAD_FINISH_SID) ||
-            (sid == TFM_CRYPTO_AEAD_VERIFY_SID) ||
-            (sid == TFM_CRYPTO_AEAD_ABORT_SID)) {
+        switch (sid) {
+        case TFM_CRYPTO_AEAD_FINISH_SID:
+        case TFM_CRYPTO_AEAD_VERIFY_SID:
+        case TFM_CRYPTO_AEAD_ABORT_SID:
+        case TFM_CRYPTO_AEAD_GENERATE_NONCE_SID:
+        case TFM_CRYPTO_AEAD_SET_NONCE_SID:
+        case TFM_CRYPTO_AEAD_SET_LENGTHS_SID:
+        case TFM_CRYPTO_AEAD_UPDATE_SID:
+        case TFM_CRYPTO_AEAD_UPDATE_AD_SID:
             /*
              * finish()/abort() interface put handle pointer in out_vec[0].
              * Therefore, out_vec[0] shall be specially set to original handle
@@ -109,6 +115,9 @@ psa_status_t tfm_crypto_aead_interface(psa_invec in_vec[],
              */
             p_handle = out_vec[0].base;
             *p_handle = iov->op_handle;
+            break;
+        default:
+            break;
         }
     }
     if (status != PSA_SUCCESS) {
@@ -154,14 +163,13 @@ psa_status_t tfm_crypto_aead_interface(psa_invec in_vec[],
         status = psa_aead_finish(operation,
                                  ciphertext, ciphertext_size, &out_vec[2].len,
                                  tag, tag_size, &out_vec[1].len);
-        if (status == PSA_SUCCESS) {
-            goto release_operation_and_return;
-        } else {
+        if (status != PSA_SUCCESS) {
             out_vec[1].len = 0;
             out_vec[2].len = 0;
         }
+
+        goto release_operation_and_return;
     }
-    break;
     case TFM_CRYPTO_AEAD_ABORT_SID:
     {
         status = psa_aead_abort(operation);
@@ -169,51 +177,65 @@ psa_status_t tfm_crypto_aead_interface(psa_invec in_vec[],
     }
     case TFM_CRYPTO_AEAD_GENERATE_NONCE_SID:
     {
-        uint8_t *nonce = out_vec[0].base;
-        size_t nonce_size = out_vec[0].len;
+        uint8_t *nonce = out_vec[1].base;
+        size_t nonce_size = out_vec[1].len;
 
         status = psa_aead_generate_nonce(operation,
                                          nonce,
                                          nonce_size,
-                                         &out_vec[0].len);
+                                         &out_vec[1].len);
         if (status != PSA_SUCCESS) {
-            out_vec[0].len = 0;
+            out_vec[1].len = 0;
+            goto release_operation_and_return;
         }
-        return status;
     }
+    break;
     case TFM_CRYPTO_AEAD_SET_NONCE_SID:
     {
         const uint8_t *nonce = in_vec[1].base;
         size_t nonce_size = in_vec[1].len;
 
-        return psa_aead_set_nonce(operation, nonce, nonce_size);
+        status = psa_aead_set_nonce(operation, nonce, nonce_size);
+        if (status != PSA_SUCCESS) {
+            goto release_operation_and_return;
+        }
     }
+    break;
     case TFM_CRYPTO_AEAD_SET_LENGTHS_SID:
     {
-        return psa_aead_set_lengths(operation, iov->ad_length,
+        status = psa_aead_set_lengths(operation, iov->ad_length,
                                     iov->plaintext_length);
+        if (status != PSA_SUCCESS) {
+            goto release_operation_and_return;
+        }
     }
+    break;
     case TFM_CRYPTO_AEAD_UPDATE_SID:
     {
         const uint8_t *input = in_vec[1].base;
         size_t input_length = in_vec[1].len;
-        uint8_t *output = out_vec[0].base;
-        size_t output_size = out_vec[0].len;
+        uint8_t *output = out_vec[1].base;
+        size_t output_size = out_vec[1].len;
 
         status = psa_aead_update(operation, input, input_length,
-                                 output, output_size, &out_vec[0].len);
+                                 output, output_size, &out_vec[1].len);
         if (status != PSA_SUCCESS) {
-            out_vec[0].len = 0;
+            out_vec[1].len = 0;
+            goto release_operation_and_return;
         }
-        return status;
     }
+    break;
     case TFM_CRYPTO_AEAD_UPDATE_AD_SID:
     {
         const uint8_t *input = in_vec[1].base;
         size_t input_length = in_vec[1].len;
 
-        return psa_aead_update_ad(operation, input, input_length);
+        status = psa_aead_update_ad(operation, input, input_length);
+        if (status != PSA_SUCCESS) {
+            goto release_operation_and_return;
+        }
     }
+    break;
     case TFM_CRYPTO_AEAD_VERIFY_SID:
     {
         const uint8_t *tag = in_vec[1].base;
@@ -224,11 +246,11 @@ psa_status_t tfm_crypto_aead_interface(psa_invec in_vec[],
         status = psa_aead_verify(operation,
                                  plaintext, plaintext_size, &out_vec[1].len,
                                  tag, tag_length);
-        if (status == PSA_SUCCESS) {
-            goto release_operation_and_return;
-        } else {
+        if (status != PSA_SUCCESS) {
             out_vec[1].len = 0;
         }
+
+        goto release_operation_and_return;
     }
     break;
     default:
