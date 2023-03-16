@@ -210,7 +210,7 @@ psa_status_t its_flash_fs_file_exist(struct its_flash_fs_ctx_t *fs_ctx,
 
 psa_status_t its_flash_fs_file_get_info(struct its_flash_fs_ctx_t *fs_ctx,
                                         const uint8_t *fid,
-                                        struct its_file_info_t *info)
+                                        struct its_flash_fs_file_info_t *info)
 {
     psa_status_t err;
     uint32_t idx;
@@ -242,8 +242,7 @@ psa_status_t its_flash_fs_file_get_info(struct its_flash_fs_ctx_t *fs_ctx,
 
 psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
                                      const uint8_t *fid,
-                                     uint32_t flags,
-                                     size_t max_size,
+                                     struct its_flash_fs_file_info_t *finfo,
                                      size_t data_size,
                                      size_t offset,
                                      const uint8_t *data)
@@ -258,13 +257,13 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
     bool use_spare;
 
     /* Do not permit the user to pass filesystem-internal flags */
-    if (flags & ITS_FLASH_FS_INTERNAL_FLAGS_MASK) {
+    if (finfo->flags & ITS_FLASH_FS_INTERNAL_FLAGS_MASK) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
 #if (ITS_FLASH_MAX_ALIGNMENT != 1)
     /* Set the max_size to be aligned with the flash program unit */
-    max_size = ITS_UTILS_ALIGN(max_size, fs_ctx->cfg->program_unit);
+    finfo->size_max = ITS_UTILS_ALIGN(finfo->size_max, fs_ctx->cfg->program_unit);
 #endif
 
     /* Check if the file already exists */
@@ -276,13 +275,13 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
             return PSA_ERROR_DOES_NOT_EXIST;
         }
 
-        if (flags & ITS_FLASH_FS_FLAG_TRUNCATE) {
-            if (file_meta.max_size == max_size) {
+        if (finfo->flags & ITS_FLASH_FS_FLAG_TRUNCATE) {
+            if (file_meta.max_size == finfo->size_max) {
                 /* Truncate and reuse the existing file, which is already the
                  * correct size.
                  */
                 file_meta.cur_size = 0;
-                file_meta.flags = flags;
+                file_meta.flags = finfo->flags;
                 new_idx = old_idx;
             } else {
                 /* Mark the existing file to be deleted in this block update. It
@@ -304,7 +303,7 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
         }
     } else if (err == PSA_ERROR_DOES_NOT_EXIST) {
         /* The create flag must be supplied to create a new file */
-        if (!(flags & ITS_FLASH_FS_FLAG_CREATE)) {
+        if (!(finfo->flags & ITS_FLASH_FS_FLAG_CREATE)) {
             return PSA_ERROR_DOES_NOT_EXIST;
         }
     } else {
@@ -314,7 +313,7 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
     /* If the existing file was not reused, then a new one must be reserved */
     if (new_idx == ITS_METADATA_INVALID_INDEX) {
         /* Check that the file's maximum size is valid */
-        if (max_size > fs_ctx->cfg->max_file_size) {
+        if (finfo->size_max > fs_ctx->cfg->max_file_size) {
             return PSA_ERROR_INVALID_ARGUMENT;
         }
 
@@ -323,7 +322,7 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
 
         /* Try to reserve a new file based on the input parameters */
         err = its_flash_fs_mblock_reserve_file(fs_ctx, fid, use_spare,
-                                               max_size, flags, &new_idx,
+                                               finfo->size_max, finfo->flags, &new_idx,
                                                &file_meta, &block_meta);
         if (err != PSA_SUCCESS) {
             return err;
