@@ -15,6 +15,11 @@
 #include "Driver_Flash.h"
 #include "flash_layout.h"
 #include "tfm_hal_defs.h"
+#include "psa/crypto.h"
+
+#ifdef TFM_ITS_ENCRYPTED
+#include "tfm_hal_its_encryption.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -72,6 +77,119 @@ extern ARM_DRIVER_FLASH TFM_HAL_ITS_FLASH_DRIVER;
  */
 enum tfm_hal_status_t
 tfm_hal_its_fs_info(struct tfm_hal_its_fs_info_t *fs_info);
+
+#ifdef TFM_ITS_ENCRYPTED
+
+/**
+ * \brief Generate an encryption nonce
+ *
+ * \details The nonce has to be unique for every encryption using the same key,
+ *          even across resets.
+ * \param [out] nonce           Pointer to the nonce
+ * \param [in]  nonce_size      Size of the nonce in bytes
+ *
+ * \retval TFM_HAL_SUCCESS             The operation completed successfully
+ * \retval TFM_HAL_ERROR_INVALID_INPUT Invalid argument
+ * \retval TFM_HAL_ERROR_GENERIC       Failed to fill the nonce seed because of
+ *                                     an internal error
+ */
+enum tfm_hal_status_t tfm_hal_its_aead_generate_nonce(uint8_t *nonce,
+                                                      size_t nonce_size);
+
+/**
+ * \brief Set the derivation label for the AEAD operation.
+ *
+ * \param [in] ctx               AEAD context for ITS object
+ * \param [in] deriv_label       Pointer to the derivation label
+ * \param [in] derive_label_size Size of the derivation label in bytes
+ *
+ * \retval TFM_HAL_SUCCESS             The operation completed successfully
+ * \retval TFM_HAL_ERROR_INVALID_INPUT Invalid argument
+ */
+enum tfm_hal_status_t tfm_hal_its_aead_set_deriv_label(
+                                         struct tfm_hal_its_auth_crypt_ctx *ctx,
+                                         uint8_t *deriv_label,
+                                         size_t deriv_label_size);
+
+/**
+ * \brief Set the nonce for the AEAD operation.
+ *
+ * \param [in] ctx        AEAD context for ITS object
+ * \param [in] nonce      Pointer to the nonce
+ * \param [in] nonce_size Size of the nonce in bytes
+ *
+ * \retval TFM_HAL_SUCCESS             The operation completed successfully
+ * \retval TFM_HAL_ERROR_INVALID_INPUT Invalid argument
+ */
+enum tfm_hal_status_t tfm_hal_its_aead_set_nonce(
+                                         struct tfm_hal_its_auth_crypt_ctx *ctx,
+                                         uint8_t *nonce,
+                                         size_t nonce_size);
+
+/**
+ * \brief Set the pointer to the additional authenticated data for the AEAD operation.
+ *
+ * \param [in] ctx      AEAD context for ITS object
+ * \param [in] ad       Pointer to the additional data
+ * \param [in] ad_size  Size of the additional data in bytes
+ *
+ * \retval TFM_HAL_SUCCESS             The operation completed successfully
+ * \retval TFM_HAL_ERROR_INVALID_INPUT Invalid argument
+ */
+enum tfm_hal_status_t tfm_hal_its_aead_set_ad(
+                                         struct tfm_hal_its_auth_crypt_ctx *ctx,
+                                         uint8_t *ad,
+                                         size_t ad_size);
+
+/**
+ * \brief Perform authenticated encryption.
+ *
+ * \param [in]  ctx               AEAD context for ITS object
+ * \param [in]  plaintext         Pointer to the plaintext
+ * \param [in]  plaintext_size    Size of the plaintext in bytes
+ * \param [out] ciphertext        Pointer to the ciphertext
+ * \param [in]  ciphertext_size   Size of the ciphertext in bytes
+ * \param [out] tag               Authentication tag
+ * \param [in]  tag_size          Authentication tag size in bytes
+ *
+ * \retval TFM_HAL_SUCCESS             The operation completed successfully
+ * \retval TFM_HAL_ERROR_INVALID_INPUT Invalid argument
+ * \retval TFM_HAL_ERROR_GENERIC       Failed to encrypt
+ */
+enum tfm_hal_status_t tfm_hal_its_aead_encrypt(
+                                         struct tfm_hal_its_auth_crypt_ctx *ctx,
+                                         uint8_t *plaintext,
+                                         size_t plaintext_size,
+                                         uint8_t *ciphertext,
+                                         size_t ciphertext_size,
+                                         uint8_t *tag,
+                                         size_t tag_size);
+
+/**
+ * \brief Perform authenticated decryption.
+ *
+ * \param [in]  ctx               AEAD context for ITS object
+ * \param [in]  ciphertext        Pointer to the ciphertext
+ * \param [in]  ciphertext_size   Size of the ciphertext in bytes
+ * \param [in]  tag               Authentication tag
+ * \param [in]  tag_size          Authentication tag size in bytes
+ * \param [out] plaintext         Pointer to the plaintext
+ * \param [in]  plaintext_size    Size of the plaintext in bytes
+ *
+ * \retval TFM_HAL_SUCCESS             The operation completed successfully
+ * \retval TFM_HAL_ERROR_INVALID_INPUT Invalid argument
+ * \retval TFM_HAL_ERROR_GENERIC       Failed to decrypt
+ */
+enum tfm_hal_status_t tfm_hal_its_aead_decrypt(
+                                         struct tfm_hal_its_auth_crypt_ctx *ctx,
+                                         uint8_t *ciphertext,
+                                         size_t ciphertext_size,
+                                         uint8_t *tag,
+                                         size_t tag_size,
+                                         uint8_t *plaintext,
+                                         size_t plaintext_size);
+
+#endif
 
 #ifdef __cplusplus
 }

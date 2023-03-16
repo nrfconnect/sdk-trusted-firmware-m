@@ -84,11 +84,11 @@ psa_status_t tfm_its_set(struct its_asset_info *asset_info,
 /**
  * \brief Retrieve data associated with a provided UID
  *
- * Retrieves up to `data_size` bytes of the data associated with `uid`, starting
- * at `data_offset` bytes from the beginning of the data. Upon successful
- * completion, the data will be placed in the `p_data` buffer, which must be at
- * least `data_size` bytes in size. The length of the data returned will be in
- * `p_data_length`. If `data_size` is 0, the contents of `p_data_length` will
+ * Retrieves up to `size_to_read` bytes of the data associated with `uid`, starting
+ * at `offset` bytes from the beginning of the data. Upon successful
+ * completion, the data will be placed in the `data_buf` buffer, which must be at
+ * least `size_to_read` bytes in size. The length of the data returned will be in
+ * `p_data_length`. If `size_to_read` is 0, the contents of `p_data_length` will
  * be set to zero.
  *
  * \param[in]  asset_info     The asset info include UID, client, etc...
@@ -113,7 +113,7 @@ psa_status_t tfm_its_set(struct its_asset_info *asset_info,
  *                                     `p_data_length`) is invalid, for example
  *                                     is `NULL` or references memory the
  *                                     caller cannot access. In addition, this
- *                                     can also happen if `data_offset` is
+ *                                     can also happen if `offset` is
  *                                     larger than the size of the data
  *                                     associated with `uid`.
  */
