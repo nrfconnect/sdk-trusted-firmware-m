@@ -49,6 +49,9 @@ target_compile_definitions(platform_s
     PUBLIC
         NRF9160_XXAA
         NRF_SKIP_FICR_NS_COPY_TO_RAM
+        $<$<BOOL:${TFM_ITS_ENCRYPTED}>:TFM_ITS_ENCRYPTED>
+        $<$<BOOL:${TFM_ITS_ENCRYPTED}>:TFM_ITS_ENC_NONCE_LENGTH=${TFM_ITS_ENC_NONCE_LENGTH}>
+        $<$<BOOL:${TFM_ITS_ENCRYPTED}>:TFM_ITS_AUTH_TAG_LENGTH=${TFM_ITS_AUTH_TAG_LENGTH}>
 )
 
 #========================= Platform Non-Secure ================================#

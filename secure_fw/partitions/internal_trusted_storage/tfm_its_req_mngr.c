@@ -18,6 +18,7 @@
 #include "psa/framework_feature.h"
 #include "psa/service.h"
 #include "psa_manifest/tfm_internal_trusted_storage.h"
+#include "psa_manifest/pid.h"
 #include "tfm_its_defs.h"
 #if PSA_FRAMEWORK_HAS_MM_IOVEC != 1
 #include "flash/its_flash.h"
@@ -31,6 +32,26 @@
 static uint8_t __ALIGNED(4) asset_data[ITS_UTILS_ALIGN(ITS_BUF_SIZE,
                                           ITS_FLASH_MAX_ALIGNMENT)];
 #endif
+
+
+static psa_status_t buffer_size_check(int32_t client_id, size_t buffer_size) {
+/* The buffer check is only need if we don't use the input buffer directly */
+#if PSA_FRAMEWORK_HAS_MM_IOVEC != 1
+#ifdef TFM_PARTITION_PROTECTED_STORAGE
+    if (client_id != TFM_SP_PS) {
+#else
+    {
+#endif /* TFM_PARTITION_PROTECTED_STORAGE */
+        /* When encryption is enabled the whole file needs to fit in the
+         * global buffer.
+         */
+        if(buffer_size > sizeof(asset_data)){
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+    }
+#endif /* PSA_FRAMEWORK_HAS_MM_IOVEC != 1 */
+    return PSA_SUCCESS;
+}
 
 static psa_status_t tfm_its_set_req(const psa_msg_t *msg)
 {
@@ -65,6 +86,13 @@ static psa_status_t tfm_its_set_req(const psa_msg_t *msg)
 
     size_remaining = msg->in_size[1];
     offset = 0;
+
+#ifdef TFM_ITS_ENCRYPTED
+    status = buffer_size_check(asset_info.client_id, size_remaining);
+    if(status != PSA_SUCCESS) {
+        return status;
+    }
+#endif /* TFM_ITS_ENCRYPTED */
 
 #if PSA_FRAMEWORK_HAS_MM_IOVEC == 1
     if (size_remaining != 0) {
@@ -129,6 +157,14 @@ static psa_status_t tfm_its_get_req(const psa_msg_t *msg)
     asset_info.client_id = msg->client_id;
     out_size = msg->out_size[0];
     first_get = true;
+
+#ifdef TFM_ITS_ENCRYPTED
+    status = buffer_size_check(asset_info.client_id, out_size);
+    if(status != PSA_SUCCESS) {
+        return status;
+    }
+#endif /* TFM_ITS_ENCRYPTED */
+
 
 #if PSA_FRAMEWORK_HAS_MM_IOVEC == 1
     size_to_read = msg->out_size[0];

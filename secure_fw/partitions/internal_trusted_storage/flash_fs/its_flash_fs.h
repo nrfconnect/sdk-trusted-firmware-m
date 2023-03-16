@@ -179,6 +179,12 @@ struct its_flash_fs_file_info_t {
     size_t size_current;  /*!< The current size of the file in bytes */
     size_t size_max;      /*!< The maximum size of the file in bytes. */
     uint32_t flags;       /*!< Flags set when the file was created */
+#ifdef TFM_ITS_ENCRYPTED
+    /*!< Additional authenticated data */
+    uint8_t add[ITS_FILE_ID_SIZE + ITS_DATA_SIZE_FIELD_SIZE + ITS_FLAG_SIZE];
+    uint8_t nonce[TFM_ITS_ENC_NONCE_LENGTH];/*!< Nonce/IV for encrypted files */
+    uint8_t tag[TFM_ITS_AUTH_TAG_LENGTH];   /*!< Authentication tag */
+#endif
 };
 
 /**

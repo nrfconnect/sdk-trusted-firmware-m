@@ -16,8 +16,22 @@
 #include "its_utils.h"
 #include "tfm_sp_log.h"
 
+#ifdef TFM_ITS_ENCRYPTED
+#include "its_crypto_interface.h"
+#endif
+
 #ifdef TFM_PARTITION_PROTECTED_STORAGE
 #include "ps_object_defs.h"
+#endif
+
+#ifdef TFM_ITS_ENCRYPTED
+
+/* Buffer to store the encrypted asset data before it is stored in the
+ * filesystem.
+ */
+static uint8_t enc_asset_data[ITS_UTILS_ALIGN(ITS_BUF_SIZE,
+                                              ITS_FLASH_MAX_ALIGNMENT)];
+
 #endif
 
 static uint8_t g_fid[ITS_FILE_ID_SIZE];
@@ -223,6 +237,7 @@ psa_status_t tfm_its_set(struct its_asset_info *asset_info,
     psa_storage_uid_t uid;
     psa_storage_create_flags_t create_flags;
     int32_t client_id;
+    uint8_t *buffer_pnt = data_buf;
 
     uid = asset_info->uid;
     create_flags = asset_info->create_flags;
@@ -270,14 +285,46 @@ psa_status_t tfm_its_set(struct its_asset_info *asset_info,
                         ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE;
     }
 
+#ifdef TFM_ITS_ENCRYPTED
+#ifdef TFM_PARTITION_PROTECTED_STORAGE
+    if (client_id != TFM_SP_PS) {
+#else
+    {
+#endif /* TFM_PARTITION_PROTECTED_STORAGE */
+
+        status = tfm_its_crypt_file(&g_file_info,
+                                    g_fid,
+                                    sizeof(g_fid),
+                                    data_buf,
+                                    size_to_write,
+                                    enc_asset_data,
+                                    sizeof(enc_asset_data),
+                                    true);
+
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+
+        buffer_pnt = enc_asset_data;
+    }
+#endif /* TFM_ITS_ENCRYPTED */
+
     /* Write to the file in the file system */
     status = its_flash_fs_file_write(get_fs_ctx(client_id),
                                      g_fid,
                                      &g_file_info,
-                                     size_to_write, offset, data_buf);
+                                     size_to_write, offset, buffer_pnt);
     if (status != PSA_SUCCESS) {
         return status;
     }
+
+    /* Do not create or truncate after the first iteration */
+    g_file_info.flags &= ~(ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE);
+
+#ifdef TFM_ITS_ENCRYPTED
+    memset(enc_asset_data, 0, sizeof(enc_asset_data));
+#endif /* TFM_ITS_ENCRYPTED */
+
 
     return PSA_SUCCESS;
 }
@@ -332,6 +379,53 @@ psa_status_t tfm_its_get(struct its_asset_info *asset_info,
     size_to_read = ITS_UTILS_MIN(size_to_read,
                                  g_file_info.size_current - offset);
 
+
+#ifdef TFM_ITS_ENCRYPTED
+     /* The PS may also encrypt the data */
+#ifdef TFM_PARTITION_PROTECTED_STORAGE
+    if (client_id != TFM_SP_PS) {
+#endif /* TFM_PARTITION_PROTECTED_STORAGE */
+        if ( g_file_info.size_max > sizeof(enc_asset_data) ){
+            return PSA_ERROR_BUFFER_TOO_SMALL;
+        }
+        /* When encryption is enabled we need to read the whole file */
+        status = its_flash_fs_file_read(get_fs_ctx(client_id),
+                                        g_fid,
+                                        g_file_info.size_current,
+                                        0,
+                                        enc_asset_data);
+
+        if (status != PSA_SUCCESS) {
+            *size_read = 0;
+            return status;
+        }
+
+        status = tfm_its_crypt_file(&g_file_info,
+                                    g_fid,
+                                    sizeof(g_fid),
+                                    enc_asset_data,
+                                    g_file_info.size_current,
+                                    enc_asset_data,
+                                    sizeof(enc_asset_data),
+                                    false);
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+
+        memcpy(data_buf, enc_asset_data + offset, size_to_read);
+        memset(enc_asset_data, 0, sizeof(enc_asset_data));
+#ifdef TFM_PARTITION_PROTECTED_STORAGE
+    } else {
+        /* Read file data from the filesystem */
+        status = its_flash_fs_file_read(get_fs_ctx(client_id),
+                                        g_fid, size_to_read,
+                                        offset, data_buf);
+        if (status != PSA_SUCCESS) {
+            return status;
+        }
+    }
+#endif /* TFM_PARTITION_PROTECTED_STORAGE */
+#else /* TFM_ITS_ENCRYPTED */
     /* Read file data from the filesystem */
     status = its_flash_fs_file_read(get_fs_ctx(client_id),
                                     g_fid, size_to_read,
@@ -339,6 +433,7 @@ psa_status_t tfm_its_get(struct its_asset_info *asset_info,
     if (status != PSA_SUCCESS) {
         return status;
     }
+#endif /* TFM_ITS_ENCRYPTED */
 
     /* Update the size of the output data */
     *size_read = size_to_read;

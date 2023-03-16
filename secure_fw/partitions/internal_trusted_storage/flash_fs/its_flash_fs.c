@@ -237,6 +237,11 @@ psa_status_t its_flash_fs_file_get_info(struct its_flash_fs_ctx_t *fs_ctx,
     info->size_current = tmp_metadata.cur_size;
     info->flags = tmp_metadata.flags & ITS_FLASH_FS_USER_FLAGS_MASK;
 
+#ifdef TFM_ITS_ENCRYPTED
+    memcpy(info->nonce, tmp_metadata.nonce, TFM_ITS_ENC_NONCE_LENGTH);
+    memcpy(info->tag, tmp_metadata.tag, TFM_ITS_AUTH_TAG_LENGTH);
+#endif
+
     return PSA_SUCCESS;
 }
 
@@ -369,6 +374,11 @@ psa_status_t its_flash_fs_file_write(struct its_flash_fs_ctx_t *fs_ctx,
     if (err != PSA_SUCCESS) {
         return PSA_ERROR_GENERIC_ERROR;
     }
+
+#ifdef TFM_ITS_ENCRYPTED
+    memcpy(file_meta.nonce, finfo->nonce, sizeof(finfo->nonce));
+    memcpy(file_meta.tag, finfo->tag, sizeof(finfo->tag));
+#endif
 
     /* Write file metadata in the scratch metadata block */
     err = its_flash_fs_mblock_update_scratch_file_meta(fs_ctx, new_idx,
