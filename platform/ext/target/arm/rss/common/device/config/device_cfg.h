@@ -54,6 +54,8 @@
 #define SIC_S
 #endif
 
+#define DEFAULT_UART_CONTROL 0
+
 /** System Counter Armv8-M */
 #define SYSCOUNTER_CNTRL_ARMV8_M_S
 #define SYSCOUNTER_CNTRL_ARMV8_M_DEV    SYSCOUNTER_CNTRL_ARMV8_M_DEV_S
