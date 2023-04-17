@@ -47,7 +47,6 @@ target_sources(platform_s
 
 target_compile_definitions(platform_s
     PUBLIC
-        NRF9160_XXAA
         NRF_SKIP_FICR_NS_COPY_TO_RAM
         $<$<BOOL:${TFM_ITS_ENCRYPTED}>:TFM_ITS_ENCRYPTED>
         $<$<BOOL:${TFM_ITS_ENCRYPTED}>:TFM_ITS_ENC_NONCE_LENGTH=${TFM_ITS_ENC_NONCE_LENGTH}>
@@ -68,7 +67,6 @@ target_sources(platform_ns
 
 target_compile_definitions(platform_ns
     PUBLIC
-        NRF9160_XXAA
         NRF_TRUSTZONE_NONSECURE
         DOMAIN_NS=1
 )
@@ -88,7 +86,6 @@ if(BL2)
 
     target_compile_definitions(platform_bl2
         PUBLIC
-            NRF9160_XXAA
             NRF_SKIP_FICR_NS_COPY_TO_RAM
     )
 endif()
