@@ -114,8 +114,6 @@ static psa_status_t derive_subkey_into_buffer(
         struct tfm_builtin_key_t *key_slot, mbedtls_key_owner_id_t owner,
         uint8_t *key_buffer, size_t key_buffer_size, size_t *key_buffer_length)
 {
-    int mbedtls_err;
-
 #ifdef TFM_PARTITION_TEST_PS
     /* Hack to allow the PS tests to work, since they directly call
      * ps_system_prepare from the test partition which would otherwise derive a
@@ -126,22 +124,54 @@ static psa_status_t derive_subkey_into_buffer(
     }
 #endif /* TFM_PARTITION_TEST_PS */
 
-    /* FIXME this should be moved to using the PSA APIs once key derivation is
-     * implemented in the PSA driver wrapper. Using the external PSA apis
-     * directly creates a keyslot and we'd need to read the data from it and
-     * then destroy it, so isn't ideal. In order to avoid infinite recursion,
-     * it'll be necessary to add a special case (probably if owner == 0) to make
-     * sure the new PSA derivation request doesn't end up back here.
-     */
-    mbedtls_err = mbedtls_hkdf(mbedtls_md_info_from_type(MBEDTLS_MD_SHA256),
-                               NULL, 0, key_slot->key, key_slot->key_len,
-                               (uint8_t *)&owner, sizeof(owner), key_buffer,
-                               key_buffer_size);
-    if (mbedtls_err) {
-        return PSA_ERROR_GENERIC_ERROR;
+    psa_status_t status;
+    mbedtls_svc_key_id_t output_key_id_local = MBEDTLS_SVC_KEY_ID_INIT;
+    mbedtls_svc_key_id_t builtin_key = psa_get_key_id(&key_slot->attr);
+    mbedtls_svc_key_id_t input_key_id_local = mbedtls_svc_key_id_make(
+        TFM_SP_CRYPTO, MBEDTLS_SVC_KEY_ID_GET_KEY_ID(builtin_key));
+    psa_key_derivation_operation_t deriv_ops = psa_key_derivation_operation_init();
+    psa_key_attributes_t output_key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    psa_key_attributes_t input_key_attr = PSA_KEY_ATTRIBUTES_INIT;
+    /* Set properties for the output key */
+    psa_set_key_type(&output_key_attr, PSA_KEY_TYPE_RAW_DATA);
+    psa_set_key_bits(&output_key_attr, PSA_BYTES_TO_BITS(key_buffer_size));
+    psa_set_key_usage_flags(&output_key_attr, PSA_KEY_USAGE_EXPORT);
+    /* Import the key material as a volatile key */
+    psa_set_key_usage_flags(&input_key_attr, PSA_KEY_USAGE_DERIVE);
+    psa_set_key_algorithm(&input_key_attr, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    psa_set_key_type(&input_key_attr, PSA_KEY_TYPE_DERIVE);
+    status = psa_import_key(&input_key_attr, key_slot->key, key_slot->key_len, &input_key_id_local);
+    if (status != PSA_SUCCESS) {
+        goto wrap_up;
     }
-
-    *key_buffer_length = key_buffer_size;
+    status = psa_key_derivation_setup(&deriv_ops, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    if (status != PSA_SUCCESS) {
+        goto wrap_up;
+    }
+    /* No salt is being used for the derivation */
+    status = psa_key_derivation_input_key(
+                    &deriv_ops, PSA_KEY_DERIVATION_INPUT_SECRET, input_key_id_local);
+    if (status != PSA_SUCCESS) {
+        goto wrap_up;
+    }
+    status = psa_key_derivation_input_bytes(
+                    &deriv_ops, PSA_KEY_DERIVATION_INPUT_INFO, (uint8_t *)&owner, sizeof(owner));
+    if (status != PSA_SUCCESS) {
+        goto wrap_up;
+    }
+    status = psa_key_derivation_output_key(&output_key_attr, &deriv_ops,
+                                           &output_key_id_local);
+    if (status != PSA_SUCCESS) {
+        goto wrap_up;
+    }
+    status = psa_export_key(output_key_id_local, key_buffer, key_buffer_size, key_buffer_length);
+    if (status != PSA_SUCCESS) {
+        goto wrap_up;
+    }
+wrap_up:
+    (void)psa_key_derivation_abort(&deriv_ops);
+    (void)psa_destroy_key(input_key_id_local);
+    (void)psa_destroy_key(output_key_id_local);
 
     return PSA_SUCCESS;
 }
