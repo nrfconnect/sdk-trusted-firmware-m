@@ -47,7 +47,7 @@ void spu_clear_events(void);
  *
  * \note region lock is not applied to allow modifying the configuration.
  */
-void spu_regions_reset_unlocked_secure(void);
+void spu_regions_reset_unlocked_secure_rwx(void);
 
 /**
  * \brief Configure Flash memory regions as Non-Secure
@@ -57,7 +57,24 @@ void spu_regions_reset_unlocked_secure(void);
  * \note region lock is applied to prevent further modification during
  * the current reset cycle.
  */
-void spu_regions_flash_config_non_secure(uint32_t start_addr, uint32_t limit_addr);
+void spu_regions_flash_config_non_secure_rwx(uint32_t start_addr, uint32_t limit_addr);
+void spu_regions_flash_config_non_secure(uint32_t start_addr, uint32_t limit_addr, uint32_t permissions);
+
+/**
+ * Configure a range of Flash memory regions as Secure
+ *
+ * \note region lock is applied to prevent further modification during
+ * the current reset cycle.
+ */
+void spu_regions_flash_config_secure(uint32_t start_addr, uint32_t limit_addr, uint32_t permissions);
+
+/**
+ * Configure a range of Flash memory regions
+ *
+ * \note region lock is applied to prevent further modification during
+ * the current reset cycle.
+ */
+void spu_regions_flash_config(uint32_t start_addr, uint32_t limit_addr, bool secure_attr, uint32_t permissions);
 
 /**
  * \brief Configure SRAM memory regions as Non-Secure
@@ -67,7 +84,17 @@ void spu_regions_flash_config_non_secure(uint32_t start_addr, uint32_t limit_add
  * \note region lock is applied to prevent further modification during
  * the current reset cycle.
  */
-void spu_regions_sram_config_non_secure(uint32_t start_addr, uint32_t limit_addr);
+void spu_regions_sram_config_non_secure_rwx(uint32_t start_addr, uint32_t limit_addr);
+
+/**
+ * Configure a range of SRAM memory regions.
+ *
+ * \note region lock is applied to prevent further modification during
+ * the current reset cycle.
+ */
+void spu_regions_sram_config(uint32_t start_addr, uint32_t limit_addr, bool secure_attr,
+							 uint32_t permissions);
+void spu_regions_sram_config_secure(uint32_t start_addr, uint32_t limit_addr, uint32_t permissions);
 
 /**
  * \brief Configure Non-Secure Callable area

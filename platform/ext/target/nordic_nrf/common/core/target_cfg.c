@@ -701,13 +701,13 @@ enum tfm_plat_err_t spu_init_cfg(void)
     /* Reset Flash and SRAM configuration of regions that are not owned by
      * the bootloader(s) to all-Secure.
      */
-    spu_regions_reset_unlocked_secure();
+    spu_regions_reset_unlocked_secure_rwx();
 
     /* Configures SPU Code and Data regions to be non-secure */
-    spu_regions_flash_config_non_secure(
+    spu_regions_flash_config_non_secure_rwx(
         memory_regions.non_secure_partition_base,
         memory_regions.non_secure_partition_limit);
-    spu_regions_sram_config_non_secure(NS_DATA_START, NS_DATA_LIMIT);
+    spu_regions_sram_config_non_secure_rwx(NS_DATA_START, NS_DATA_LIMIT);
 
     /* Configures veneers region to be non-secure callable */
     spu_regions_flash_config_non_secure_callable(
@@ -716,14 +716,14 @@ enum tfm_plat_err_t spu_init_cfg(void)
 
 #ifdef NRF_NS_SECONDARY
     /* Secondary image partition */
-    spu_regions_flash_config_non_secure(
+    spu_regions_flash_config_non_secure_rwx(
         memory_regions.secondary_partition_base,
         memory_regions.secondary_partition_limit);
 #endif /* NRF_NS_SECONDARY */
 
 #ifdef NRF_NS_STORAGE_PARTITION_START
     /* Configures storage partition to be non-secure */
-    spu_regions_flash_config_non_secure(
+    spu_regions_flash_config_non_secure_rwx(
         memory_regions.non_secure_storage_partition_base,
         memory_regions.non_secure_storage_partition_limit);
 #endif /* NRF_NS_STORAGE_PARTITION_START */
