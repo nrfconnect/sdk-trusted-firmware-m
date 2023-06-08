@@ -703,6 +703,15 @@ enum tfm_plat_err_t spu_init_cfg(void)
      */
     spu_regions_reset_unlocked_secure_rwx();
 
+	uint32_t permissions_for_secure_flash = 0;
+	permissions_for_secure_flash |= NRF_SPU_MEM_PERM_READ;
+	// Do not permit writes to secure flash
+	permissions_for_secure_flash |= NRF_SPU_MEM_PERM_EXECUTE;
+
+    /* Configures Secure Code to be secure and RX */
+    spu_regions_flash_config_secure(S_CODE_START, S_CODE_START + S_CODE_SIZE - 1,
+				    permissions_for_secure_flash);
+
     /* Configures SPU Code and Data regions to be non-secure */
     spu_regions_flash_config_non_secure_rwx(
         memory_regions.non_secure_partition_base,
