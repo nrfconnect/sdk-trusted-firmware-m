@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2018-2020 Arm Limited. All rights reserved.
  * Copyright (c) 2020 Nordic Semiconductor ASA.
+ * Copyright (c) 2021 Laird Connectivity.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +24,18 @@
 
 #include <spu.h>
 #include <nrfx.h>
+#include <nrfx_nvmc.h>
+#include <hal/nrf_nvmc.h>
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_spu.h>
 
 #define PIN_XL1 0
 #define PIN_XL2 1
+
+#if !(defined(NRF91_SERIES) || defined(NRF53_SERIES))
+#error "Invalid configuration"
+#endif
+
 
 #if TFM_PERIPHERAL_DCNF_SECURE
 struct platform_data_t tfm_peripheral_dcnf = {
@@ -274,6 +282,13 @@ struct platform_data_t tfm_peripheral_dppi = {
 };
 #endif
 
+#if TFM_PERIPHERAL_WDT_SECURE
+struct platform_data_t tfm_peripheral_wdt = {
+    NRF_WDT_S_BASE,
+    NRF_WDT_S_BASE + (sizeof(NRF_WDT_Type) - 1),
+};
+#endif
+
 #if TFM_PERIPHERAL_WDT0_SECURE
 struct platform_data_t tfm_peripheral_wdt0 = {
     NRF_WDT0_S_BASE,
@@ -379,6 +394,13 @@ struct platform_data_t tfm_peripheral_pdm0 = {
 };
 #endif
 
+#if TFM_PERIPHERAL_PDM_SECURE
+struct platform_data_t tfm_peripheral_pdm = {
+    NRF_PDM_S_BASE,
+    NRF_PDM_S_BASE + (sizeof(NRF_PDM_Type) - 1),
+};
+#endif
+
 #if TFM_PERIPHERAL_I2S0_SECURE
 struct platform_data_t tfm_peripheral_i2s0 = {
     NRF_I2S0_S_BASE,
@@ -386,10 +408,24 @@ struct platform_data_t tfm_peripheral_i2s0 = {
 };
 #endif
 
+#if TFM_PERIPHERAL_I2S_SECURE
+struct platform_data_t tfm_peripheral_i2s = {
+    NRF_I2S_S_BASE,
+    NRF_I2S_S_BASE + (sizeof(NRF_I2S_Type) - 1),
+};
+#endif
+
 #if TFM_PERIPHERAL_IPC_SECURE
 struct platform_data_t tfm_peripheral_ipc = {
     NRF_IPC_S_BASE,
     NRF_IPC_S_BASE + (sizeof(NRF_IPC_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_FPU_SECURE
+struct platform_data_t tfm_peripheral_fpu = {
+    NRF_FPU_S_BASE,
+    NRF_FPU_S_BASE + (sizeof(NRF_FPU_Type) - 1),
 };
 #endif
 
@@ -569,6 +605,14 @@ enum tfm_plat_err_t system_reset_cfg(void)
 
 enum tfm_plat_err_t init_debug(void)
 {
+#if defined(NRF91_SERIES)
+
+#if !defined(DAUTH_CHIP_DEFAULT)
+#error "Debug access on this platform can only be configured by programming the corresponding registers in UICR."
+#endif
+
+#elif defined(NRF53_SERIES)
+
 #if defined(DAUTH_NONE)
     /* Disable debugging */
     NRF_CTRLAP->APPROTECT.DISABLE = 0;
@@ -585,11 +629,14 @@ enum tfm_plat_err_t init_debug(void)
 #else
 #error "No debug authentication setting is provided."
 #endif
+
     /* Lock access to APPROTECT, SECUREAPPROTECT */
     NRF_CTRLAP->APPROTECT.LOCK = CTRLAPPERI_APPROTECT_LOCK_LOCK_Locked <<
         CTRLAPPERI_APPROTECT_LOCK_LOCK_Msk;
     NRF_CTRLAP->SECUREAPPROTECT.LOCK = CTRLAPPERI_SECUREAPPROTECT_LOCK_LOCK_Locked <<
         CTRLAPPERI_SECUREAPPROTECT_LOCK_LOCK_Msk;
+
+#endif
 
     return TFM_PLAT_ERR_SUCCESS;
 }
@@ -690,7 +737,7 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 
     /* The following peripherals share ID:
      * - FPU
-     * - DCNF
+     * - DCNF (On 53, but not 91)
      */
     spu_peripheral_config_non_secure((uint32_t)NRF_FPU, false);
     /* The following peripherals share ID:
@@ -701,7 +748,7 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
     /* The following peripherals share ID:
      * - CLOCK
      * - POWER
-     * - RESET
+     * - RESET (On 53, but not 91)
      */
     spu_peripheral_config_non_secure((uint32_t)NRF_CLOCK, false);
     /* The following peripherals share ID: (referred to as Serial-Box)
@@ -724,9 +771,11 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
     spu_peripheral_config_non_secure((uint32_t)NRF_SPIM1, false);
 #endif
 
-    spu_peripheral_config_non_secure((uint32_t)NRF_SPIM4, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_SPIM2, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_SPIM3, false);
+#ifdef NRF_SPIM4
+    spu_peripheral_config_non_secure((uint32_t)NRF_SPIM4, false);
+#endif
     spu_peripheral_config_non_secure((uint32_t)NRF_SAADC, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_TIMER0, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_TIMER1, false);
@@ -735,15 +784,24 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
     spu_peripheral_config_non_secure((uint32_t)NRF_RTC1, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_DPPIC, false);
 #ifndef PSA_API_TEST_IPC
+#ifdef NRF_WDT0
     /* WDT0 is used as a secure peripheral in PSA FF tests */
     spu_peripheral_config_non_secure((uint32_t)NRF_WDT0, false);
 #endif
+#ifdef NRF_WDT
+    spu_peripheral_config_non_secure((uint32_t)NRF_WDT, false);
+#endif
+#endif /* PSA_API_TEST_IPC */
+#ifdef NRF_WDT1
     spu_peripheral_config_non_secure((uint32_t)NRF_WDT1, false);
+#endif
     /* The following peripherals share ID:
      * - COMP
      * - LPCOMP
      */
+#ifdef NRF_COMP
     spu_peripheral_config_non_secure((uint32_t)NRF_COMP, false);
+#endif
     spu_peripheral_config_non_secure((uint32_t)NRF_EGU0, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_EGU1, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_EGU2, false);
@@ -757,40 +815,77 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
     spu_peripheral_config_non_secure((uint32_t)NRF_PWM1, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_PWM2, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_PWM3, false);
+#ifdef NRF_PDM0
     spu_peripheral_config_non_secure((uint32_t)NRF_PDM0, false);
+#endif
+#ifdef NRF_I2S0
     spu_peripheral_config_non_secure((uint32_t)NRF_I2S0, false);
+#endif
     spu_peripheral_config_non_secure((uint32_t)NRF_IPC, false);
+#ifndef SECURE_QSPI
+#ifdef NRF_QSPI
     spu_peripheral_config_non_secure((uint32_t)NRF_QSPI, false);
+#endif
+#endif
+#ifdef NRF_NFCT
     spu_peripheral_config_non_secure((uint32_t)NRF_NFCT, false);
+#endif
+#ifdef NRF_MUTEX
     spu_peripheral_config_non_secure((uint32_t)NRF_MUTEX, false);
+#endif
+#ifdef NRF_QDEC0
     spu_peripheral_config_non_secure((uint32_t)NRF_QDEC0, false);
+#endif
+#ifdef NRF_QDEC1
     spu_peripheral_config_non_secure((uint32_t)NRF_QDEC1, false);
+#endif
+#ifdef NRF_USBD
     spu_peripheral_config_non_secure((uint32_t)NRF_USBD, false);
+#endif
+#ifdef NRF_USBREGULATOR
     spu_peripheral_config_non_secure((uint32_t)NRF_USBREGULATOR, false);
+#endif
     spu_peripheral_config_non_secure((uint32_t)NRF_NVMC, false);
     spu_peripheral_config_non_secure((uint32_t)NRF_P0, false);
+#ifdef NRF_P1
     spu_peripheral_config_non_secure((uint32_t)NRF_P1, false);
+#endif
     spu_peripheral_config_non_secure((uint32_t)NRF_VMC, false);
 
     /* DPPI channel configuration */
     spu_dppi_config_non_secure(TFM_PERIPHERAL_DPPI_CHANNEL_MASK_SECURE, true);
 
-    /* GPIO pin configuration (P0 and P1 ports) */
+    /* GPIO pin configuration */
     spu_gpio_config_non_secure(0, TFM_PERIPHERAL_GPIO0_PIN_MASK_SECURE, true);
+#ifdef TFM_PERIPHERAL_GPIO1_PIN_MASK_SECURE
     spu_gpio_config_non_secure(1, TFM_PERIPHERAL_GPIO1_PIN_MASK_SECURE, true);
+#endif
 
+#ifdef NRF53_SERIES
     /* Configure properly the XL1 and XL2 pins so that the low-frequency crystal
      * oscillator (LFXO) can be used.
      * This configuration can be done only from secure code, as otherwise those
-     * register fields are not accessible.  That's why it is placed here.
+     * register fields are not accessible. That's why it is placed here.
      */
     nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_PERIPHERAL);
     nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_PERIPHERAL);
+#endif
 
-    /* Enable the instruction and data cache (this can be done only from secure
-     * code; that's why it is placed here).
-     */
-    NRF_CACHE->ENABLE = CACHE_ENABLE_ENABLE_Enabled;
+	/*
+	 * 91 has an instruction cache.
+	 * 53 has both instruction cache and a data cache.
+	 *
+	 * 53's instruction cache has an nrfx driver, but 91's cache is
+	 * not supported by nrfx at time of writing.
+	 *
+	 * We enable all caches available here because non-secure cannot
+	 * configure caches.
+	 */
+#if defined(NVMC_FEATURE_CACHE_PRESENT) // From MDK
+	nrfx_nvmc_icache_enable();
+#elif defined(CACHE_PRESENT) // From MDK
+	NRF_CACHE->ENABLE = CACHE_ENABLE_ENABLE_Enabled;
+#endif
 
     /* Enforce that the nRF5340 Network MCU is in the Non-Secure
      * domain. Non-secure is the HW reset value for the network core
