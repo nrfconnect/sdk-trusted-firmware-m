@@ -703,6 +703,18 @@ enum tfm_plat_err_t spu_init_cfg(void)
      */
     spu_regions_reset_unlocked_secure_rwx();
 
+	uint32_t permissions_for_secure_ram = 0;
+	permissions_for_secure_ram |= NRF_SPU_MEM_PERM_READ;
+	permissions_for_secure_ram |= NRF_SPU_MEM_PERM_WRITE;
+
+	/* Permit execute from Secure RAM because otherwise Crypto fails
+	 * to initialize. */
+	permissions_for_secure_ram |= NRF_SPU_MEM_PERM_EXECUTE;
+
+    /* Configures Secure RAM to be secure and RWX */
+	spu_regions_sram_config_secure(S_DATA_START, S_DATA_START + S_DATA_SIZE - 1,
+				    permissions_for_secure_ram);
+
 	uint32_t permissions_for_secure_flash = 0;
 	permissions_for_secure_flash |= NRF_SPU_MEM_PERM_READ;
 	// Do not permit writes to secure flash
