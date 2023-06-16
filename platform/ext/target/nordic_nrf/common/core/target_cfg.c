@@ -741,9 +741,10 @@ enum tfm_plat_err_t spu_init_cfg(void)
 
 #ifdef NRF_NS_SECONDARY
     /* Secondary image partition */
-    spu_regions_flash_config_non_secure_rwx(
+    spu_regions_flash_config_non_secure(
         memory_regions.secondary_partition_base,
-        memory_regions.secondary_partition_limit);
+        memory_regions.secondary_partition_limit,
+		permissions_for_storage);
 #endif /* NRF_NS_SECONDARY */
 
 #ifdef NRF_NS_STORAGE_PARTITION_START
