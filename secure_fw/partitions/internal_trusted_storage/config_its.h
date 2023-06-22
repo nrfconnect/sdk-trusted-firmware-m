@@ -9,7 +9,9 @@
 #define __CONFIG_PARTITION_ITS_H__
 
 #include "config_tfm.h"
+#ifdef TFM_PARTITION_PROTECTED_STORAGE
 #include "config_ps.h"
+#endif
 
 /* Create flash FS if it doesn't exist for Internal Trusted Storage partition */
 #ifndef ITS_CREATE_FLASH_LAYOUT
