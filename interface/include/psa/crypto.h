@@ -18,6 +18,17 @@
 #include "crypto_platform.h"
 #endif
 
+/* In Mbed TLS, we would query the current config through inclusion of
+ * of mbedtls/build_info.h, but in TF-M, we don't rely on build_info.h
+ * hence we just include the current configuration if it has been passed
+ * through command line. These config defines are required in crypto_sizes.h
+ * to compute macros that define sizes which depend on algorithms supported
+ * by the implementation
+ */
+#if defined(MBEDTLS_PSA_CRYPTO_CONFIG_FILE)
+#include MBEDTLS_PSA_CRYPTO_CONFIG_FILE
+#endif /* MBEDTLS_PSA_CRYPTO_CONFIG_FILE */
+
 #include <stddef.h>
 
 #ifdef __DOXYGEN_ONLY__
