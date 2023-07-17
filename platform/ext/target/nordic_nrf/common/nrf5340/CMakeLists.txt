@@ -9,29 +9,9 @@
 cmake_policy(SET CMP0076 NEW)
 set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+set(target nrf5340)
+
 add_subdirectory(../core nrf_common)
-
-#========================= Platform common defs ===============================#
-
-# Specify the location of platform specific build dependencies.
-target_sources(tfm_s
-    PRIVATE
-    $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/startup_nrf5340.c>
-)
-
-if(NS)
-    target_sources(tfm_ns
-        PRIVATE
-            $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/startup_nrf5340.c>
-    )
-endif()
-
-if(BL2)
-    target_sources(bl2
-        PRIVATE
-            $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/gcc/startup_nrf5340.c>
-    )
-endif()
 
 #========================= Platform Secure ====================================#
 
