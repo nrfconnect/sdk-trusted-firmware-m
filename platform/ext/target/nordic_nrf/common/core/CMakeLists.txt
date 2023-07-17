@@ -212,3 +212,22 @@ target_sources(tfm_spm
         faults.c
         target_cfg.c
 )
+
+target_sources(tfm_s
+    PRIVATE
+    $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/startup_${target}.c>
+)
+
+if(NS)
+    target_sources(tfm_ns
+        PRIVATE
+            $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/startup_${target}.c>
+    )
+endif()
+
+if(BL2)
+    target_sources(bl2
+        PRIVATE
+            $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/startup_${target}.c>
+    )
+endif()
