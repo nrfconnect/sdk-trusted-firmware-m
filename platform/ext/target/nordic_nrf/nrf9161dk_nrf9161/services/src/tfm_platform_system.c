@@ -1,8 +1,7 @@
 /*
- * Copyright (c) 2019, Arm Limited. All rights reserved.
+ * Copyright (c) 2023 Nordic Semiconductor ASA
  *
- * SPDX-License-Identifier: BSD-3-Clause
- *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
 #include "platform/include/tfm_platform_system.h"
@@ -24,8 +23,7 @@ enum tfm_platform_err_t tfm_platform_hal_ioctl(tfm_platform_ioctl_req_t request,
 	switch (request) {
 	case TFM_PLATFORM_IOCTL_READ_SERVICE:
 		return tfm_platform_hal_read_service(in_vec, out_vec);
-	case TFM_PLATFORM_IOCTL_GPIO_SERVICE:
-		return tfm_platform_hal_gpio_service(in_vec, out_vec);
+
 	/* Board specific IOCTL services */
 
 	/* Not a supported IOCTL service.*/

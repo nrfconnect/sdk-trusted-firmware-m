@@ -1,10 +1,8 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2020, Nordic Semiconductor ASA.
-# Copyright (c) 2020, Arm Limited. All rights reserved.
+#
+# Copyright (c) 2023, Nordic Semiconductor ASA.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
-#-------------------------------------------------------------------------------
 
 # preload.cmake is used to set things that related to the platform that are both
 # immutable and global, which is to say they should apply to any kind of project
@@ -18,6 +16,6 @@ set(TFM_SYSTEM_DSP OFF)
 set(CONFIG_TFM_FP_ARCH "fpv5-sp-d16")
 
 add_compile_definitions(
-    NRF9160_XXAA
-    NRF91_SERIES
+        NRF9120_XXAA
+        NRF91_SERIES
 )

@@ -1,10 +1,8 @@
-#-------------------------------------------------------------------------------
-# Copyright (c) 2020, Nordic Semiconductor ASA.
-# Copyright (c) 2022, Arm Limited. All rights reserved.
 #
-# SPDX-License-Identifier: BSD-3-Clause
+# Copyright (c) 2023, Nordic Semiconductor ASA.
 #
-#-------------------------------------------------------------------------------
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
 
 cmake_policy(SET CMP0076 NEW)
 set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
