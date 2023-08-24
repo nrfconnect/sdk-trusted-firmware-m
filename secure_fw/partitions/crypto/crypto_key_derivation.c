@@ -59,18 +59,6 @@ psa_status_t tfm_crypto_key_derivation_interface(psa_invec in_vec[],
                                             TFM_CRYPTO_KEY_DERIVATION_OPERATION,
                                             iov->op_handle,
                                             (void **)&operation);
-        switch (sid) {
-        case TFM_CRYPTO_KEY_DERIVATION_ABORT_SID:
-        case TFM_CRYPTO_KEY_DERIVATION_INPUT_BYTES_SID:
-        case TFM_CRYPTO_KEY_DERIVATION_INPUT_KEY_SID:
-        case TFM_CRYPTO_KEY_DERIVATION_OUTPUT_BYTES_SID:
-        case TFM_CRYPTO_KEY_DERIVATION_OUTPUT_KEY_SID:
-            p_handle = out_vec[0].base;
-            *p_handle = iov->op_handle;
-            break;
-        default:
-            break;
-        }
     }
     if ((status != PSA_SUCCESS) &&
         (sid != TFM_CRYPTO_KEY_DERIVATION_ABORT_SID)) {
@@ -102,39 +90,27 @@ psa_status_t tfm_crypto_key_derivation_interface(psa_invec in_vec[],
         const uint8_t *data = in_vec[1].base;
         size_t data_length = in_vec[1].len;
 
-        status = psa_key_derivation_input_bytes(operation, iov->step, data,
-                                                data_length);
-        if (status != PSA_SUCCESS) {
-            goto release_operation_and_return;
-        }
+        return psa_key_derivation_input_bytes(operation, iov->step, data,
+                                              data_length);
     }
-    break;
     case TFM_CRYPTO_KEY_DERIVATION_OUTPUT_BYTES_SID:
     {
-        uint8_t *output = out_vec[1].base;
-        size_t output_length = out_vec[1].len;
+        uint8_t *output = out_vec[0].base;
+        size_t output_length = out_vec[0].len;
 
-        status = psa_key_derivation_output_bytes(operation,
+        return psa_key_derivation_output_bytes(operation,
                                                output, output_length);
-        if (status != PSA_SUCCESS) {
-            goto release_operation_and_return;
-        }
     }
-    break;
     case TFM_CRYPTO_KEY_DERIVATION_INPUT_KEY_SID:
     {
-        status = psa_key_derivation_input_key(operation,
-                                              iov->step, *encoded_key);
-        if (status != PSA_SUCCESS) {
-            goto release_operation_and_return;
-        }
+         return psa_key_derivation_input_key(operation,
+                                             iov->step, *encoded_key);
     }
-    break;
     case TFM_CRYPTO_KEY_DERIVATION_OUTPUT_KEY_SID:
     {
         const struct psa_client_key_attributes_s *client_key_attr =
                                                             in_vec[1].base;
-        psa_key_id_t *key_handle = out_vec[1].base;
+        psa_key_id_t *key_handle = out_vec[0].base;
         psa_key_attributes_t key_attributes = PSA_KEY_ATTRIBUTES_INIT;
         int32_t partition_id = MBEDTLS_SVC_KEY_ID_GET_OWNER_ID(*encoded_key);
 
@@ -142,7 +118,7 @@ psa_status_t tfm_crypto_key_derivation_interface(psa_invec in_vec[],
                                                        partition_id,
                                                        &key_attributes);
         if (status != PSA_SUCCESS) {
-            goto release_operation_and_return;
+            return status;
         }
 
         status = psa_key_derivation_output_key(&key_attributes, operation,
@@ -153,6 +129,8 @@ psa_status_t tfm_crypto_key_derivation_interface(psa_invec in_vec[],
     break;
     case TFM_CRYPTO_KEY_DERIVATION_ABORT_SID:
     {
+        p_handle = out_vec[0].base;
+        *p_handle = iov->op_handle;
         if (status != PSA_SUCCESS) {
             /*
              * If lookup() failed to find out a valid operation, it is not

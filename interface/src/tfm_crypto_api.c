@@ -221,13 +221,12 @@ psa_status_t psa_cipher_generate_iv(psa_cipher_operation_t *operation,
         {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
     };
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
         {.base = iv, .len = iv_size},
     };
 
     status = API_DISPATCH(in_vec, out_vec);
 
-    *iv_length = out_vec[1].len;
+    *iv_length = out_vec[0].len;
 
     return status;
 }
@@ -246,11 +245,7 @@ psa_status_t psa_cipher_set_iv(psa_cipher_operation_t *operation,
         {.base = iv, .len = iv_length},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-    };
-
-    return API_DISPATCH(in_vec, out_vec);
+    return API_DISPATCH_NO_OUTVEC(in_vec);
 }
 
 psa_status_t psa_cipher_encrypt_setup(psa_cipher_operation_t *operation,
@@ -313,13 +308,12 @@ psa_status_t psa_cipher_update(psa_cipher_operation_t *operation,
         {.base = input, .len = input_length},
     };
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
         {.base = output, .len = output_size}
     };
 
     status = API_DISPATCH(in_vec, out_vec);
 
-    *output_length = out_vec[1].len;
+    *output_length = out_vec[0].len;
 
     return status;
 }
@@ -400,11 +394,7 @@ psa_status_t psa_hash_update(psa_hash_operation_t *operation,
         {.base = input, .len = input_length},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-    };
-
-    return API_DISPATCH(in_vec, out_vec);
+    return API_DISPATCH_NO_OUTVEC(in_vec);
 }
 
 psa_status_t psa_hash_finish(psa_hash_operation_t *operation,
@@ -849,13 +839,12 @@ psa_status_t psa_aead_generate_nonce(psa_aead_operation_t *operation,
         {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
     };
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-        {.base = nonce, .len = nonce_size},
+        {.base = nonce, .len = nonce_size}
     };
 
     status = API_DISPATCH(in_vec, out_vec);
 
-    *nonce_length = out_vec[1].len;
+    *nonce_length = out_vec[0].len;
     return status;
 }
 
@@ -874,11 +863,7 @@ psa_status_t psa_aead_set_nonce(psa_aead_operation_t *operation,
         {.base = nonce, .len = nonce_length}
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)}
-    };
-
-    status = API_DISPATCH(in_vec, out_vec);
+    status = API_DISPATCH_NO_OUTVEC(in_vec);
     return status;
 }
 
@@ -898,11 +883,7 @@ psa_status_t psa_aead_set_lengths(psa_aead_operation_t *operation,
         {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)}
-    };
-
-    status = API_DISPATCH(in_vec, out_vec);
+    status = API_DISPATCH_NO_OUTVEC(in_vec);
     return status;
 }
 
@@ -931,13 +912,8 @@ psa_status_t psa_aead_update_ad(psa_aead_operation_t *operation,
     if (input == NULL) {
         in_len--;
     }
-
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)}
-    };
-
     status = psa_call(TFM_CRYPTO_HANDLE, PSA_IPC_CALL, in_vec, in_len,
-                      out_vec, IOVEC_LEN(out_vec));
+                      NULL, 0);
     return status;
 }
 
@@ -964,7 +940,6 @@ psa_status_t psa_aead_update(psa_aead_operation_t *operation,
         {.base = input, .len = input_length}
     };
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
         {.base = output, .len = output_size},
     };
 
@@ -976,7 +951,7 @@ psa_status_t psa_aead_update(psa_aead_operation_t *operation,
     status = psa_call(TFM_CRYPTO_HANDLE, PSA_IPC_CALL, in_vec, in_len,
                       out_vec, IOVEC_LEN(out_vec));
 
-    *output_length = out_vec[1].len;
+    *output_length = out_vec[0].len;
     return status;
 }
 
@@ -1325,7 +1300,6 @@ psa_status_t psa_key_derivation_output_bytes(
     };
 
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
         {.base = output, .len = output_length},
     };
 
@@ -1348,11 +1322,7 @@ psa_status_t psa_key_derivation_input_key(
         {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-    };
-
-    return API_DISPATCH(in_vec, out_vec);
+    return API_DISPATCH_NO_OUTVEC(in_vec);
 }
 
 psa_status_t psa_key_derivation_abort(psa_key_derivation_operation_t *operation)
@@ -1629,11 +1599,7 @@ psa_status_t psa_key_derivation_input_bytes(
         {.base = data, .len = data_length},
     };
 
-    psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
-    };
-
-    return API_DISPATCH(in_vec, out_vec);
+    return API_DISPATCH_NO_OUTVEC(in_vec);
 }
 
 psa_status_t psa_key_derivation_output_key(
@@ -1652,7 +1618,6 @@ psa_status_t psa_key_derivation_output_key(
     };
 
     psa_outvec out_vec[] = {
-        {.base = &(operation->handle), .len = sizeof(uint32_t)},
         {.base = key, .len = sizeof(psa_key_id_t)}
     };
 
