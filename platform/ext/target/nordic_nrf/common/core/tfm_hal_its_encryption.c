@@ -18,7 +18,7 @@
 #include "platform/include/tfm_hal_its.h"
 #include "psa/crypto.h"
 #include <string.h>
-#include <stdint.h>
+#include <stdint>
 
 /* The cc3xx driver is used directly in this file as the PSA APIs depends on
  * ITS, so using PSA APIs would result in circular dependencies
