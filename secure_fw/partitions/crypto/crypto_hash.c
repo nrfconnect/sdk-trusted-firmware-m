@@ -72,9 +72,11 @@ psa_status_t tfm_crypto_hash_interface(psa_invec in_vec[],
         status = tfm_crypto_operation_lookup(TFM_CRYPTO_HASH_OPERATION,
                                              iov->op_handle,
                                              (void **)&operation);
-        if ((sid == TFM_CRYPTO_HASH_FINISH_SID) ||
-            (sid == TFM_CRYPTO_HASH_VERIFY_SID) ||
-            (sid == TFM_CRYPTO_HASH_ABORT_SID)) {
+        switch (sid) {
+        case TFM_CRYPTO_HASH_FINISH_SID:
+        case TFM_CRYPTO_HASH_VERIFY_SID:
+        case TFM_CRYPTO_HASH_UPDATE_SID:
+        case TFM_CRYPTO_HASH_ABORT_SID:
             /*
              * finish()/abort() interface put handle in out_vec[0].
              * Therefore, out_vec[0] shall be specially set to original handle
@@ -83,6 +85,9 @@ psa_status_t tfm_crypto_hash_interface(psa_invec in_vec[],
              */
             p_handle = out_vec[0].base;
             *p_handle = iov->op_handle;
+            break;
+        default:
+            break;
         }
     }
     if (status != PSA_SUCCESS) {
@@ -115,32 +120,32 @@ psa_status_t tfm_crypto_hash_interface(psa_invec in_vec[],
         const uint8_t *input = in_vec[1].base;
         size_t input_length = in_vec[1].len;
 
-        return psa_hash_update(operation, input, input_length);
+        status = psa_hash_update(operation, input, input_length);
+        if (status != PSA_SUCCESS) {
+            goto release_operation_and_return;
+        }
     }
+    break;
     case TFM_CRYPTO_HASH_FINISH_SID:
     {
         uint8_t *hash = out_vec[1].base;
         size_t hash_size = out_vec[1].len;
 
         status = psa_hash_finish(operation, hash, hash_size, &out_vec[1].len);
-        if (status == PSA_SUCCESS) {
-            goto release_operation_and_return;
-        } else {
+        if (status != PSA_SUCCESS) {
             out_vec[1].len = 0;
         }
+
+        goto release_operation_and_return;
     }
-    break;
     case TFM_CRYPTO_HASH_VERIFY_SID:
     {
         const uint8_t *hash = in_vec[1].base;
         size_t hash_length = in_vec[1].len;
 
         status = psa_hash_verify(operation, hash, hash_length);
-        if (status == PSA_SUCCESS) {
-            goto release_operation_and_return;
-        }
+        goto release_operation_and_return;
     }
-    break;
     case TFM_CRYPTO_HASH_ABORT_SID:
     {
         status = psa_hash_abort(operation);
@@ -161,7 +166,7 @@ psa_status_t tfm_crypto_hash_interface(psa_invec in_vec[],
         }
         status = psa_hash_clone(operation, target_operation);
         if (status != PSA_SUCCESS) {
-            (void)tfm_crypto_operation_release(p_handle);
+            goto release_operation_and_return;
         }
     }
     break;

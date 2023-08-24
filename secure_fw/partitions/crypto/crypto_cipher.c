@@ -78,8 +78,12 @@ psa_status_t tfm_crypto_cipher_interface(psa_invec in_vec[],
         status = tfm_crypto_operation_lookup(TFM_CRYPTO_CIPHER_OPERATION,
                                              iov->op_handle,
                                              (void **)&operation);
-        if ((sid == TFM_CRYPTO_CIPHER_FINISH_SID) ||
-            (sid == TFM_CRYPTO_CIPHER_ABORT_SID)) {
+        switch (sid) {
+        case TFM_CRYPTO_CIPHER_FINISH_SID:
+        case TFM_CRYPTO_CIPHER_ABORT_SID:
+        case TFM_CRYPTO_CIPHER_SET_IV_SID:
+        case TFM_CRYPTO_CIPHER_GENERATE_IV_SID:
+        case TFM_CRYPTO_CIPHER_UPDATE_SID:
             /*
              * finish()/abort() interface put handle in out_vec[0].
              * Therefore, out_vec[0] shall be specially set to original handle
@@ -88,6 +92,9 @@ psa_status_t tfm_crypto_cipher_interface(psa_invec in_vec[],
              */
             p_handle = out_vec[0].base;
             *p_handle = iov->op_handle;
+            break;
+        default:
+            break;
         }
     }
     if (status != PSA_SUCCESS) {
@@ -109,22 +116,27 @@ psa_status_t tfm_crypto_cipher_interface(psa_invec in_vec[],
     switch (sid) {
     case TFM_CRYPTO_CIPHER_GENERATE_IV_SID:
     {
-        unsigned char *iv = out_vec[0].base;
-        size_t iv_size = out_vec[0].len;
+        unsigned char *iv = out_vec[1].base;
+        size_t iv_size = out_vec[1].len;
 
-        status = psa_cipher_generate_iv(operation, iv, iv_size, &out_vec[0].len);
+        status = psa_cipher_generate_iv(operation, iv, iv_size, &out_vec[1].len);
         if (status != PSA_SUCCESS) {
-            out_vec[0].len = 0;
+            out_vec[1].len = 0;
+            goto release_operation_and_return;
         }
-        return status;
     }
+    break;
     case TFM_CRYPTO_CIPHER_SET_IV_SID:
     {
         const unsigned char *iv = in_vec[1].base;
         size_t iv_length = in_vec[1].len;
 
-        return psa_cipher_set_iv(operation, iv, iv_length);
+        status = psa_cipher_set_iv(operation, iv, iv_length);
+        if (status != PSA_SUCCESS) {
+            goto release_operation_and_return;
+        }
     }
+    break;
     case TFM_CRYPTO_CIPHER_ENCRYPT_SETUP_SID:
     {
         status = psa_cipher_encrypt_setup(operation, *encoded_key, iov->alg);
@@ -145,16 +157,17 @@ psa_status_t tfm_crypto_cipher_interface(psa_invec in_vec[],
     {
         const uint8_t *input = in_vec[1].base;
         size_t input_length = in_vec[1].len;
-        unsigned char *output = out_vec[0].base;
-        size_t output_size = out_vec[0].len;
+        unsigned char *output = out_vec[1].base;
+        size_t output_size = out_vec[1].len;
 
         status = psa_cipher_update(operation, input, input_length,
-                                   output, output_size, &out_vec[0].len);
+                                   output, output_size, &out_vec[1].len);
         if (status != PSA_SUCCESS) {
-            out_vec[0].len = 0;
+            out_vec[1].len = 0;
+            goto release_operation_and_return;
         }
-        return status;
     }
+    break;
     case TFM_CRYPTO_CIPHER_FINISH_SID:
     {
         uint8_t *output = out_vec[1].base;
@@ -162,14 +175,12 @@ psa_status_t tfm_crypto_cipher_interface(psa_invec in_vec[],
 
         status = psa_cipher_finish(operation,
                                    output, output_size, &out_vec[1].len);
-        if (status == PSA_SUCCESS) {
-            /* In case of success automatically release the operation */
-            goto release_operation_and_return;
-        } else {
+        if (status != PSA_SUCCESS) {
             out_vec[1].len = 0;
         }
+
+        goto release_operation_and_return;
     }
-    break;
     case TFM_CRYPTO_CIPHER_ABORT_SID:
     {
         status = psa_cipher_abort(operation);
