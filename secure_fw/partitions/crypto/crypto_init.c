@@ -280,7 +280,12 @@ static psa_status_t tfm_crypto_engine_init(void)
 
     /* mbedtls_printf is used to print messages including error information. */
 #if (TFM_PARTITION_LOG_LEVEL >= TFM_PARTITION_LOG_LEVEL_ERROR)
-    mbedtls_platform_set_printf(printf);
+    /* NCSDK-19569: We cannot enable this function because cc3xx library causes
+     * duplicate definition of some symbols.
+     * It is not needed because we have in platform.h:
+     * #define MBEDTLS_PLATFORM_STD_PRINTF   printf
+     */
+    // mbedtls_platform_set_printf(printf);
 #endif
 
     /* Initialise the crypto accelerator if one is enabled. If the driver API is
