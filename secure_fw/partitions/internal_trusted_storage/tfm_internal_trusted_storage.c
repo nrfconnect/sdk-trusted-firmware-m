@@ -21,7 +21,7 @@
 #endif
 
 static uint8_t g_fid[ITS_FILE_ID_SIZE];
-static struct its_flash_fs_file_info_t g_file_info;
+static struct its_file_info_t g_file_info;
 
 static its_flash_fs_ctx_t fs_ctx_its;
 static struct its_flash_fs_config_t fs_cfg_its = {
@@ -265,15 +265,13 @@ psa_status_t tfm_its_set(struct its_asset_info *asset_info,
             return status;
         }
 
-        g_file_info.size_max = max_size;
-        g_file_info.flags = (uint32_t)create_flags |
-                        ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE;
+        create_flags |= ITS_FLASH_FS_FLAG_CREATE | ITS_FLASH_FS_FLAG_TRUNCATE;
     }
 
     /* Write to the file in the file system */
     status = its_flash_fs_file_write(get_fs_ctx(client_id),
                                      g_fid,
-                                     &g_file_info,
+                                     create_flags, max_size,
                                      size_to_write, offset, data_buf);
     if (status != PSA_SUCCESS) {
         return status;
