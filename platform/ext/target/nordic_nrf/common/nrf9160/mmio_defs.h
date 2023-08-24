@@ -15,7 +15,12 @@ extern "C" {
 #include <stdint.h>
 #include "tfm_peripherals_def.h"
 #include "tfm_peripherals_config.h"
-#include "handle_attr.h"
+
+/* Boundary handle binding macros. */
+#define HANDLE_ATTR_PRIV_POS            1U
+#define HANDLE_ATTR_PRIV_MASK           (0x1UL << HANDLE_ATTR_PRIV_POS)
+#define HANDLE_ATTR_NS_POS              0U
+#define HANDLE_ATTR_NS_MASK             (0x1UL << HANDLE_ATTR_NS_POS)
 
 /* Allowed named MMIO of this platform */
 const uintptr_t partition_named_mmio_list[] = {
