@@ -496,16 +496,11 @@ struct platform_data_t
 };
 #endif /* PSA_API_TEST_IPC */
 
+
 /* The section names come from the scatter file */
 REGION_DECLARE(Load$$LR$$, LR_NS_PARTITION, $$Base);
-REGION_DECLARE(Load$$LR$$, LR_VENEER, $$Base);
-REGION_DECLARE(Load$$LR$$, LR_VENEER, $$Limit);
-#ifdef NRF_NS_SECONDARY
-REGION_DECLARE(Load$$LR$$, LR_SECONDARY_PARTITION, $$Base);
-#endif /* NRF_NS_SECONDARY */
-#ifdef NRF_NS_STORAGE_PARTITION_START
-REGION_DECLARE(Load$$LR$$, LR_NRF_NS_STORAGE_PARTITION, $$Base);
-#endif /* NRF_NS_STORAGE_PARTITION_START */
+REGION_DECLARE(Image$$, ER_VENEER, $$Base);
+REGION_DECLARE(Image$$, VENEER_ALIGN, $$Limit);
 
 const struct memory_region_limits memory_regions = {
     .non_secure_code_start =
@@ -520,25 +515,20 @@ const struct memory_region_limits memory_regions = {
         NS_PARTITION_SIZE - 1,
 
     .veneer_base =
-        (uint32_t)&REGION_NAME(Load$$LR$$, LR_VENEER, $$Base),
+        (uint32_t)&REGION_NAME(Image$$, ER_VENEER, $$Base),
 
     .veneer_limit =
-        (uint32_t)&REGION_NAME(Load$$LR$$, LR_VENEER, $$Limit),
+        (uint32_t)&REGION_NAME(Image$$, VENEER_ALIGN, $$Limit),
 
 #ifdef NRF_NS_SECONDARY
-    .secondary_partition_base =
-        (uint32_t)&REGION_NAME(Load$$LR$$, LR_SECONDARY_PARTITION, $$Base),
-
-    .secondary_partition_limit =
-        (uint32_t)&REGION_NAME(Load$$LR$$, LR_SECONDARY_PARTITION, $$Base) +
+    .secondary_partition_base = SECONDARY_PARTITION_START,
+    .secondary_partition_limit = SECONDARY_PARTITION_START +
         SECONDARY_PARTITION_SIZE - 1,
 #endif /* NRF_NS_SECONDARY */
 
 #ifdef NRF_NS_STORAGE_PARTITION_START
-    .non_secure_storage_partition_base =
-        (uint32_t)&REGION_NAME(Load$$LR$$, LR_NRF_NS_STORAGE_PARTITION, $$Base),
-    .non_secure_storage_partition_limit =
-        (uint32_t)&REGION_NAME(Load$$LR$$, LR_NRF_NS_STORAGE_PARTITION, $$Base) +
+    .non_secure_storage_partition_base = NRF_NS_STORAGE_PARTITION_START,
+    .non_secure_storage_partition_limit = NRF_NS_STORAGE_PARTITION_START +
         NRF_NS_STORAGE_PARTITION_SIZE - 1,
 #endif /* NRF_NS_STORAGE_PARTITION_START */
 };
@@ -554,10 +544,11 @@ enum tfm_plat_err_t enable_fault_handlers(void)
     NVIC_SetPriority(SecureFault_IRQn, 0);
 
     /* Enables BUS, MEM, USG and Secure faults */
-    SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk
-                  | SCB_SHCSR_BUSFAULTENA_Msk
-                  | SCB_SHCSR_MEMFAULTENA_Msk
-                  | SCB_SHCSR_SECUREFAULTENA_Msk;
+    SCB->SHCSR |= SCB_SHCSR_USGFAULTENA_Msk |
+                  SCB_SHCSR_BUSFAULTENA_Msk |
+                  SCB_SHCSR_MEMFAULTENA_Msk |
+                  SCB_SHCSR_SECUREFAULTENA_Msk;
+
     return TFM_PLAT_ERR_SUCCESS;
 }
 
@@ -661,17 +652,20 @@ enum tfm_plat_err_t spu_init_cfg(void)
     spu_regions_reset_unlocked_secure();
 
     /* Configures SPU Code and Data regions to be non-secure */
-    spu_regions_flash_config_non_secure(memory_regions.non_secure_partition_base,
+    spu_regions_flash_config_non_secure(
+        memory_regions.non_secure_partition_base,
         memory_regions.non_secure_partition_limit);
     spu_regions_sram_config_non_secure(NS_DATA_START, NS_DATA_LIMIT);
 
     /* Configures veneers region to be non-secure callable */
-    spu_regions_flash_config_non_secure_callable(memory_regions.veneer_base,
+    spu_regions_flash_config_non_secure_callable(
+        memory_regions.veneer_base,
         memory_regions.veneer_limit - 1);
 
 #ifdef NRF_NS_SECONDARY
     /* Secondary image partition */
-    spu_regions_flash_config_non_secure(memory_regions.secondary_partition_base,
+    spu_regions_flash_config_non_secure(
+        memory_regions.secondary_partition_base,
         memory_regions.secondary_partition_limit);
 #endif /* NRF_NS_SECONDARY */
 
@@ -777,8 +771,8 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
      * This configuration can be done only from secure code, as otherwise those
      * register fields are not accessible.  That's why it is placed here.
      */
-    nrf_gpio_pin_mcu_select(PIN_XL1, NRF_GPIO_PIN_MCUSEL_PERIPHERAL);
-    nrf_gpio_pin_mcu_select(PIN_XL2, NRF_GPIO_PIN_MCUSEL_PERIPHERAL);
+    nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_PERIPHERAL);
+    nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_PERIPHERAL);
 
     /* Enable the instruction and data cache (this can be done only from secure
      * code; that's why it is placed here).
