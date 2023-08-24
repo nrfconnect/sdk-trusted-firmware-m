@@ -24,7 +24,10 @@ typedef void(*VECTOR_TABLE_Type)(void);
 void __PROGRAM_START(void) __NO_RETURN;
 
 #define DEFAULT_IRQ_HANDLER(handler_name)  \
-__NO_RETURN void __attribute__((weak, alias("default_tfm_IRQHandler"))) handler_name(void);
+void __WEAK handler_name(void) __NO_RETURN; \
+void handler_name(void) { \
+    while(1); \
+}
 
 __NO_RETURN void Reset_Handler(void);
 
