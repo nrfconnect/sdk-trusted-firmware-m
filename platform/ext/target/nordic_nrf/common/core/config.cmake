@@ -41,3 +41,6 @@ set(CONFIG_TFM_USE_TRUSTZONE            ON)
 set(TFM_MULTI_CORE_TOPOLOGY             OFF)
 
 set(NRF_SECURE_UART_INSTANCE            1           CACHE STRING  "The UART instance number to use for secure UART")
+
+# Make FLIH IRQ test as the default IRQ test on nordic platforms
+set(TEST_NS_SLIH_IRQ                  OFF   CACHE BOOL    "Whether to build NS regression Second-Level Interrupt Handling tests")
