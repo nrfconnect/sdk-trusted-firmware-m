@@ -233,18 +233,18 @@ enum tfm_hal_status_t tfm_spim4_irq_init(void *p_pt,
 }
 #endif
 
-#if TFM_PERIPHERAL_GPIOTE0_SECURE
-static struct irq_t gpiote0_irq = {0};
+#if TFM_PERIPHERAL_GPIOTE1_SECURE
+static struct irq_t gpiote1_irq = {0};
 
-void GPIOTE0_IRQHandler(void)
+void GPIOTE1_IRQHandler(void)
 {
-    spm_handle_interrupt(gpiote0_irq.p_pt, gpiote0_irq.p_ildi);
+    spm_handle_interrupt(gpiote1_irq.p_pt, gpiote1_irq.p_ildi);
 }
 
-enum tfm_hal_status_t tfm_gpiote0_irq_init(void *p_pt,
+enum tfm_hal_status_t tfm_gpiote1_irq_init(void *p_pt,
                                            const struct irq_load_info_t *p_ildi)
 {
-    return irq_init(&gpiote0_irq, TFM_GPIOTE0_IRQ, p_pt, p_ildi);
+    return irq_init(&gpiote1_irq, TFM_GPIOTE1_IRQ, p_pt, p_ildi);
 }
 #endif
 
