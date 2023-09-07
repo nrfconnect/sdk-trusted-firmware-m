@@ -216,7 +216,9 @@
 #endif
 #else /* defined(MBEDTLS_PSA_CRYPTO_CONFIG)  */
 /* Without any PSA configuration we must assume the maximum size possible. */
+#ifndef PSA_VENDOR_ECC_MAX_CURVE_BITS
 #define PSA_VENDOR_ECC_MAX_CURVE_BITS 521
+#endif
 #endif /* defined(MBEDTLS_PSA_CRYPTO_CONFIG)  */
 
 /** This macro returns the maximum supported length of the PSK for the
