@@ -64,7 +64,7 @@ extern "C" {
 #define TFM_PDM_IRQ            (NRFX_IRQ_NUMBER_GET(NRF_PDM))
 #define TFM_I2S_IRQ            (NRFX_IRQ_NUMBER_GET(NRF_I2S))
 #define TFM_IPC_IRQ            (NRFX_IRQ_NUMBER_GET(NRF_IPC))
-#define TFM_GPIOTE0_IRQ        (NRFX_IRQ_NUMBER_GET(NRF_GPIOTE0))
+#define TFM_GPIOTE1_IRQ        (NRFX_IRQ_NUMBER_GET(NRF_GPIOTE1))
 
 struct platform_data_t;
 
