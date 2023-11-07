@@ -49,7 +49,7 @@
 #define CRYPTO_HASH_MODULE_ENABLED             1
 
 /* Enable PSA Crypto Cipher module */
-#define CRYPTO_CIPHER_MODULE_ENABLED           1
+#define CRYPTO_CIPHER_MODULE_ENABLED           0
 
 /* Enable PSA Crypto asymmetric key signature module */
 #define CRYPTO_ASYM_SIGN_MODULE_ENABLED        1
