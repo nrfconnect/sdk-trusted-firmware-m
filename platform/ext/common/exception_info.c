@@ -77,7 +77,7 @@ uint32_t *get_exception_frame(uint32_t lr, uint32_t msp, uint32_t psp)
 }
 
 static void dump_exception_info(bool stack_error,
-                                struct exception_info_t *ctx)
+                                const struct exception_info_t *ctx)
 {
     SPMLOG_DBGMSG("Here is some context for the exception:\r\n");
     SPMLOG_DBGMSGVAL("    EXC_RETURN (LR): ", ctx->EXC_RETURN);
@@ -148,7 +148,13 @@ static void dump_exception_info(bool stack_error,
 #endif
 }
 
-static void dump_error(uint32_t error_type)
+#define EXCEPTION_TYPE_SECUREFAULT (NVIC_USER_IRQ_OFFSET + SecureFault_IRQn)
+#define EXCEPTION_TYPE_MEMFAULT    (NVIC_USER_IRQ_OFFSET + MemoryManagement_IRQn)
+#define EXCEPTION_TYPE_HARDFAULT   (NVIC_USER_IRQ_OFFSET + HardFault_IRQn)
+#define EXCEPTION_TYPE_BUSFAULT    (NVIC_USER_IRQ_OFFSET + BusFault_IRQn)
+#define EXCEPTION_TYPE_USAGEFAULT  (NVIC_USER_IRQ_OFFSET + UsageFault_IRQn)
+
+static void dump_error(const struct exception_info_t *ctx)
 {
     bool stack_error = false;
 
@@ -157,7 +163,7 @@ static void dump_error(uint32_t error_type)
 #endif
 
     SPMLOG_ERRMSG("FATAL ERROR: ");
-    switch (error_type) {
+    switch (ctx->VECTACTIVE) {
     case EXCEPTION_TYPE_SECUREFAULT:
         SPMLOG_ERRMSG("SecureFault\r\n");
         break;
@@ -176,17 +182,19 @@ static void dump_error(uint32_t error_type)
         SPMLOG_ERRMSG("UsageFault\r\n");
         stack_error = true;
         break;
-    case EXCEPTION_TYPE_PLATFORM:
-        SPMLOG_ERRMSG("Platform Exception\r\n");
+    /* Platform specific external interrupt secure handler. */
+    default:
+        if (ctx->VECTACTIVE < 16) {
+            SPMLOG_ERRMSGVAL("Reserved Exception ", ctx->VECTACTIVE);
+        } else {
+            SPMLOG_ERRMSGVAL("Platform external interrupt: ", ctx->VECTACTIVE - 16);
+        }
         /* Depends on the platform, assume it may cause stack error */
         stack_error = true;
         break;
-    default:
-        SPMLOG_ERRMSG("Unknown\r\n");
-        break;
     }
 
-    dump_exception_info(stack_error, &exception_info);
+    dump_exception_info(stack_error, ctx);
 }
 
 void tfm_exception_info_get_context(struct exception_info_t *ctx)
@@ -194,11 +202,11 @@ void tfm_exception_info_get_context(struct exception_info_t *ctx)
     memcpy(ctx, &exception_info, sizeof(exception_info));
 }
 
-void store_and_dump_context(uint32_t LR_in, uint32_t MSP_in, uint32_t PSP_in,
-                            uint32_t exception_type)
+void store_and_dump_context(uint32_t LR_in, uint32_t MSP_in, uint32_t PSP_in)
 {
     struct exception_info_t *ctx = &exception_info;
 
+    ctx->VECTACTIVE = SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk;
     ctx->xPSR = __get_xPSR();
     ctx->EXC_RETURN = LR_in;
     ctx->MSP = MSP_in;
@@ -223,5 +231,5 @@ void store_and_dump_context(uint32_t LR_in, uint32_t MSP_in, uint32_t PSP_in,
 #endif
 #endif
 
-    dump_error(exception_type);
+    dump_error(ctx);
 }
