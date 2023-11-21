@@ -42,7 +42,16 @@ if(NS)
     )
     target_link_libraries(CMSIS_5_tfm_ns
         INTERFACE
-            CMSIS_5_RTX_V8MMN
+            $<$<OR:$<BOOL:${CONFIG_TFM_ENABLE_FP}>,$<BOOL:${CONFIG_TFM_ENABLE_MVE_FP}>>:CMSIS_5_RTX_V8MMFN>
+            $<$<NOT:$<OR:$<BOOL:${CONFIG_TFM_ENABLE_FP}>,$<BOOL:${CONFIG_TFM_ENABLE_MVE_FP}>>>:CMSIS_5_RTX_V8MMN>
+    )
+    target_compile_options(tfm_ns
+        PUBLIC
+            ${COMPILER_CP_FLAG}
+    )
+    target_link_options(tfm_ns
+        PUBLIC
+            ${LINKER_CP_OPTION}
     )
     target_sources(tfm_ns
         PRIVATE
