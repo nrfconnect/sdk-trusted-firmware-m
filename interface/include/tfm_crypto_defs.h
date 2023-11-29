@@ -47,7 +47,6 @@ struct tfm_crypto_pack_iovec {
     uint32_t op_handle;      /*!< Frontend context handle associated to a
                               *   multipart operation
                               */
-    size_t capacity;         /*!< Key derivation capacity */
     size_t ad_length;        /*!< Additional Data length for multipart AEAD */
     size_t plaintext_length; /*!< Plaintext length for multipart AEAD */
 
@@ -59,6 +58,10 @@ struct tfm_crypto_pack_iovec {
                               */
     uint16_t step;           /*!< Key derivation step */
     psa_pake_role_t role;    /*!< PAKE role */
+    union {
+        size_t capacity;     /*!< Key derivation capacity */
+        uint64_t value;      /*!< Key derivation integer for update*/
+    };
 };
 
 /**
@@ -155,6 +158,7 @@ enum tfm_crypto_group_id {
     X(TFM_CRYPTO_KEY_DERIVATION_SET_CAPACITY)      \
     X(TFM_CRYPTO_KEY_DERIVATION_INPUT_BYTES)       \
     X(TFM_CRYPTO_KEY_DERIVATION_INPUT_KEY)         \
+    X(TFM_CRYPTO_KEY_DERIVATION_INPUT_INTEGER)     \
     X(TFM_CRYPTO_KEY_DERIVATION_KEY_AGREEMENT)     \
     X(TFM_CRYPTO_KEY_DERIVATION_OUTPUT_BYTES)      \
     X(TFM_CRYPTO_KEY_DERIVATION_OUTPUT_KEY)        \
