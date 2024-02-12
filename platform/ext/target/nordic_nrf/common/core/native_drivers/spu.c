@@ -126,28 +126,27 @@ void spu_regions_reset_unlocked_secure(void)
     for (size_t i = 0; i < NUM_FLASH_SECURE_ATTRIBUTION_REGIONS ; i++) {
         if (!spu_region_is_bootloader_region(NRF_SPU, i)) {
             nrf_spu_flashregion_set(NRF_SPU, i,
-                SPU_SECURE_ATTR_SECURE,
+                1 /* Secure */,
                 NRF_SPU_MEM_PERM_READ
                 | NRF_SPU_MEM_PERM_WRITE
                 | NRF_SPU_MEM_PERM_EXECUTE,
-                SPU_LOCK_CONF_UNLOCKED);
+                0 /* No lock */);
         }
     }
 
     for (size_t i = 0; i < NUM_SRAM_SECURE_ATTRIBUTION_REGIONS ; i++) {
         if (!spu_region_is_pcd_region(NRF_SPU, i)) {
             nrf_spu_ramregion_set(NRF_SPU, i,
-                SPU_SECURE_ATTR_SECURE,
+                1 /* Secure */,
                 NRF_SPU_MEM_PERM_READ
                 | NRF_SPU_MEM_PERM_WRITE
                 | NRF_SPU_MEM_PERM_EXECUTE,
-                SPU_LOCK_CONF_UNLOCKED);
+                0 /* No lock */);
         }
     }
 }
 
-void spu_regions_flash_config(uint32_t start_addr, uint32_t limit_addr, bool secure_attr,
-			      uint32_t permissions, bool lock_conf)
+void spu_regions_flash_config_non_secure(uint32_t start_addr, uint32_t limit_addr)
 {
     /* Determine start and last flash region number */
     size_t start_id =
@@ -159,12 +158,16 @@ void spu_regions_flash_config(uint32_t start_addr, uint32_t limit_addr, bool sec
 
     /* Configure all flash regions between start_id and last_id */
     for (size_t i = start_id; i <= last_id; i++) {
-        nrf_spu_flashregion_set(NRF_SPU, i, secure_attr, permissions, lock_conf);
+        nrf_spu_flashregion_set(NRF_SPU, i,
+            0 /* Non-Secure */,
+            NRF_SPU_MEM_PERM_READ
+            | NRF_SPU_MEM_PERM_WRITE
+            | NRF_SPU_MEM_PERM_EXECUTE,
+            1 /* Lock */);
     }
 }
 
-void spu_regions_sram_config(uint32_t start_addr, uint32_t limit_addr, bool secure_attr,
-			      uint32_t permissions, bool lock_conf)
+void spu_regions_sram_config_non_secure(uint32_t start_addr, uint32_t limit_addr)
 {
     /* Determine start and last ram region number */
     size_t start_id =
@@ -176,7 +179,12 @@ void spu_regions_sram_config(uint32_t start_addr, uint32_t limit_addr, bool secu
 
     /* Configure all ram regions between start_id and last_id */
     for (size_t i = start_id; i <= last_id; i++) {
-        nrf_spu_ramregion_set(NRF_SPU, i, secure_attr, permissions, lock_conf);
+        nrf_spu_ramregion_set(NRF_SPU, i,
+            0 /* Non-Secure */,
+            NRF_SPU_MEM_PERM_READ
+            | NRF_SPU_MEM_PERM_WRITE
+            | NRF_SPU_MEM_PERM_EXECUTE,
+            1 /* Lock */);
     }
 }
 
@@ -203,7 +211,7 @@ void spu_regions_flash_config_non_secure_callable(uint32_t start_addr,
     nrf_spu_flashnsc_set(NRF_SPU, 0,
         FLASH_NSC_SIZE_REG(nsc_size),
         FLASH_NSC_REGION_FROM_ADDR(start_addr),
-        SPU_LOCK_CONF_LOCKED);
+        1 /* Lock */);
 }
 
 uint32_t spu_regions_flash_get_base_address_in_region(uint32_t region_id)
