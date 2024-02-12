@@ -107,13 +107,16 @@
  * only one type of access available. For these peripherals, you cannot choose
  * between secure and non-secure mapping.
  */
-#if !defined(NRF_TRUSTZONE_NONSECURE)
+#if defined(NRF_TRUSTZONE_NONSECURE)
+#define NRF_GPIOTE1      NRF_GPIOTE1_NS
+#else
 #define NRF_CACHE        NRF_CACHE_S
 #define NRF_CACHEINFO    NRF_CACHEINFO_S
 #define NRF_CACHEDATA    NRF_CACHEDATA_S
 #define NRF_CRYPTOCELL   NRF_CRYPTOCELL_S
 #define NRF_CTI          NRF_CTI_S
 #define NRF_FICR         NRF_FICR_S
+#define NRF_GPIOTE0      NRF_GPIOTE0_S
 #define NRF_SPU          NRF_SPU_S
 #define NRF_TAD          NRF_TAD_S
 #define NRF_UICR         NRF_UICR_S
@@ -122,9 +125,13 @@
 /* Fixup for the QDEC driver. */
 #define NRF_QDEC         NRF_QDEC0
 
-/* Fixups for the GPIOTE driver. */
-#define NRF_GPIOTE0      NRF_GPIOTE0_S
-#define NRF_GPIOTE1      NRF_GPIOTE1_NS
+/* Fixup for the GPIOTE driver. */
+#if defined(NRF_TRUSTZONE_NONSECURE)
+#define NRF_GPIOTE       NRF_GPIOTE1
+#else
+#define NRF_GPIOTE       NRF_GPIOTE0
+#endif
+
 
 // <<< Use Configuration Wizard in Context Menu >>>\n
 
@@ -504,10 +511,6 @@
 
 #ifndef NRFX_GPIOTE_CONFIG_DEBUG_COLOR
 #define NRFX_GPIOTE_CONFIG_DEBUG_COLOR 0
-#endif
-
-#ifndef NRFX_GPIOTE1_ENABLED
-#define NRFX_GPIOTE1_ENABLED 1
 #endif
 
 // </e>
