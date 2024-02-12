@@ -109,11 +109,6 @@ if(TFM_SPM_LOG_RAW_ENABLED)
             cmsis_drivers/Driver_USART.c
             ${HAL_NORDIC_PATH}/nrfx/drivers/src/nrfx_uarte.c
     )
-
-    target_compile_definitions(platform_s
-        PUBLIC
-            NRF_SECURE_UART_INSTANCE=${NRF_SECURE_UART_INSTANCE}
-    )
 endif()
 
 target_compile_options(platform_s
