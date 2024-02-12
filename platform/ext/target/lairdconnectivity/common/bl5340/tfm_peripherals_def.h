@@ -73,7 +73,7 @@ extern "C" {
 #define TFM_IPC_IRQ            (IPC_IRQn)
 #define TFM_QSPI_IRQ           (QSPI_IRQn)
 #define TFM_NFCT_IRQ           (NFCT_IRQn)
-#define TFM_GPIOTE0_IRQ        (GPIOTE0_IRQn)
+#define TFM_GPIOTE1_IRQ        (GPIOTE1_IRQn)
 #define TFM_QDEC0_IRQ          (QDEC0_IRQn)
 #define TFM_QDEC1_IRQ          (QDEC1_IRQn)
 #define TFM_USBD_IRQ           (USBD_IRQn)
