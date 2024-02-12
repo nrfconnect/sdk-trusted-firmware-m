@@ -46,7 +46,7 @@ void SPU_Handler(void)
 
 __attribute__((naked)) void SPU_IRQHandler(void)
 {
-    EXCEPTION_INFO();
+    EXCEPTION_INFO(EXCEPTION_TYPE_PLATFORM);
 
     __ASM volatile(
         "BL        SPU_Handler             \n"
