@@ -59,7 +59,6 @@ endif()
 target_compile_definitions(platform_region_defs
     INTERFACE
         $<$<BOOL:${NULL_POINTER_EXCEPTION_DETECTION}>:NULL_POINTER_EXCEPTION_DETECTION>
-        $<$<BOOL:${NRF_NS_STORAGE}>:NRF_NS_STORAGE>
 )
 
 #========================= Platform Secure ====================================#
