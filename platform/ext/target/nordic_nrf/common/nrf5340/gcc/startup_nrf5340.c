@@ -27,15 +27,9 @@
 #include "hw_init.h"
 #endif
 #include "startup.h"
-#include "exception_info.h"
 
 __NO_RETURN __attribute__((naked)) void default_tfm_IRQHandler(void) {
-	EXCEPTION_INFO(EXCEPTION_TYPE_PLATFORM);
-
-	__ASM volatile(
-        "BL        default_irq_handler     \n"
-        "B         .                       \n"
-    );
+    while(1);
 }
 
 DEFAULT_IRQ_HANDLER(NMI_Handler)
