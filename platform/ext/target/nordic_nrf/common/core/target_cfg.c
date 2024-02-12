@@ -742,25 +742,26 @@ enum tfm_plat_err_t spu_init_cfg(void)
 enum tfm_plat_err_t spu_periph_init_cfg(void)
 {
     /* Peripheral configuration */
-static const uint8_t target_peripherals[] = {
+
     /* The following peripherals share ID:
      * - FPU (FPU cannot be configured in NRF91 series, it's always NS)
      * - DCNF (On 53, but not 91)
      */
 #ifndef NRF91_SERIES
-    NRFX_PERIPHERAL_ID_GET(NRF_FPU),
+    spu_peripheral_config_non_secure((uint32_t)NRF_FPU, false);
 #endif
+
     /* The following peripherals share ID:
      * - REGULATORS
      * - OSCILLATORS
      */
-    NRFX_PERIPHERAL_ID_GET(NRF_REGULATORS),
+    spu_peripheral_config_non_secure((uint32_t)NRF_REGULATORS, false);
     /* The following peripherals share ID:
      * - CLOCK
      * - POWER
      * - RESET (On 53, but not 91)
      */
-    NRFX_PERIPHERAL_ID_GET(NRF_CLOCK),
+    spu_peripheral_config_non_secure((uint32_t)NRF_CLOCK, false);
     /* The following peripherals share ID: (referred to as Serial-Box)
      * - SPIMx
      * - SPISx
@@ -773,105 +774,100 @@ static const uint8_t target_peripherals[] = {
      * The UART Driver will configure it as non-secure when it uninitializes.
      */
 #if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 0)
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM0_NS),
+    spu_peripheral_config_non_secure((uint32_t)NRF_SPIM0, false);
 #endif
 
     /* When UART1 is a secure peripheral we need to leave Serial-Box 1 as Secure */
 #if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 1)
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM1),
+    spu_peripheral_config_non_secure((uint32_t)NRF_SPIM1, false);
 #endif
 
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM2),
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM3),
+    spu_peripheral_config_non_secure((uint32_t)NRF_SPIM2, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_SPIM3, false);
 #ifdef NRF_SPIM4
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM4),
+    spu_peripheral_config_non_secure((uint32_t)NRF_SPIM4, false);
 #endif
-    NRFX_PERIPHERAL_ID_GET(NRF_SAADC),
-    NRFX_PERIPHERAL_ID_GET(NRF_TIMER0),
-    NRFX_PERIPHERAL_ID_GET(NRF_TIMER1),
-    NRFX_PERIPHERAL_ID_GET(NRF_TIMER2),
-    NRFX_PERIPHERAL_ID_GET(NRF_RTC0),
-    NRFX_PERIPHERAL_ID_GET(NRF_RTC1),
-    NRFX_PERIPHERAL_ID_GET(NRF_DPPIC),
+    spu_peripheral_config_non_secure((uint32_t)NRF_SAADC, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_TIMER0, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_TIMER1, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_TIMER2, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_RTC0, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_RTC1, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_DPPIC, false);
 #ifndef PSA_API_TEST_IPC
 #ifdef NRF_WDT0
     /* WDT0 is used as a secure peripheral in PSA FF tests */
-    NRFX_PERIPHERAL_ID_GET(NRF_WDT0),
+    spu_peripheral_config_non_secure((uint32_t)NRF_WDT0, false);
 #endif
 #ifdef NRF_WDT
-    NRFX_PERIPHERAL_ID_GET(NRF_WDT),
+    spu_peripheral_config_non_secure((uint32_t)NRF_WDT, false);
 #endif
 #endif /* PSA_API_TEST_IPC */
 #ifdef NRF_WDT1
-    NRFX_PERIPHERAL_ID_GET(NRF_WDT1),
+    spu_peripheral_config_non_secure((uint32_t)NRF_WDT1, false);
 #endif
     /* The following peripherals share ID:
      * - COMP
      * - LPCOMP
      */
 #ifdef NRF_COMP
-    NRFX_PERIPHERAL_ID_GET(NRF_COMP),
+    spu_peripheral_config_non_secure((uint32_t)NRF_COMP, false);
 #endif
-    NRFX_PERIPHERAL_ID_GET(NRF_EGU0),
-    NRFX_PERIPHERAL_ID_GET(NRF_EGU1),
-    NRFX_PERIPHERAL_ID_GET(NRF_EGU2),
-    NRFX_PERIPHERAL_ID_GET(NRF_EGU3),
-    NRFX_PERIPHERAL_ID_GET(NRF_EGU4),
+    spu_peripheral_config_non_secure((uint32_t)NRF_EGU0, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_EGU1, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_EGU2, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_EGU3, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_EGU4, false);
 #ifndef PSA_API_TEST_IPC
     /* EGU5 is used as a secure peripheral in PSA FF tests */
-    NRFX_PERIPHERAL_ID_GET(NRF_EGU5),
+    spu_peripheral_config_non_secure((uint32_t)NRF_EGU5, false);
 #endif
-    NRFX_PERIPHERAL_ID_GET(NRF_PWM0),
-    NRFX_PERIPHERAL_ID_GET(NRF_PWM1),
-    NRFX_PERIPHERAL_ID_GET(NRF_PWM2),
-    NRFX_PERIPHERAL_ID_GET(NRF_PWM3),
+    spu_peripheral_config_non_secure((uint32_t)NRF_PWM0, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_PWM1, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_PWM2, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_PWM3, false);
 #ifdef NRF_PDM
-    NRFX_PERIPHERAL_ID_GET(NRF_PDM),
+    spu_peripheral_config_non_secure((uint32_t)NRF_PDM, false);
 #endif
 #ifdef NRF_PDM0
-    NRFX_PERIPHERAL_ID_GET(NRF_PDM0),
+    spu_peripheral_config_non_secure((uint32_t)NRF_PDM0, false);
 #endif
 #ifdef NRF_I2S
-    NRFX_PERIPHERAL_ID_GET(NRF_I2S),
+    spu_peripheral_config_non_secure((uint32_t)NRF_I2S, false);
 #endif
 #ifdef NRF_I2S0
-    NRFX_PERIPHERAL_ID_GET(NRF_I2S0),
+    spu_peripheral_config_non_secure((uint32_t)NRF_I2S0, false);
 #endif
-    NRFX_PERIPHERAL_ID_GET(NRF_IPC),
+    spu_peripheral_config_non_secure((uint32_t)NRF_IPC, false);
 #ifndef SECURE_QSPI
 #ifdef NRF_QSPI
-    NRFX_PERIPHERAL_ID_GET(NRF_QSPI),
+    spu_peripheral_config_non_secure((uint32_t)NRF_QSPI, false);
 #endif
 #endif
 #ifdef NRF_NFCT
-    NRFX_PERIPHERAL_ID_GET(NRF_NFCT),
+    spu_peripheral_config_non_secure((uint32_t)NRF_NFCT, false);
 #endif
 #ifdef NRF_MUTEX
-    NRFX_PERIPHERAL_ID_GET(NRF_MUTEX),
+    spu_peripheral_config_non_secure((uint32_t)NRF_MUTEX, false);
 #endif
 #ifdef NRF_QDEC0
-    NRFX_PERIPHERAL_ID_GET(NRF_QDEC0),
+    spu_peripheral_config_non_secure((uint32_t)NRF_QDEC0, false);
 #endif
 #ifdef NRF_QDEC1
-    NRFX_PERIPHERAL_ID_GET(NRF_QDEC1),
+    spu_peripheral_config_non_secure((uint32_t)NRF_QDEC1, false);
 #endif
 #ifdef NRF_USBD
-    NRFX_PERIPHERAL_ID_GET(NRF_USBD),
+    spu_peripheral_config_non_secure((uint32_t)NRF_USBD, false);
 #endif
 #ifdef NRF_USBREGULATOR
-    NRFX_PERIPHERAL_ID_GET(NRF_USBREGULATOR),
+    spu_peripheral_config_non_secure((uint32_t)NRF_USBREGULATOR, false);
 #endif
-    NRFX_PERIPHERAL_ID_GET(NRF_NVMC),
-    NRFX_PERIPHERAL_ID_GET(NRF_P0),
+    spu_peripheral_config_non_secure((uint32_t)NRF_NVMC, false);
+    spu_peripheral_config_non_secure((uint32_t)NRF_P0, false);
 #ifdef NRF_P1
-    NRFX_PERIPHERAL_ID_GET(NRF_P1),
+    spu_peripheral_config_non_secure((uint32_t)NRF_P1, false);
 #endif
-    NRFX_PERIPHERAL_ID_GET(NRF_VMC),
-};
-
-    for (int i = 0; i < ARRAY_SIZE(target_peripherals); i++) {
-        spu_peripheral_config_non_secure(target_peripherals[i], SPU_LOCK_CONF_UNLOCKED);
-    }
+    spu_peripheral_config_non_secure((uint32_t)NRF_VMC, false);
 
     /* DPPI channel configuration */
     spu_dppi_config_non_secure(TFM_PERIPHERAL_DPPI_CHANNEL_MASK_SECURE, SPU_LOCK_CONF_LOCKED);
@@ -918,4 +914,14 @@ static const uint8_t target_peripherals[] = {
     nrf_spu_extdomain_set(NRF_SPU, 0, false, true);
 
     return TFM_PLAT_ERR_SUCCESS;
+}
+
+void spu_periph_configure_to_secure(uint32_t periph_num)
+{
+    spu_peripheral_config_secure(periph_num, true);
+}
+
+void spu_periph_configure_to_non_secure(uint32_t periph_num)
+{
+    spu_peripheral_config_non_secure(periph_num, true);
 }
