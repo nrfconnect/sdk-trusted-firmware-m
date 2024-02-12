@@ -92,6 +92,11 @@ static int32_t ARM_Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
     return ARM_DRIVER_OK;
 }
 
+static int32_t ARM_Flash_Uninitialize(void)
+{
+    return ARM_DRIVER_OK;
+}
+
 static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
 {
     /* Conversion between data items and bytes */
@@ -146,7 +151,7 @@ ARM_DRIVER_FLASH Driver_FLASH0 = {
     .GetVersion      = NULL,
     .GetCapabilities = ARM_Flash_GetCapabilities,
     .Initialize      = ARM_Flash_Initialize,
-    .Uninitialize    = NULL,
+    .Uninitialize    = ARM_Flash_Uninitialize,
     .PowerControl    = NULL,
     .ReadData        = ARM_Flash_ReadData,
     .ProgramData     = ARM_Flash_ProgramData,
