@@ -21,7 +21,16 @@
 #include <RTE_Device.h>
 #include <flash_layout.h>
 #include <string.h>
+
+#include <nrf.h>
+
+#if defined(NRF_NVMC_S)
 #include <nrfx_nvmc.h>
+#elif defined(NRF_RRAMC_S)
+#include <nrfx_rramc.h>
+#else
+#error "Unrecognized platform"
+#endif
 
 #ifndef ARG_UNUSED
 #define ARG_UNUSED(arg)  (void)arg
@@ -92,7 +101,30 @@ static int32_t ARM_Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
         return ARM_DRIVER_ERROR;
     }
 
+#ifdef NRF_RRAMC_S
+    /* Disable buffering until it's security impact is understood */
+    uint8_t write_buff_size = 0;
+
+	/* Don't use an event handler until it's understood whether we
+	 * want it or not */
+	nrfx_rramc_evt_handler_t handler = NULL;
+
+	nrfx_rramc_config_t p_config = NRFX_RRAMC_DEFAULT_CONFIG(write_buff_size);
+
+	nrfx_err_t err_code = nrfx_rramc_init(&p_config, handler);
+
+	switch(err_code){
+	case NRFX_SUCCESS:
+	case NRFX_ERROR_ALREADY:
+		// TF-M appears to be invoking ARM_FLASH_Initialize multiple
+		// times, but this is of no concern to the driver.
+		return ARM_DRIVER_OK;
+	default:
+		return ARM_DRIVER_ERROR;
+	}
+#else
     return ARM_DRIVER_OK;
+#endif
 }
 
 static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
@@ -124,7 +156,11 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
+#ifdef NRF_NVMC_S
     nrfx_nvmc_words_write(addr, data, cnt);
+#else
+	nrfx_rramc_words_write(addr, data, cnt);
+#endif
 
     /* Conversion between bytes and data items */
     return cnt;
@@ -132,10 +168,20 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
 
 static int32_t ARM_Flash_EraseSector(uint32_t addr)
 {
+#ifdef NRF_NVMC_S
     nrfx_err_t err_code = nrfx_nvmc_page_erase(addr);
+
     if (err_code != NRFX_SUCCESS) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
+#else
+    for (uint32_t *erase_word_ptr = (uint32_t *)addr;
+		 (uint32_t)erase_word_ptr < addr + FLASH_AREA_IMAGE_SECTOR_SIZE; erase_word_ptr++) {
+		if(*erase_word_ptr != 0xFFFFFFFFU) {
+			nrfx_rramc_word_write((uint32_t)erase_word_ptr, 0xFFFFFFFFU);
+		}
+    }
+#endif
 
     return ARM_DRIVER_OK;
 }

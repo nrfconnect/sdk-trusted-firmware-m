@@ -20,23 +20,31 @@
 #include "region_defs.h"
 #include "tfm_plat_defs.h"
 #include "tfm_peripherals_config.h"
+#include "utilities.h"
 #include "region.h"
 #include "array.h"
 
 #include <spu.h>
 #include <nrfx.h>
-#include <nrfx_nvmc.h>
-#include <hal/nrf_nvmc.h>
+
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_spu.h>
 
-#define PIN_XL1 0
-#define PIN_XL2 1
-
-#if !(defined(NRF91_SERIES) || defined(NRF53_SERIES))
-#error "Invalid configuration"
+#ifdef CACHE_PRESENT
+#include <hal/nrf_cache.h>
 #endif
 
+#ifdef NVMC_PRESENT
+#include <nrfx_nvmc.h>
+#include <hal/nrf_nvmc.h>
+#endif
+
+#ifdef MPC_PRESENT
+#include <hal/nrf_mpc.h>
+#endif
+
+#define PIN_XL1 0
+#define PIN_XL2 1
 
 #if TFM_PERIPHERAL_DCNF_SECURE
 struct platform_data_t tfm_peripheral_dcnf = {
@@ -231,6 +239,13 @@ struct platform_data_t tfm_peripheral_twis3 = {
 struct platform_data_t tfm_peripheral_uarte3 = {
     NRF_UARTE3_S_BASE,
     NRF_UARTE3_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_UARTE22_SECURE
+struct platform_data_t tfm_peripheral_uarte22 = {
+    NRF_UARTE22_S_BASE,
+    NRF_UARTE22_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
 };
 #endif
 
@@ -637,6 +652,12 @@ enum tfm_plat_err_t init_debug(void)
     NRF_CTRLAP->SECUREAPPROTECT.LOCK = CTRLAPPERI_SECUREAPPROTECT_LOCK_LOCK_Locked <<
         CTRLAPPERI_SECUREAPPROTECT_LOCK_LOCK_Msk;
 
+#elif defined(NRF54L15_ENGA_XXAA)
+	// TODO: NCSDK-25047: Support nRF54L
+#else
+
+#error "Unrecognized platform"
+
 #endif
 
     return TFM_PLAT_ERR_SUCCESS;
@@ -650,8 +671,14 @@ enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
         NVIC->ITNS[i] = 0xFFFFFFFF;
     }
 
-    /* Make sure that the SPU is targeted to S state */
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_SPU));
+    /* Make sure that the SPU instance(s) are targeted to S state */
+	for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
+		NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(spu_instances[i]));
+	}
+
+#ifdef NRF_CRACEN
+	NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_CRACEN));
+#endif
 
 #ifdef SECURE_UART1
 #if NRF_SECURE_UART_INSTANCE == 0
@@ -660,6 +687,9 @@ enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
 #elif NRF_SECURE_UART_INSTANCE == 1
     /* UARTE1 is a secure peripheral, so its IRQ has to target S state */
     NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE1));
+#elif NRF_SECURE_UART_INSTANCE == 22
+    /* UARTE22 is a secure peripheral, so its IRQ has to target S state */
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE22));
 #endif
 #endif
 
@@ -672,8 +702,14 @@ enum tfm_plat_err_t nvic_interrupt_enable(void)
     /* SPU interrupt enabling */
     spu_enable_interrupts();
 
-    NVIC_ClearPendingIRQ(NRFX_IRQ_NUMBER_GET(NRF_SPU));
-    NVIC_EnableIRQ(NRFX_IRQ_NUMBER_GET(NRF_SPU));
+	for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
+		NVIC_ClearPendingIRQ(NRFX_IRQ_NUMBER_GET(spu_instances[i]));
+		NVIC_EnableIRQ(NRFX_IRQ_NUMBER_GET(spu_instances[i]));
+	}
+
+	/* The CRACEN driver configures the NVIC for CRACEN and is
+	 * therefore omitted here.
+	 */
 
     return TFM_PLAT_ERR_SUCCESS;
 }
@@ -682,13 +718,61 @@ enum tfm_plat_err_t nvic_interrupt_enable(void)
 
 void sau_and_idau_cfg(void)
 {
+	/*
+	 * SAU and IDAU configuration is very different between old
+	 * (53/91) and new (54++) platforms. New platforms have a proper SAU
+	 * and IDAU, whereas old platforms do not.
+	 */
+#ifdef NRF54L15_ENGA_XXAA
+	/*
+	 * This SAU configuration aligns with ARM's RSS implementation of
+	 * sau_and_idau_cfg when possible.
+	 */
+
+	/* Enables SAU */
+    TZ_SAU_Enable();
+
+    /* Configures SAU regions to be non-secure */
+
+	/* Note that this SAU configuration assumes that there is only one
+	 * secure NVM partition and one non-secure NVM partition. Meaning,
+	 * memory_regions.non_secure_partition_limit is at the end of
+	 * NVM.
+	 */
+
+	/* Configure the end of NVM, and the FICR, to be non-secure using
+	   a single region. Note that the FICR is placed after the
+	   non-secure NVM and before the UICR.*/
+    SAU->RNR  = 0;
+    SAU->RBAR = (memory_regions.non_secure_partition_base
+                 & SAU_RBAR_BADDR_Msk);
+    SAU->RLAR = (NRF_UICR_S_BASE & SAU_RLAR_LADDR_Msk) | SAU_RLAR_ENABLE_Msk;
+
+	/* Leave SAU region 1 disabled until we find a use for it */
+
+    /* Configures veneers region to be non-secure callable */
+    SAU->RNR  = 2;
+    SAU->RBAR = (memory_regions.veneer_base & SAU_RBAR_BADDR_Msk);
+    SAU->RLAR = (memory_regions.veneer_limit & SAU_RLAR_LADDR_Msk)
+                 | SAU_RLAR_ENABLE_Msk | SAU_RLAR_NSC_Msk;
+
+	/* Configures SAU region 3 to cover both the end of SRAM and
+	 * regions above it as shown in the "Example memory map" in the
+	 * "Product Specification" */
+    SAU->RNR  = 3;
+    SAU->RBAR = (NS_DATA_START & SAU_RBAR_BADDR_Msk);
+    SAU->RLAR = (0xFFFFFFFFul & SAU_RLAR_LADDR_Msk) | SAU_RLAR_ENABLE_Msk;
+
+#else
     /* IDAU (SPU) is always enabled. SAU is non-existent.
      * Allow SPU to have precedence over (non-existing) ARMv8-M SAU.
      */
     TZ_SAU_Disable();
     SAU->CTRL |= SAU_CTRL_ALLNS_Msk;
+#endif
 }
 
+#if NRF_SPU_HAS_MEMORY
 enum tfm_plat_err_t spu_init_cfg(void)
 {
     /*
@@ -767,10 +851,221 @@ enum tfm_plat_err_t spu_init_cfg(void)
 
     return TFM_PLAT_ERR_SUCCESS;
 }
+#endif /* NRF_SPU_HAS_MEMORY */
+
+
+#ifdef MPC_PRESENT
+struct mpc_region_override {
+	nrf_mpc_override_config_t config;
+	nrf_owner_t owner_id;
+	uintptr_t start_address;
+	size_t endaddr;
+	uint32_t perm;
+	uint32_t permmask;
+	size_t index;
+};
+
+static void mpc_configure_override(NRF_MPC_Type *mpc, struct mpc_region_override *override)
+{
+	nrf_mpc_override_startaddr_set(mpc, override->index, override->start_address);
+	nrf_mpc_override_endaddr_set(mpc, override->index, override->endaddr);
+	nrf_mpc_override_perm_set(mpc, override->index, override->perm);
+	nrf_mpc_override_permmask_set(mpc, override->index, override->permmask);
+	nrf_mpc_override_ownerid_set(mpc, override->index, override->owner_id);
+	nrf_mpc_override_config_set(mpc, override->index, &override->config);
+}
+
+/*
+ * Configure the override struct with reasonable defaults. This includes:
+ *
+ * Use a slave number of 0 to avoid redirecting bus transactions from
+ * one slave to another.
+ *
+ * Lock the override to prevent the code that follows from tampering
+ * with the configuration.
+ *
+ * Enable the override so it takes effect.
+ *
+ * Indicate that secdom is not enabled as this driver is not used on
+ * platforms with secdom.
+ */
+static void init_mpc_region_override(struct mpc_region_override * override)
+{
+	*override = (struct mpc_region_override){
+		.config =
+		(nrf_mpc_override_config_t){
+			.slave_number = 0,
+			.lock = true,
+			.enable = true,
+			.secdom_enable = false,
+			.secure_mask = true,
+		},
+		.perm = 0, /* 0 for non-secure */
+		.owner_id = 1, // TODO: NCSDK-25169: Investigate if 1 is correct
+	};
+
+	override->permmask = MPC_OVERRIDE_PERM_SECATTR_Msk;
+}
+
+enum tfm_plat_err_t nrf_mpc_init_cfg(void)
+{
+	/* On 54l the NRF_MPC00->REGION[]'s are fixed in HW and the
+	 * OVERRIDE indexes (that are useful to us) start at 0 and end
+	 * (inclusive) at 4.
+	 */
+	uint32_t index = 0;
+
+	/* Configure the non-secure partition of the non-volatile
+	 * memory. This MPC region is intended to cover both the
+	 * non-secure partition in the NVM and also the FICR. The FICR
+	 * starts after the NVM and ends just before the UICR.
+	 */
+	{
+		struct mpc_region_override override;
+
+		init_mpc_region_override(&override);
+
+		override.start_address = memory_regions.non_secure_partition_base;
+		override.endaddr = NRF_UICR_S_BASE;
+		override.index = index++;
+
+		mpc_configure_override(NRF_MPC00, &override);
+	}
+
+	/* Configure the non-secure partition of the volatile memory */
+	{
+		struct mpc_region_override override;
+
+		init_mpc_region_override(&override);
+
+		override.start_address = NS_DATA_START;
+		override.endaddr = 1 + NS_DATA_LIMIT;
+		override.index = index++;
+
+		mpc_configure_override(NRF_MPC00, &override);
+	}
+
+	if(index > 4) {
+		/* Used more overrides than are available */
+		tfm_core_panic();
+	}
+
+	/* TODO: NCSDK-25050: Review configuration. Any other addresses we need to override? */
+
+	/* Note that we don't configure the NSC region to be NS because it is secure */
+
+	/* Note that OVERRIDE[n].MASTERPORT has a reasonable reset value
+	 * so it is left unconfigured.
+	 */
+
+	return TFM_PLAT_ERR_SUCCESS;
+}
+
+#endif /* MPC_PRESENT */
+
+static void dppi_channel_configuration(void)
+{
+	/* The SPU HW and corresponding NRFX HAL API have two different
+	 * API's for DPPI security configuration. The defines
+	 * NRF_SPU_HAS_OWNERSHIP and NRF_SPU_HAS_MEMORY identify which of the two API's
+	 * are present.
+	 *
+	 * TFM_PERIPHERAL_DPPI_CHANNEL_MASK_SECURE is configurable, but
+	 * usually defaults to 0, which results in all DPPI channels being
+	 * non-secure.
+	 */
+#if NRF_SPU_HAS_MEMORY
+    /* There is only one dppi_id */
+    uint8_t dppi_id = 0;
+    nrf_spu_dppi_config_set(NRF_SPU, dppi_id, TFM_PERIPHERAL_DPPI_CHANNEL_MASK_SECURE,
+			    SPU_LOCK_CONF_LOCKED);
+#else
+	/* TODO_NRF54L15: Use the nrf_spu_feature API to configure DPPI
+	   channels according to a user-controllable config similar to
+	   TFM_PERIPHERAL_DPPI_CHANNEL_MASK_SECURE. */
+#endif
+}
 
 enum tfm_plat_err_t spu_periph_init_cfg(void)
 {
     /* Peripheral configuration */
+#ifdef NRF54L15_ENGA_XXAA
+	/* Configure features to be non-secure */
+
+	/*
+	 * Due to MLT-7600, many SPU HW reset values are wrong. The docs
+	 * generally features being non-secure when coming out of HW
+	 * reset, but the HW has a good mix of both.
+	 *
+	 * When configuring NRF_SPU 0 will indicate non-secure and 1 will
+	 * indicate secure.
+	 *
+	 * Most of the chip should be non-secure so to simplify and be
+	 * consistent, we memset the entire memory map of each SPU
+	 * peripheral to 0.
+	 *
+	 * Just after memsetting to 0 we explicitly configure the
+	 * peripherals that should be secure back to secure again.
+	 *
+	 * At the moment we also have some redundant code that is
+	 * configuring things to 0/NonSecure because it is not clear if
+	 * this strategy is safe and we want to keep this code in case we
+	 * need it later.
+	 */
+	// TODO: NCSDK-22597: Evaluate if it is safe to memset everything
+	// in NRF_SPU to 0.
+	memset(NRF_SPU00, 0, sizeof(NRF_SPU_Type));
+	memset(NRF_SPU10, 0, sizeof(NRF_SPU_Type));
+	memset(NRF_SPU20, 0, sizeof(NRF_SPU_Type));
+	memset(NRF_SPU30, 0, sizeof(NRF_SPU_Type));
+
+	/* Configure peripherals to be non-secure */
+	for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
+		NRF_SPU_Type * spu_instance = spu_instances[i];
+
+		/* Configure all pins as non-secure */
+		bool spu_has_GPIO = i != 1;
+		if(spu_has_GPIO) {
+			for(int j = 0; j < ARRAY_SIZE(spu_instance->FEATURE.GPIO); j++) {
+				for(int pin = 0; pin < 32; pin++) {
+					spu_instance->FEATURE.GPIO[j].PIN[pin] = 0;
+				}
+			}
+		}
+
+		/* TODO: NCSDK-22597: Configure UART22 pins as secure */
+
+		for(uint8_t index = 0; index < ARRAY_SIZE(spu_instance->PERIPH); index++) {
+			if(!nrf_spu_periph_perm_present_get(spu_instance, index)) {
+				/* Peripheral is not present, nothing to configure */
+				continue;
+			}
+
+			nrf_spu_securemapping_t securemapping = nrf_spu_periph_perm_securemapping_get(spu_instance, index);
+
+			bool secattr_has_effect =
+				securemapping == NRF_SPU_SECUREMAPPING_USERSELECTABLE ||
+				securemapping == NRF_SPU_SECUREMAPPING_SPLIT;
+
+			if(secattr_has_effect) {
+				bool enable = false;  /* false means non-secure */
+
+				nrf_spu_periph_perm_secattr_set(spu_instance, index, enable);
+			}
+
+			/* Note that we don't configure dmasec because it has no effect when secattr is non-secure */
+
+			/* nrf_spu_periph_perm_lock_enable TODO: NCSDK-25009: Lock it down without breaking TF-M UART */
+		}
+	}
+
+	/* Configure TF-M's UART22 peripheral to be secure with secure DMA */
+	bool enable = true; /* true means secure */
+	uint32_t UART22_SLAVE_INDEX = (NRF_UARTE22_S_BASE & 0x0003F000) >> 12;
+	nrf_spu_periph_perm_secattr_set(NRF_SPU20, UART22_SLAVE_INDEX, enable);
+	nrf_spu_periph_perm_dmasec_set(NRF_SPU20, UART22_SLAVE_INDEX, enable);
+
+#else
 static const uint8_t target_peripherals[] = {
     /* The following peripherals share ID:
      * - FPU (FPU cannot be configured in NRF91 series, it's always NS)
@@ -811,6 +1106,11 @@ static const uint8_t target_peripherals[] = {
 #endif
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM2),
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM3),
+    /* When UART22 is a secure peripheral we need to leave Serial-Box 22 as Secure */
+#if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 22)
+    // TODO: NCSDK-25009: spu_peripheral_config_non_secure((uint32_t)NRF_SPIM22, false);
+#endif
+
 #ifdef NRF_SPIM4
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM4),
 #endif
@@ -901,13 +1201,21 @@ static const uint8_t target_peripherals[] = {
         spu_peripheral_config_non_secure(target_peripherals[i], SPU_LOCK_CONF_UNLOCKED);
     }
 
+#endif /* Moonlight */
+
     /* DPPI channel configuration */
-    spu_dppi_config_non_secure(TFM_PERIPHERAL_DPPI_CHANNEL_MASK_SECURE, SPU_LOCK_CONF_LOCKED);
+	dppi_channel_configuration();
 
     /* GPIO pin configuration */
-    spu_gpio_config_non_secure(0, TFM_PERIPHERAL_GPIO0_PIN_MASK_SECURE, SPU_LOCK_CONF_LOCKED);
+#ifdef NRF_SPU
+
+	nrf_spu_gpio_config_set(NRF_SPU, 0, TFM_PERIPHERAL_GPIO0_PIN_MASK_SECURE, SPU_LOCK_CONF_LOCKED);
 #ifdef TFM_PERIPHERAL_GPIO1_PIN_MASK_SECURE
-    spu_gpio_config_non_secure(1, TFM_PERIPHERAL_GPIO1_PIN_MASK_SECURE, SPU_LOCK_CONF_LOCKED);
+	nrf_spu_gpio_config_set(NRF_SPU, 1, TFM_PERIPHERAL_GPIO1_PIN_MASK_SECURE, SPU_LOCK_CONF_LOCKED);
+#endif
+
+#else
+	/* TODO: NCSDK-22597: Support configuring pins as secure or non-secure on nrf54L */
 #endif
 
 #ifdef NRF53_SERIES
@@ -933,9 +1241,20 @@ static const uint8_t target_peripherals[] = {
 #if defined(NVMC_FEATURE_CACHE_PRESENT) // From MDK
 	nrfx_nvmc_icache_enable();
 #elif defined(CACHE_PRESENT) // From MDK
-	NRF_CACHE->ENABLE = CACHE_ENABLE_ENABLE_Enabled;
+
+#ifdef NRF_CACHE
+	nrf_cache_enable(NRF_CACHE);
+#endif
+#ifdef NRF_ICACHE
+	nrf_cache_enable(NRF_ICACHE);
+#endif
+#ifdef NRF_DCACHE
+	nrf_cache_enable(NRF_DCACHE);
 #endif
 
+#endif
+
+#if NRF_SPU_HAS_MEMORY
     /* Enforce that the nRF5340 Network MCU is in the Non-Secure
      * domain. Non-secure is the HW reset value for the network core
      * so configuring this should not be necessary, but we want to
@@ -944,6 +1263,9 @@ static const uint8_t target_peripherals[] = {
      * it doesn't get changed by accident.
      */
     nrf_spu_extdomain_set(NRF_SPU, 0, false, true);
+#else
+	/* TODO: NCSDK-22597: Configure VPR to be non-secure on nrf54L */
+#endif
 
     return TFM_PLAT_ERR_SUCCESS;
 }

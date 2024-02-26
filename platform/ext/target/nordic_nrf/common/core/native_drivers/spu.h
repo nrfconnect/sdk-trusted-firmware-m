@@ -28,6 +28,24 @@
 #define SPU_SECURE_ATTR_SECURE true
 #define SPU_SECURE_ATTR_NONSECURE false
 
+__attribute__((unused)) static NRF_SPU_Type * spu_instances[] = {
+#ifdef NRF_SPU
+	NRF_SPU,
+#endif
+#ifdef NRF_SPU00
+	NRF_SPU00,
+#endif
+#ifdef NRF_SPU10
+	NRF_SPU10,
+#endif
+#ifdef NRF_SPU20
+	NRF_SPU20,
+#endif
+#ifdef NRF_SPU30
+	NRF_SPU30,
+#endif
+};
+
 /**
  * \brief SPU interrupt enabling
  *
@@ -120,34 +138,6 @@ void spu_peripheral_config_secure(const uint8_t periph_id, bool periph_lock);
  * - DMA transactions are configured as Non-Secure
  */
 void spu_peripheral_config_non_secure(const uint8_t periph_id, bool periph_lock);
-
-/**
- * Configure DPPI channels to be accessible from Non-Secure domain.
- *
- * \param channels_mask Bitmask with channels configuration.
- * \param lock_conf Variable indicating whether to lock DPPI channel security
- *
- * \note all channels are configured as Non-Secure
- */
-static inline void spu_dppi_config_non_secure(uint32_t channels_mask, bool lock_conf)
-{
-    nrf_spu_dppi_config_set(NRF_SPU, 0, channels_mask, lock_conf);
-}
-
-/**
- * Configure GPIO pins to be accessible from Non-Secure domain.
- *
- * \param port_number GPIO Port number
- * \param gpio_mask Bitmask with gpio configuration.
- * \param lock_conf Variable indicating whether to lock GPIO port security
- *
- * \note all pins are configured as Non-Secure
- */
-static inline void spu_gpio_config_non_secure(uint8_t port_number, uint32_t gpio_mask,
-    bool lock_conf)
-{
-    nrf_spu_gpio_config_set(NRF_SPU, port_number, gpio_mask, lock_conf);
-}
 
 /**
  * \brief Return base address of a Flash SPU regions
