@@ -15,6 +15,7 @@ static void spu_dump_context(struct nrf_exception_info *ctx)
 {
     SPMLOG_ERRMSG("Platform Exception: SPU Fault\r\n");
 
+#ifdef NRF_SPU
     /* Report which type of violation occured */
     if (ctx->events & SPU_EVENT_RAMACCERR) {
         SPMLOG_DBGMSG("  RAMACCERR\r\n");
@@ -27,6 +28,10 @@ static void spu_dump_context(struct nrf_exception_info *ctx)
     if (ctx->events & SPU_EVENT_FLASHACCERR) {
         SPMLOG_DBGMSG("  FLASHACCERR\r\n");
     }
+#else
+	// TODO: NCSDK-25011: Support error handling on nrf54l
+#endif
+
 }
 
 void nrf_exception_info_store_context(void)
