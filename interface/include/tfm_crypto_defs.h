@@ -58,6 +58,7 @@ struct tfm_crypto_pack_iovec {
                               *   See tfm_crypto_func_sid for detail
                               */
     uint16_t step;           /*!< Key derivation step */
+    psa_pake_role_t role;    /*!< PAKE role */
 };
 
 /**
@@ -75,6 +76,7 @@ enum tfm_crypto_group_id {
     TFM_CRYPTO_GROUP_ID_ASYM_SIGN,
     TFM_CRYPTO_GROUP_ID_ASYM_ENCRYPT,
     TFM_CRYPTO_GROUP_ID_KEY_DERIVATION,
+    TFM_CRYPTO_GROUP_ID_PAKE,
 };
 
 /* Set of X macros describing each of the available PSA Crypto APIs */
@@ -161,6 +163,17 @@ enum tfm_crypto_group_id {
 #define RANDOM_FUNCS                               \
     X(TFM_CRYPTO_GENERATE_RANDOM)
 
+#define PAKE_FUNCS                                  \
+    X(TFM_CRYPTO_PAKE_SETUP)                        \
+    X(TFM_CRYPTO_PAKE_SET_ROLE)                     \
+    X(TFM_CRYPTO_PAKE_SET_USER)                     \
+    X(TFM_CRYPTO_PAKE_SET_PEER)                     \
+    X(TFM_CRYPTO_PAKE_SET_CONTEXT)                  \
+    X(TFM_CRYPTO_PAKE_OUTPUT)                       \
+    X(TFM_CRYPTO_PAKE_INPUT)                        \
+    X(TFM_CRYPTO_PAKE_GET_SHARED_KEY)               \
+    X(TFM_CRYPTO_PAKE_ABORT)
+
 /**
  * \brief Define function IDs in each group. The function ID will be encoded into
  *        tfm_crypto_func_sid below. Each group is defined as a dedicated enum
@@ -192,6 +205,9 @@ enum tfm_crypto_key_derivation_func_id {
 };
 enum tfm_crypto_random_func_id {
     RANDOM_FUNCS
+};
+enum tfm_crypto_pake_func_id {
+    PAKE_FUNCS
 };
 #undef X
 
@@ -267,6 +283,11 @@ enum tfm_crypto_func_sid {
 #define X(func_id)      func_id ## _SID = (uint16_t)((FUNC_ID(func_id)) | \
                                            (TFM_CRYPTO_GROUP_ID_RANDOM & 0xFF)),
     RANDOM_FUNCS
+
+#undef X
+#define X(func_id)      func_id ## _SID = (uint16_t)((FUNC_ID(func_id)) | \
+                                   (TFM_CRYPTO_GROUP_ID_PAKE & 0xFF)),
+    PAKE_FUNCS
 
 };
 #undef X

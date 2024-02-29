@@ -71,6 +71,10 @@ config CRYPTO_KEY_DERIVATION_MODULE_ENABLED
     bool "PSA Crypto key derivation module"
     default y
 
+config CRYPTO_PAKE_MODULE_ENABLED
+    bool "PSA Crypto PAKE module"
+    default y
+
 config CRYPTO_NV_SEED
     bool
     default n if CRYPTO_HW_ACCELERATOR
