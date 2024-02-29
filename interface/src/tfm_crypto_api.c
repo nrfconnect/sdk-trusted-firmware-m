@@ -1656,3 +1656,159 @@ TFM_CRYPTO_API(psa_status_t, psa_key_derivation_output_key)(
 
     return API_DISPATCH(in_vec, out_vec);
 }
+
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_setup)
+(psa_pake_operation_t *operation, psa_key_id_t password_key,
+ const psa_pake_cipher_suite_t *cipher_suite) {
+  struct tfm_crypto_pack_iovec iov = {.function_id = TFM_CRYPTO_PAKE_SETUP_SID,
+                                      .op_handle = operation->handle,
+                                      .key_id = password_key};
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+      {.base = cipher_suite, .len = sizeof(psa_pake_cipher_suite_t)},
+  };
+
+  psa_outvec out_vec[] = {
+      {.base = &(operation->handle), .len = sizeof(uint32_t)},
+  };
+
+  return API_DISPATCH(in_vec, out_vec);
+}
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_set_role)
+(psa_pake_operation_t *operation, psa_pake_role_t role) {
+  struct tfm_crypto_pack_iovec iov = {
+      .function_id = TFM_CRYPTO_PAKE_SET_ROLE_SID,
+      .op_handle = operation->handle,
+      .role = role,
+  };
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+  };
+
+  return API_DISPATCH_NO_OUTVEC(in_vec);
+}
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_set_user)
+(psa_pake_operation_t *operation, const uint8_t *user_id, size_t user_id_len) {
+  struct tfm_crypto_pack_iovec iov = {
+      .function_id = TFM_CRYPTO_PAKE_SET_USER_SID,
+      .op_handle = operation->handle,
+  };
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+      {.base = user_id, .len = user_id_len},
+  };
+
+  return API_DISPATCH_NO_OUTVEC(in_vec);
+}
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_set_peer)
+(psa_pake_operation_t *operation, const uint8_t *peer_id, size_t peer_id_len) {
+  struct tfm_crypto_pack_iovec iov = {
+      .function_id = TFM_CRYPTO_PAKE_SET_PEER_SID,
+      .op_handle = operation->handle,
+  };
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+      {.base = peer_id, .len = peer_id_len},
+  };
+
+  return API_DISPATCH_NO_OUTVEC(in_vec);
+}
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_set_context)
+(psa_pake_operation_t *operation, const uint8_t *context, size_t context_len) {
+  struct tfm_crypto_pack_iovec iov = {
+      .function_id = TFM_CRYPTO_PAKE_SET_CONTEXT_SID,
+      .op_handle = operation->handle,
+  };
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+      {.base = context, .len = context_len},
+  };
+
+  return API_DISPATCH_NO_OUTVEC(in_vec);
+}
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_output)
+(psa_pake_operation_t *operation, psa_pake_step_t step, uint8_t *output,
+ size_t output_size, size_t *output_length) {
+  psa_status_t status = PSA_ERROR_CORRUPTION_DETECTED;
+  struct tfm_crypto_pack_iovec iov = {
+      .function_id = TFM_CRYPTO_PAKE_OUTPUT_SID,
+      .op_handle = operation->handle,
+      .step = step,
+  };
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+  };
+
+  psa_outvec out_vec[] = {{.base = output, .len = output_size}};
+
+  status = API_DISPATCH(in_vec, out_vec);
+
+  *output_length = out_vec[0].len;
+
+  return status;
+}
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_input)
+(psa_pake_operation_t *operation, psa_pake_step_t step, const uint8_t *input,
+ size_t input_length) {
+  struct tfm_crypto_pack_iovec iov = {
+      .function_id = TFM_CRYPTO_PAKE_INPUT_SID,
+      .op_handle = operation->handle,
+      .step = step,
+  };
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+      {.base = input, .len = input_length},
+  };
+
+  return API_DISPATCH_NO_OUTVEC(in_vec);
+}
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_get_shared_key)
+(psa_pake_operation_t *operation, const psa_key_attributes_t *attributes,
+ mbedtls_svc_key_id_t *key) {
+  struct tfm_crypto_pack_iovec iov = {
+      .function_id = TFM_CRYPTO_PAKE_GET_SHARED_KEY_SID,
+      .op_handle = operation->handle,
+  };
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+      {.base = attributes, .len = sizeof(psa_key_attributes_t)},
+  };
+
+  psa_outvec out_vec[] = {
+      {.base = &(operation->handle), .len = sizeof(uint32_t)},
+      {.base = key, .len = sizeof(mbedtls_svc_key_id_t)}};
+
+  return API_DISPATCH(in_vec, out_vec);
+}
+
+TFM_CRYPTO_API(psa_status_t, psa_pake_abort)(psa_pake_operation_t *operation) {
+  struct tfm_crypto_pack_iovec iov = {
+      .function_id = TFM_CRYPTO_PAKE_ABORT_SID,
+      .op_handle = operation->handle,
+  };
+
+  psa_invec in_vec[] = {
+      {.base = &iov, .len = sizeof(struct tfm_crypto_pack_iovec)},
+  };
+  psa_outvec out_vec[] = {
+      {.base = &(operation->handle), .len = sizeof(uint32_t)},
+  };
+
+  return API_DISPATCH(in_vec, out_vec);
+}
