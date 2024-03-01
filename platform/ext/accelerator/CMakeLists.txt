@@ -5,6 +5,17 @@
 #
 #-------------------------------------------------------------------------------
 
+cmake_policy(SET CMP0079 NEW)
+
+# TODO: Verify that this works for both minimal and normal configuration
+target_compile_definitions(tfm_config
+    INTERFACE
+        CRYPTO_HW_ACCELERATOR
+)
+
+# When using nrf_security we don't need these build scripts
+return()
+
 if(BL2)
     add_library(bl2_crypto_hw STATIC)
 endif()
