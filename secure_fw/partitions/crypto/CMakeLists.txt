@@ -91,10 +91,10 @@ target_link_libraries(tfm_config
 
 ############################### PSA CRYPTO CONFIG ##############################
 add_library(psa_crypto_config INTERFACE)
-target_compile_definitions(psa_crypto_config
-    INTERFACE
-        MBEDTLS_PSA_CRYPTO_CONFIG_FILE="${TFM_MBEDCRYPTO_PSA_CRYPTO_CONFIG_PATH}"
-)
+# target_compile_definitions(psa_crypto_config
+#     INTERFACE
+#         MBEDTLS_PSA_CRYPTO_CONFIG_FILE="${TFM_MBEDCRYPTO_PSA_CRYPTO_CONFIG_PATH}"
+# )
 
 ############################### MBEDCRYPTO #####################################
 
