@@ -28,6 +28,11 @@
 #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 #endif
 
+#if !(DOMAIN_NS == 1U) && defined(CONFIG_TFM_LOG_SHARE_UART)
+#define SPU_CONFIGURE_UART
+#include <spu.h>
+#endif
+
 #ifndef ARG_UNUSED
 #define ARG_UNUSED(arg)  (void)arg
 #endif
@@ -108,6 +113,11 @@ static int32_t ARM_USARTx_Initialize(ARM_USART_SignalEvent_t cb_event,
 {
     ARG_UNUSED(cb_event);
 
+#ifdef SPU_CONFIGURE_UART
+    spu_peripheral_config_secure((uint32_t)uart_resources->uarte.p_reg, false);
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET((uint32_t)uart_resources->uarte.p_reg));
+#endif
+
     nrfx_uarte_config_t uart_config = UART_CONFIG_INITIALIZER();
 
     uart_config_set_uart_pins(&uart_config,
@@ -135,6 +145,12 @@ static int32_t ARM_USARTx_Uninitialize(UARTx_Resources *uart_resources)
     nrfx_uarte_uninit(&uart_resources->uarte);
 
     uart_resources->initialized = false;
+
+#ifdef SPU_CONFIGURE_UART
+    spu_peripheral_config_non_secure((uint32_t)uart_resources->uarte.p_reg, false);
+    NVIC_SetTargetState(NRFX_IRQ_NUMBER_GET((uint32_t)uart_resources->uarte.p_reg));
+#endif
+
     return ARM_DRIVER_OK;
 }
 
