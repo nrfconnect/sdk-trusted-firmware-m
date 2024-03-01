@@ -192,6 +192,7 @@ install(FILES       startup.c
 )
 
 install(FILES       startup.h
+                    target_cfg.h
                     nrfx_config.h
                     ns/CMakeLists.txt
                     config.cmake
