@@ -18,8 +18,12 @@ execute_process(COMMAND git describe --tags --always
 
 string(FIND ${TFM_VERSION_FULL} "TF-M" TFM_TAG)
 if(TFM_TAG EQUAL -1)
-    set(TFM_VERSION_FULL v${TFM_VERSION_MANUAL})
+  set(TFM_VERSION_FULL v${TFM_VERSION_MANUAL})
+  if(SILENCE_TFM_VERSION_WARNING)
+    # Some users tag TF-M themselves with their own versioning scheme
+  else()
     message(WARNING "Actual TF-M version is not available from Git repository. Settled to " ${TFM_VERSION_FULL})
+  endif()
 endif()
 
 string(REGEX REPLACE "TF-M" "" TFM_VERSION_FULL ${TFM_VERSION_FULL})
