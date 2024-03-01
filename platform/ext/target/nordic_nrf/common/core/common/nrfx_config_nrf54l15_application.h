@@ -1,4 +1,8 @@
-/*$$$LICENCE_NORDIC_STANDARD<2017>$$$*/
+/*
+ * Copyright (c) 2024 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
 
 #ifndef NRFX_CONFIG_NRF54L15_APPLICATION_H__
 #define NRFX_CONFIG_NRF54L15_APPLICATION_H__
