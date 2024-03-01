@@ -139,20 +139,8 @@ set(GEN_FILES OFF)
 # Set the prefix to be used by mbedTLS targets
 set(MBEDTLS_TARGET_PREFIX crypto_service_)
 
-# Check if the p256m driver is enabled in the config file, as that will require a
-# dedicated target to be linked in. Note that 0 means SUCCESS here, 1 means FAILURE
-set(MBEDTLS_P256M_NOT_FOUND 1)
-execute_process(COMMAND
-    ${Python3_EXECUTABLE}
-    ${MBEDCRYPTO_PATH}/scripts/config.py -f "${TFM_MBEDCRYPTO_CONFIG_PATH}" get MBEDTLS_PSA_P256M_DRIVER_ENABLED
-    RESULT_VARIABLE MBEDTLS_P256M_NOT_FOUND)
-
-if (${MBEDTLS_P256M_NOT_FOUND} EQUAL 0)
-    message(STATUS "[Crypto service] Using P256M software driver in PSA Crypto backend")
-    set(MBEDTLS_P256M_ENABLED true)
-else()
-    set(MBEDTLS_P256M_ENABLED false)
-endif()
+# We use hardware acceleration or ocrypto so disable the P256M module by default
+set(MBEDTLS_P256M_ENABLED false)
 
 # If the project is configured with CMAKE_BUILD_TYPE="Debug", the value of
 # MBEDCRYPTO_BUILD_TYPE will be set "RelWithDebInfo" to optimize the space
