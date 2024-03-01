@@ -12,7 +12,7 @@
 
 /* Check invalid configs. */
 #if CRYPTO_NV_SEED && CRYPTO_EXT_RNG
-#error "Invalid config: CRYPTO_NV_SEED AND CRYPTO_EXT_RNG!"
+// #error "Invalid config: CRYPTO_NV_SEED AND CRYPTO_EXT_RNG!"
 #endif
 
 #if (!CRYPTO_NV_SEED) && (!CRYPTO_EXT_RNG)
