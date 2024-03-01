@@ -22,7 +22,11 @@ void SPU_Handler(void)
     /* Clear SPU interrupt flag and pending SPU IRQ */
     spu_clear_events();
 
+#ifdef SPU_IRQn
     NVIC_ClearPendingIRQ(SPU_IRQn);
+#else
+    // TODO: NCSDK-25011: Support nrf54l
+#endif
 
     tfm_core_panic();
 }

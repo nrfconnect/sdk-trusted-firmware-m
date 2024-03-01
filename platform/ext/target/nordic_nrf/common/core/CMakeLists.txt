@@ -19,6 +19,15 @@ if (NOT NRF_BOARD_SELECTED)
         "Instead of '${TFM_PLATFORM}', choose e.g. '${hint}'.")
 endif()
 
+# At the time of writing there is no systematic way to identify which
+# NVM technology is used by the SoC from the Kconfig, so we just
+# hardcode this information here instead.
+if(PSA_API_TEST_TARGET STREQUAL nrf54l15)
+  set(HAS_RRAMC 1)
+else()
+  set(HAS_NVMC 1)
+endif()
+
 #========================= Platform dependencies ===============================#
 
 include(hal_nordic.cmake)
@@ -63,10 +72,25 @@ target_include_directories(platform_s
         services/include
 )
 
+set(nvm_sources
+  $<$<BOOL:${TFM_PARTITION_INTERNAL_TRUSTED_STORAGE}>:${CMAKE_CURRENT_SOURCE_DIR}/cmsis_drivers/Driver_Flash.c>
+)
+
+if(HAS_RRAMC)
+  list(APPEND nvm_sources
+    ${HAL_NORDIC_PATH}/nrfx/drivers/src/nrfx_rramc.c
+  )
+elseif(HAS_NVMC)
+  list(APPEND nvm_sources
+    ${HAL_NORDIC_PATH}/nrfx/drivers/src/nrfx_nvmc.c
+  )
+else()
+  message(FATAL_ERROR "Unexpected device")
+endif()
+
 target_sources(platform_s
-    PRIVATE
-        cmsis_drivers/Driver_Flash.c
-        ${HAL_NORDIC_PATH}/nrfx/drivers/src/nrfx_nvmc.c
+  PRIVATE
+       ${nvm_sources}
         nrfx_glue.c
         native_drivers/mpu_armv8m_drv.c
         native_drivers/spu.c
@@ -127,10 +151,9 @@ target_compile_definitions(platform_s
 if(BL2)
     target_sources(platform_bl2
         PRIVATE
-            cmsis_drivers/Driver_Flash.c
+            ${nvm_sources}
             cmsis_drivers/Driver_USART.c
             ${HAL_NORDIC_PATH}/nrfx/drivers/src/nrfx_uarte.c
-            ${HAL_NORDIC_PATH}/nrfx/drivers/src/nrfx_nvmc.c
             nrfx_glue.c
     )
     target_sources(bl2

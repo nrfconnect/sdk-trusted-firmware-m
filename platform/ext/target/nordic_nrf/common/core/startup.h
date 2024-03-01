@@ -35,6 +35,13 @@ __NO_RETURN void SecureFault_Handler(void);
 
 void SPU_IRQHandler(void);
 
+void SPU00_IRQHandler(void);
+void SPU10_IRQHandler(void);
+void SPU20_IRQHandler(void);
+void SPU30_IRQHandler(void);
+
+void CRACEN_IRQHandler(void);
+
 /*
  * The default irq handler is used as a backup in case of
  * misconfiguration.
