@@ -5,6 +5,18 @@
 #
 #-------------------------------------------------------------------------------
 
+cmake_policy(SET CMP0079 NEW)
+
+# TODO: Verify that this works for both minimal and normal configuration
+target_compile_definitions(tfm_config
+    INTERFACE
+        CRYPTO_HW_ACCELERATOR
+        CRYPTO_EXT_RNG
+)
+
+# When using nrf_security we don't need these build scripts
+return()
+
 if (TFM_PARTITION_CRYPTO)
     add_library(crypto_service_crypto_hw STATIC)
 endif()
