@@ -159,12 +159,17 @@ set(MANIFEST_COMMAND
     -o ${CMAKE_BINARY_DIR}/generated
     ${PARSE_MANIFEST_QUIET_FLAG})
 
+set(NO_BUILD_CMD_FOR_MANIFEST 1)
+
+if(NO_BUILD_CMD_FOR_MANIFEST)
+else()
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated
     COMMAND ${MANIFEST_COMMAND}
     DEPENDS ${MANIFEST_LISTS} ${GENERATED_FILE_LISTS}
             ${MANIFEST_FILES} ${TEMPLATE_FILES}
 )
+endif()
 
 add_custom_target(
     manifest_tool
