@@ -34,7 +34,6 @@
 #define __VECTOR_TABLE_ATTRIBUTE  __attribute__((used, section(".vectors")))
 
 #include "cmsis.h"
-#include "hw_init.h"
 #include "startup.h"
 #include "exception_info.h"
 
