@@ -46,7 +46,7 @@
 #endif
 
 #ifdef NRF54L15_ENGA_XXAA
-#define NS_DRIVER_STDIO     Driver_USART22
+#define NS_DRIVER_STDIO     Driver_USART20
 #else
 #define NS_DRIVER_STDIO     Driver_USART0
 #endif
