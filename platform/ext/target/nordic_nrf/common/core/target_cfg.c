@@ -32,6 +32,10 @@
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_spu.h>
 
+#if CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE > 0
+#include <hal/nrf_rramc.h>
+#endif
+
 #ifdef CACHE_PRESENT
 #include <hal/nrf_cache.h>
 #endif
@@ -1254,6 +1258,22 @@ static const uint8_t target_peripherals[] = {
 	nrf_cache_enable(NRF_DCACHE);
 #endif
 
+#endif
+
+#if CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE > 0
+	/*
+	 * The NRF_RRAMC peripheral is hardware-fixed to S so the non-secure
+	 * image cannot configure the peripheral without costly TF-M system
+	 * calls.
+	 *
+	 * To fix this we do static configuration of the NRF_RRAMC_S peripheral
+	 * for the NRF_RRAMC_S->CONFIG value during TF-M boot.
+	 */
+	nrf_rramc_ready_next_timeout_t params = {
+		.value = CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE,
+		.enable = true,
+	};
+	nrf_rramc_ready_next_timeout_set(NRF_RRAMC_S, &params);
 #endif
 
 #if NRF_SPU_HAS_MEMORY
