@@ -18,6 +18,10 @@
 
 #include <hal/nrf_gpio.h>
 
+#ifdef NRF_RRAMC_S
+#include <hal/nrf_rramc.h>
+#endif
+
 #include "handle_attr.h"
 
 enum tfm_platform_err_t
@@ -133,3 +137,37 @@ tfm_platform_hal_gpio_service(const psa_invec  *in_vec, const psa_outvec *out_ve
 }
 #endif /* NRF_GPIO_HAS_SEL */
 
+#ifdef NRF_RRAMC_S
+static void nrf_rramc_config_service_set(struct tfm_nrf_rramc_config_service_args * args)
+{
+	nrf_rramc_config_t config;
+
+	config.mode_write = args->set.mode_write;
+	config.write_buff_size = args->set.write_buff_size;
+
+	nrf_rramc_config_set(NRF_RRAMC_S, &config);
+}
+
+enum tfm_platform_err_t
+tfm_platform_hal_nrf_rramc_config_service(const psa_invec  *in_vec, const psa_outvec *out_vec)
+{
+	struct tfm_nrf_rramc_config_service_args *args;
+
+	if (in_vec->len != sizeof(struct tfm_nrf_rramc_config_service_args)) {
+		return TFM_PLATFORM_ERR_INVALID_PARAM;
+	}
+
+	args = (struct tfm_nrf_rramc_config_service_args *)in_vec->base;
+
+	switch(args->type)
+	{
+	case TFM_NRF_RRAMC_CONFIG_SERVICE_TYPE_SET:
+		nrf_rramc_config_service_set(args);
+		break;
+	default:
+		return TFM_PLATFORM_ERR_NOT_SUPPORTED;
+	}
+
+	return TFM_PLATFORM_ERR_SUCCESS;
+}
+#endif /* NRF_RRAMC_S */
