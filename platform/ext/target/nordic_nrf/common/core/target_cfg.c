@@ -24,6 +24,8 @@
 #include "region.h"
 #include "array.h"
 
+#include <autoconf.h>
+
 #include <spu.h>
 #include <nrfx.h>
 
