@@ -30,6 +30,7 @@ extern "C" {
 enum tfm_platform_ioctl_core_reqest_types_t {
 	TFM_PLATFORM_IOCTL_READ_SERVICE,
 	TFM_PLATFORM_IOCTL_GPIO_SERVICE,
+	TFM_PLATFORM_IOCTL_NRF_RRAMC_CONFIG_SERVICE,
 
 	/* Last core service, start platform specific from this value. */
 	TFM_PLATFORM_IOCTL_CORE_LAST
@@ -75,6 +76,22 @@ struct tfm_gpio_service_out {
 	uint32_t result;
 };
 
+enum tfm_nrf_rramc_config_service_type {
+	TFM_NRF_RRAMC_CONFIG_SERVICE_TYPE_SET = 0,
+};
+
+struct tfm_nrf_rramc_config_service_args_set {
+	uint32_t write_buff_size;
+	uint32_t mode_write;
+};
+
+struct tfm_nrf_rramc_config_service_args {
+	uint32_t type;
+	union {
+		struct tfm_nrf_rramc_config_service_args_set set;
+	};
+};
+
 /**
  * @brief Perform a read operation.
  *
@@ -107,6 +124,17 @@ struct tfm_read_service_range {
  */
 enum tfm_platform_err_t tfm_platform_gpio_pin_mcu_select(uint32_t pin_number, uint32_t mcu,
 							 uint32_t *result);
+
+/**
+ * @brief Perform a nrf_rramc_config_set operation with the
+ * NRF_RRAMC_S peripheral.
+ *
+ * @param[in] mode_write         1 if write mode is to be enabled, 0 otherwise.
+ * @param[in] write_buff_size    Write-buffer size in case set to 0 buffering is disabled.
+ *
+ * @return Returns values as specified by the tfm_platform_err_t
+ */
+enum tfm_platform_err_t tfm_platform_nrf_rramc_config_set(uint32_t mode_write, uint32_t write_buff_size);
 
 
 #ifdef __cplusplus

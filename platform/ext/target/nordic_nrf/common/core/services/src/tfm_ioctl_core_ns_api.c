@@ -66,3 +66,24 @@ enum tfm_platform_err_t tfm_platform_gpio_pin_mcu_select(uint32_t pin_number, ui
 	return TFM_PLATFORM_ERR_NOT_SUPPORTED;
 #endif
 }
+
+enum tfm_platform_err_t tfm_platform_nrf_rramc_config_set(uint32_t mode_write,
+							  uint32_t write_buff_size)
+{
+	enum tfm_platform_err_t ret;
+	psa_invec in_vec;
+	psa_outvec * ptr_out_vec = NULL;
+
+	struct tfm_nrf_rramc_config_service_args args;
+
+	args.type = TFM_NRF_RRAMC_CONFIG_SERVICE_TYPE_SET;
+	args.set.mode_write = mode_write;
+	args.set.write_buff_size = write_buff_size;
+
+	in_vec.base = (const void *)&args;
+	in_vec.len = sizeof(args);
+
+	ret = tfm_platform_ioctl(TFM_PLATFORM_IOCTL_NRF_RRAMC_CONFIG_SERVICE, &in_vec, ptr_out_vec);
+
+	return ret;
+}
