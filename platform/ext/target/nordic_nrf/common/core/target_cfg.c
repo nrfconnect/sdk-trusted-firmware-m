@@ -901,7 +901,7 @@ static void init_mpc_region_override(struct mpc_region_override * override)
 			.secure_mask = true,
 		},
 		.perm = 0, /* 0 for non-secure */
-		.owner_id = 1, // TODO: NCSDK-25169: Investigate if 1 is correct
+		.owner_id = 0,
 	};
 
 	override->permmask = MPC_OVERRIDE_PERM_SECATTR_Msk;
