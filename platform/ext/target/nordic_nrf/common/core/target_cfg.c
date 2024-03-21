@@ -244,10 +244,10 @@ struct platform_data_t tfm_peripheral_uarte3 = {
 };
 #endif
 
-#if TFM_PERIPHERAL_UARTE22_SECURE
-struct platform_data_t tfm_peripheral_uarte22 = {
-    NRF_UARTE22_S_BASE,
-    NRF_UARTE22_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
+#if TFM_PERIPHERAL_UARTE30_SECURE
+struct platform_data_t tfm_peripheral_uarte30 = {
+    NRF_UARTE30_S_BASE,
+    NRF_UARTE30_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
 };
 #endif
 
@@ -689,9 +689,9 @@ enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
 #elif NRF_SECURE_UART_INSTANCE == 1
     /* UARTE1 is a secure peripheral, so its IRQ has to target S state */
     NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE1));
-#elif NRF_SECURE_UART_INSTANCE == 22
-    /* UARTE22 is a secure peripheral, so its IRQ has to target S state */
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE22));
+#elif NRF_SECURE_UART_INSTANCE == 30
+    /* UARTE30 is a secure peripheral, so its IRQ has to target S state */
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE30));
 #endif
 #endif
 
@@ -1035,7 +1035,7 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 			}
 		}
 
-		/* TODO: NCSDK-22597: Configure UART22 pins as secure */
+		/* TODO: NCSDK-22597: Configure UART30 pins as secure */
 
 		for(uint8_t index = 0; index < ARRAY_SIZE(spu_instance->PERIPH); index++) {
 			if(!nrf_spu_periph_perm_present_get(spu_instance, index)) {
@@ -1061,11 +1061,11 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 		}
 	}
 
-	/* Configure TF-M's UART22 peripheral to be secure with secure DMA */
+	/* Configure TF-M's UART30 peripheral to be secure with secure DMA */
 	bool enable = true; /* true means secure */
-	uint32_t UART22_SLAVE_INDEX = (NRF_UARTE22_S_BASE & 0x0003F000) >> 12;
-	nrf_spu_periph_perm_secattr_set(NRF_SPU20, UART22_SLAVE_INDEX, enable);
-	nrf_spu_periph_perm_dmasec_set(NRF_SPU20, UART22_SLAVE_INDEX, enable);
+	uint32_t UART30_SLAVE_INDEX = (NRF_UARTE30_S_BASE & 0x0003F000) >> 12;
+	nrf_spu_periph_perm_secattr_set(NRF_SPU30, UART30_SLAVE_INDEX, enable);
+	nrf_spu_periph_perm_dmasec_set(NRF_SPU30, UART30_SLAVE_INDEX, enable);
 
 #else
 static const uint8_t target_peripherals[] = {
@@ -1108,9 +1108,9 @@ static const uint8_t target_peripherals[] = {
 #endif
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM2),
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM3),
-    /* When UART22 is a secure peripheral we need to leave Serial-Box 22 as Secure */
-#if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 22)
-    // TODO: NCSDK-25009: spu_peripheral_config_non_secure((uint32_t)NRF_SPIM22, false);
+    /* When UART30 is a secure peripheral we need to leave Serial-Box 30 as Secure */
+#if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 30)
+    // TODO: NCSDK-25009: spu_peripheral_config_non_secure((uint32_t)NRF_SPIM30, false);
 #endif
 
 #ifdef NRF_SPIM4
