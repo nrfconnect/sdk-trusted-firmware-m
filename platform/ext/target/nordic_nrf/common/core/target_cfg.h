@@ -41,12 +41,12 @@
 #define TFM_DRIVER_STDIO    Driver_USART0
 #elif NRF_SECURE_UART_INSTANCE == 1
 #define TFM_DRIVER_STDIO    Driver_USART1
-#elif NRF_SECURE_UART_INSTANCE == 22
-#define TFM_DRIVER_STDIO    Driver_USART22
+#elif NRF_SECURE_UART_INSTANCE == 30
+#define TFM_DRIVER_STDIO    Driver_USART30
 #endif
 
 #ifdef NRF54L15_ENGA_XXAA
-#define NS_DRIVER_STDIO     Driver_USART22
+#define NS_DRIVER_STDIO     Driver_USART20
 #else
 #define NS_DRIVER_STDIO     Driver_USART0
 #endif
