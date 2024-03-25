@@ -46,59 +46,6 @@
 #define PIN_XL1 0
 #define PIN_XL2 1
 
-/* Use the SPU_PERIPH_PERM_SECUREMAPPING_NonSecure symbol to determine
- * if we have and old or new SPU.
- */
-#ifdef SPU_PERIPH_PERM_SECUREMAPPING_NonSecure
-/* TODO: Remove this temporary fix when the patch from NRFX-3570 is available.
- * These symbols named nrf_spu_* were copied from nrf_spu.h.
- */
-/** @brief SPU read capabilities for TrustZone Cortex-M secure attribute. */
-typedef enum
-{
-    NRF_SPU_SECUREMAPPING_NONSECURE      = SPU_PERIPH_PERM_SECUREMAPPING_NonSecure,      /**< Peripheral is always accessible as non-secure. */
-    NRF_SPU_SECUREMAPPING_SECURE         = SPU_PERIPH_PERM_SECUREMAPPING_Secure,         /**< Peripheral is always accessible as secure. */
-    NRF_SPU_SECUREMAPPING_USERSELECTABLE = SPU_PERIPH_PERM_SECUREMAPPING_UserSelectable, /**< Non-secure or secure attribute for this peripheral is defined by the PERIPH[n].PERM register. */
-    NRF_SPU_SECUREMAPPING_SPLIT          = SPU_PERIPH_PERM_SECUREMAPPING_Split,          /**< Peripheral implements the split security mechanism. */
-} nrf_spu_securemapping_t;
-
-void nrf_spu_periph_perm_secattr_set(NRF_SPU_Type * p_reg,
-                                                       uint8_t        index,
-                                                       bool           enable)
-{
-    p_reg->PERIPH[index].PERM = ((p_reg->PERIPH[index].PERM & ~SPU_PERIPH_PERM_SECATTR_Msk)
-                                 | ((enable ? SPU_PERIPH_PERM_SECATTR_Secure :
-                                     SPU_PERIPH_PERM_SECATTR_NonSecure) <<
-                                    SPU_PERIPH_PERM_SECATTR_Pos));
-}
-
-void nrf_spu_periph_perm_dmasec_set(NRF_SPU_Type * p_reg,
-                                                      uint8_t        index,
-                                                      bool           enable)
-{
-    p_reg->PERIPH[index].PERM = ((p_reg->PERIPH[index].PERM & ~SPU_PERIPH_PERM_DMASEC_Msk)
-                                 | ((enable ? SPU_PERIPH_PERM_DMASEC_Secure :
-                                     SPU_PERIPH_PERM_DMASEC_NonSecure) <<
-                                    SPU_PERIPH_PERM_DMASEC_Pos));
-}
-
-bool nrf_spu_periph_perm_present_get(NRF_SPU_Type const * p_reg,
-                                                       uint8_t              index)
-{
-    return (p_reg->PERIPH[index].PERM & SPU_PERIPH_PERM_PRESENT_Msk) >>
-           SPU_PERIPH_PERM_PRESENT_Pos;
-}
-
-nrf_spu_securemapping_t nrf_spu_periph_perm_securemapping_get(NRF_SPU_Type const * p_reg,
-                                                              uint8_t              index)
-{
-    return (nrf_spu_securemapping_t)((p_reg->PERIPH[index].PERM
-                                      & SPU_PERIPH_PERM_SECUREMAPPING_Msk) >>
-                                     SPU_PERIPH_PERM_SECUREMAPPING_Pos);
-}
-
-#endif /* SPU_PERIPH_PERM_SECUREMAPPING_NonSecure */
-
 #if TFM_PERIPHERAL_DCNF_SECURE
 struct platform_data_t tfm_peripheral_dcnf = {
     NRF_DCNF_S_BASE,
