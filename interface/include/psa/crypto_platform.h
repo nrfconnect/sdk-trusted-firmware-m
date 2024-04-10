@@ -99,4 +99,25 @@ typedef struct {
 typedef uint32_t mbedtls_psa_client_handle_t;
 #endif
 
+#if defined(__NRF_TFM__) && defined(MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER)
+/*
+ * This header file is provided by TF-M and is only intended to be
+ * used by clients of PSA, not implementations of PSA. So secure
+ * partitions in the TF-M image (other than the crypto partition
+ * itself), and non-secure images.
+ *
+ * In NCS, the TF-M crypto partition should be using PSA header files
+ * from Oberon as it is Oberon that implements PSA.
+ *
+ * We want to detect that a source file is in the crypto partition,
+ * but has accidentally used this TF-M header instead of headers
+ * provided by Oberon. To do this we would ideally have a
+ * IS_IN_CRYPTO_PARTION define, but since there is no such define at
+ * time of writing we check MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
+ * instead, which should only be defined by the PSA implementation,
+ * not by PSA clients.
+ */
+#error "The TF-M image included the TF-M PSA headers but should have included Oberon PSA headers"
+#endif
+
 #endif /* PSA_CRYPTO_PLATFORM_H */
