@@ -24,10 +24,19 @@
 
 #include <nrf.h>
 
+#include <autoconf.h>
+
 #if defined(NRF_NVMC_S)
 #include <nrfx_nvmc.h>
 #elif defined(NRF_RRAMC_S)
 #include <nrfx_rramc.h>
+
+#if CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE > 0
+#define WRITE_BUFFER_SIZE CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE
+#else
+#define WRITE_BUFFER_SIZE 0
+#endif
+
 #else
 #error "Unrecognized platform"
 #endif
@@ -101,30 +110,31 @@ static int32_t ARM_Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
         return ARM_DRIVER_ERROR;
     }
 
-#ifdef NRF_RRAMC_S
-    /* Disable buffering until it's security impact is understood */
-    uint8_t write_buff_size = 0;
+#ifdef RRAMC_PRESENT
+	nrfx_rramc_config_t config = NRFX_RRAMC_DEFAULT_CONFIG(WRITE_BUFFER_SIZE);
+
+	config.mode_write = true;
+
+#if CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE > 0
+	config.preload_timeout_enable = true;
+	config.preload_timeout = CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE;
+#else
+	config.preload_timeout_enable = false;
+	config.preload_timeout = 0;
+#endif
 
 	/* Don't use an event handler until it's understood whether we
-	 * want it or not */
+	 * want it or not
+	 */
 	nrfx_rramc_evt_handler_t handler = NULL;
 
-	nrfx_rramc_config_t p_config = NRFX_RRAMC_DEFAULT_CONFIG(write_buff_size);
+	nrfx_err_t err = nrfx_rramc_init(&config, handler);
 
-	nrfx_err_t err_code = nrfx_rramc_init(&p_config, handler);
-
-	switch(err_code){
-	case NRFX_SUCCESS:
-	case NRFX_ERROR_ALREADY:
-		// TF-M appears to be invoking ARM_FLASH_Initialize multiple
-		// times, but this is of no concern to the driver.
-		return ARM_DRIVER_OK;
-	default:
-		return ARM_DRIVER_ERROR;
+	if(err != NRFX_SUCCESS && err != NRFX_ERROR_ALREADY) {
+		return err;
 	}
-#else
+#endif /* RRAMC_PRESENT */
     return ARM_DRIVER_OK;
-#endif
 }
 
 static int32_t ARM_Flash_ReadData(uint32_t addr, void *data, uint32_t cnt)
@@ -160,6 +170,15 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
     nrfx_nvmc_words_write(addr, data, cnt);
 #else
 	nrfx_rramc_words_write(addr, data, cnt);
+
+	/* At time of writing, the Zephyr driver commits writes, but the
+	 * nrfx driver does not, so we commit here using the HAL to align
+	 * Zephyr and TF-M behaviour.
+	 *
+	 * Not committing may cause data loss and/or high power
+	 * consumption.
+	 */
+	nrf_rramc_task_trigger(NRF_RRAMC, NRF_RRAMC_TASK_COMMIT_WRITEBUF);
 #endif
 
     /* Conversion between bytes and data items */
@@ -181,6 +200,8 @@ static int32_t ARM_Flash_EraseSector(uint32_t addr)
 			nrfx_rramc_word_write((uint32_t)erase_word_ptr, 0xFFFFFFFFU);
 		}
     }
+
+	nrf_rramc_task_trigger(NRF_RRAMC, NRF_RRAMC_TASK_COMMIT_WRITEBUF);
 #endif
 
     return ARM_DRIVER_OK;
