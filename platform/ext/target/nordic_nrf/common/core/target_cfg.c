@@ -32,6 +32,18 @@
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_spu.h>
 
+#ifdef RRAMC_PRESENT
+#include <nrfx_rramc.h>
+#include <hal/nrf_rramc.h>
+
+#if CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE > 0
+#define WRITE_BUFFER_SIZE CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE
+#else
+#define WRITE_BUFFER_SIZE 0
+#endif
+
+#endif
+
 #ifdef CACHE_PRESENT
 #include <hal/nrf_cache.h>
 #endif
@@ -1255,6 +1267,30 @@ static const uint8_t target_peripherals[] = {
 #endif
 
 #endif
+
+#ifdef RRAMC_PRESENT
+	nrfx_rramc_config_t config = NRFX_RRAMC_DEFAULT_CONFIG(WRITE_BUFFER_SIZE);
+
+	config.mode_write = true;
+
+#if CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE > 0
+	config.preload_timeout_enable = true;
+	config.preload_timeout = CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE;
+#else
+	config.preload_timeout_enable = false;
+	config.preload_timeout = 0;
+#endif
+
+	/* Don't use an event handler until it's understood whether we
+	 * want it or not
+	 */
+	nrfx_rramc_evt_handler_t handler = NULL;
+
+	nrfx_err_t err = nrfx_rramc_init(&config, handler);
+	if(err != NRFX_SUCCESS && err != NRFX_ERROR_ALREADY) {
+		return err;
+	}
+#endif /* RRAMC_PRESENT */
 
 #if NRF_SPU_HAS_MEMORY
     /* Enforce that the nRF5340 Network MCU is in the Non-Secure
