@@ -153,6 +153,7 @@ psa_status_t tfm_crypto_core_library_key_attributes_to_client(
     return PSA_SUCCESS;
 }
 
+#ifdef PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER
 /**
  * \brief This function is required by mbed TLS to enable support for
  *        platform builtin keys in the PSA Crypto core layer implemented
@@ -181,4 +182,5 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 
     return PSA_ERROR_DOES_NOT_EXIST;
 }
+#endif
 /*!@}*/
