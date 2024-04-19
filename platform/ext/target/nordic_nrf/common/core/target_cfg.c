@@ -730,6 +730,9 @@ enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
 #ifdef NRF_CRACEN
 	NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_CRACEN));
 #endif
+#ifdef NRF_MPC00
+	NVIC_ClearTargetState(MPC00_IRQn);
+#endif
 
 #ifdef SECURE_UART1
 #if NRF_SECURE_UART_INSTANCE == 0
@@ -757,6 +760,14 @@ enum tfm_plat_err_t nvic_interrupt_enable(void)
 		NVIC_ClearPendingIRQ(NRFX_IRQ_NUMBER_GET(spu_instances[i]));
 		NVIC_EnableIRQ(NRFX_IRQ_NUMBER_GET(spu_instances[i]));
 	}
+
+#ifdef MPC_PRESENT
+    /* MPC interrupt enabling */
+    mpc_enable_interrupts();
+
+    NVIC_ClearPendingIRQ(NRFX_IRQ_NUMBER_GET(NRF_MPC00));
+    NVIC_EnableIRQ(NRFX_IRQ_NUMBER_GET(NRF_MPC00));
+#endif
 
 	/* The CRACEN driver configures the NVIC for CRACEN and is
 	 * therefore omitted here.

@@ -114,11 +114,6 @@ enum tfm_plat_err_t spu_init_cfg(void);
 enum tfm_plat_err_t spu_periph_init_cfg(void);
 
 /**
- * \brief Clears SPU interrupt.
- */
-void spu_clear_irq(void);
-
-/**
  * \brief Configures memory permissions via the MPC.
  *
  * \return Returns values as specified by the \ref tfm_plat_err_t

@@ -112,17 +112,18 @@ DEFAULT_IRQ_HANDLER(GPIOTE30_1_Handler)
 DEFAULT_IRQ_HANDLER(CLOCK_POWER_Handler)
 
 #if defined(DOMAIN_NS) || defined(BL2)
-DEFAULT_IRQ_HANDLER(SPU00_Handler)
-DEFAULT_IRQ_HANDLER(SPU10_Handler)
-DEFAULT_IRQ_HANDLER(SPU20_Handler)
-DEFAULT_IRQ_HANDLER(SPU30_Handler)
+DEFAULT_IRQ_HANDLER(MPC00_IRQHandler)
+DEFAULT_IRQ_HANDLER(SPU00_IRQHandler)
+DEFAULT_IRQ_HANDLER(SPU10_IRQHandler)
+DEFAULT_IRQ_HANDLER(SPU20_IRQHandler)
+DEFAULT_IRQ_HANDLER(SPU30_IRQHandler)
 DEFAULT_IRQ_HANDLER(CRACEN_IRQHandler)
 #else
 // TODO: Move into the SPU error handling code
-DEFAULT_IRQ_HANDLER(SPU00_Handler)
-DEFAULT_IRQ_HANDLER(SPU10_Handler)
-DEFAULT_IRQ_HANDLER(SPU20_Handler)
-DEFAULT_IRQ_HANDLER(SPU30_Handler)
+DEFAULT_IRQ_HANDLER(SPU00_IRQHandler)
+DEFAULT_IRQ_HANDLER(SPU10_IRQHandler)
+DEFAULT_IRQ_HANDLER(SPU20_IRQHandler)
+DEFAULT_IRQ_HANDLER(SPU30_IRQHandler)
 #endif
 
 #if defined ( __GNUC__ )
@@ -213,8 +214,8 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
-    SPU00_Handler,
-    MPC00_Handler,
+    SPU00_IRQHandler,
+    MPC00_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
@@ -277,7 +278,7 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
-    SPU10_Handler,
+    SPU10_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
@@ -341,7 +342,7 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
-    SPU20_Handler,
+    SPU20_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
@@ -405,7 +406,7 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
-    SPU30_Handler,
+    SPU30_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,

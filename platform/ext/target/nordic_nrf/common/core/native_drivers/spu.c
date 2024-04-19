@@ -130,22 +130,46 @@ uint32_t spu_events_get(void)
 {
     uint32_t events = 0;
 
+    for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
+        if(nrf_spu_event_check(spu_instances[i], NRF_SPU_EVENT_PERIPHACCERR)){
+            events |= SPU_EVENT_PERIPHACCERR;
+        }
 #if NRF_SPU_HAS_MEMORY
-    if (nrf_spu_event_check(NRF_SPU, NRF_SPU_EVENT_RAMACCERR)) {
-        events |= SPU_EVENT_RAMACCERR;
+        if (nrf_spu_event_check(spu_instances[i], NRF_SPU_EVENT_RAMACCERR)) {
+            events |= SPU_EVENT_RAMACCERR;
+        }
+        if (nrf_spu_event_check(spu_instances[i], NRF_SPU_EVENT_FLASHACCERR)) {
+            events |= SPU_EVENT_FLASHACCERR;
+        }
+#endif /* NRF_SPU_HAS_MEMORY */
     }
-    if (nrf_spu_event_check(NRF_SPU, NRF_SPU_EVENT_FLASHACCERR)) {
-        events |= SPU_EVENT_FLASHACCERR;
-    }
-    if (nrf_spu_event_check(NRF_SPU, NRF_SPU_EVENT_PERIPHACCERR)) {
-        events |= SPU_EVENT_PERIPHACCERR;
-    }
-#else
-    // TODO: NCSDK-25011: Support fault handling on 54L
-#endif
 
     return events;
 }
+
+#ifdef MPC_PRESENT
+void mpc_enable_interrupts(void)
+{
+    uint32_t mask = NRF_MPC_INT_MEMACCERR_MASK;
+    nrf_mpc_int_enable(NRF_MPC00, mask);
+}
+
+uint32_t mpc_events_get(void)
+{
+    uint32_t events = 0;
+
+    if (nrf_mpc_event_check(NRF_MPC00, NRF_MPC_EVENT_MEMACCERR)){
+        events |= MPC_EVENT_MEMACCERR;
+    }
+
+    return events;
+}
+
+void mpc_clear_events()
+{
+    nrf_mpc_event_clear(NRF_MPC00, NRF_MPC_EVENT_MEMACCERR);
+}
+#endif /* MPC_PRESENT */
 
 void spu_clear_events(void)
 {
@@ -157,6 +181,23 @@ void spu_clear_events(void)
 		nrf_spu_event_clear(spu_instances[i], NRF_SPU_EVENT_PERIPHACCERR);
 	}
 }
+
+#ifdef SPU_PERIPHACCERR_ADDRESS_ADDRESS_Msk
+uint32_t spu_get_peri_addr(void) {
+    uint32_t addr = 0;
+
+    for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
+        if(spu_instances[i]->EVENTS_PERIPHACCERR){
+            /* Only the lower 16 bits of the address are captured into the register. The upper
+             * 16 bits correspond to the upper 16 bits of the SPU's base address.
+             */
+            addr = spu_instances[i]->PERIPHACCERR.ADDRESS | ((uint32_t)spu_instances[i] & 0xFFFF0000);
+        }
+    }
+
+    return addr;
+}
+#endif
 
 #if NRF_SPU_HAS_MEMORY
 void spu_regions_reset_unlocked_secure(void)
