@@ -20,8 +20,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <nrfx.h>
 
 #include <hal/nrf_spu.h>
+#ifdef MPC_PRESENT
+#include <hal/nrf_mpc.h>
+#endif
 
 #define SPU_LOCK_CONF_LOCKED true
 #define SPU_LOCK_CONF_UNLOCKED false
@@ -58,6 +62,7 @@ enum spu_events {
        SPU_EVENT_RAMACCERR = 1 << 0,
        SPU_EVENT_FLASHACCERR = 1 << 1,
        SPU_EVENT_PERIPHACCERR= 1 << 2,
+	   MPC_EVENT_MEMACCERR = 1 << 3
 };
 
 /**
@@ -138,6 +143,12 @@ void spu_peripheral_config_secure(const uint8_t periph_id, bool periph_lock);
  * - DMA transactions are configured as Non-Secure
  */
 void spu_peripheral_config_non_secure(const uint8_t periph_id, bool periph_lock);
+
+/**
+ * /brief Retrieve the address of the transaction that triggered PERIPHACCERR.
+ *
+ */
+uint32_t spu_get_peri_addr(void);
 
 /**
  * \brief Return base address of a Flash SPU regions
@@ -224,5 +235,25 @@ uint32_t spu_regions_sram_get_last_id(void);
  * \return the size of SRAM SPU regions
  */
 uint32_t spu_regions_sram_get_region_size(void);
+
+/**
+ * \brief MPC interrupt enabling
+ *
+ * Enable security violations outside the Cortex-M33
+ * to trigger SPU interrupts.
+ */
+void mpc_enable_interrupts(void);
+
+/**
+ * \brief Retrieve bitmask of MPC events.
+ */
+uint32_t mpc_events_get(void);
+
+/**
+ * \brief MPC event clearing
+ *
+ * Clear MPC event registers
+ */
+void mpc_clear_events(void);
 
 #endif

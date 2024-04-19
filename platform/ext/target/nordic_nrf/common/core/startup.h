@@ -40,6 +40,8 @@ void SPU10_IRQHandler(void);
 void SPU20_IRQHandler(void);
 void SPU30_IRQHandler(void);
 
+void MPC00_IRQHandler(void);
+
 void CRACEN_IRQHandler(void);
 
 /*
