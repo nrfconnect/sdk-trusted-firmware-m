@@ -45,8 +45,15 @@
 #include <hal/nrf_mpc.h>
 #endif
 
+#ifdef NRF53_SERIES
 #define PIN_XL1 0
 #define PIN_XL2 1
+#endif
+#ifdef NRF54L15_ENGA_XXAA
+/* On nRF54L15 XL1 and XL2 are(P1.00) and XL2(P1.01) */
+#define PIN_XL1 32
+#define PIN_XL2 33
+#endif
 
 #if TFM_PERIPHERAL_DCNF_SECURE
 struct platform_data_t tfm_peripheral_dcnf = {
@@ -1220,14 +1227,19 @@ static const uint8_t target_peripherals[] = {
 	/* TODO: NCSDK-22597: Support configuring pins as secure or non-secure on nrf54L */
 #endif
 
-#ifdef NRF53_SERIES
     /* Configure properly the XL1 and XL2 pins so that the low-frequency crystal
      * oscillator (LFXO) can be used.
      * This configuration can be done only from secure code, as otherwise those
      * register fields are not accessible. That's why it is placed here.
      */
+#ifdef NRF53_SERIES
     nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_PERIPHERAL);
     nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_PERIPHERAL);
+#endif
+#ifdef NRF54L15_ENGA_XXAA
+    /* NRF54L has a different define */
+    nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_GPIO);
+    nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_GPIO);
 #endif
 
 	/*
