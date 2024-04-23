@@ -630,7 +630,7 @@ enum tfm_plat_err_t system_reset_cfg(void)
 
 enum tfm_plat_err_t init_debug(void)
 {
-#if defined(NRF91_SERIES)
+#if defined(NRF91_SERIES) || defined(NRF54L15_ENGA_XXAA)
 
 #if !defined(DAUTH_CHIP_DEFAULT)
 #error "Debug access on this platform can only be configured by programming the corresponding registers in UICR."
@@ -661,10 +661,7 @@ enum tfm_plat_err_t init_debug(void)
     NRF_CTRLAP->SECUREAPPROTECT.LOCK = CTRLAPPERI_SECUREAPPROTECT_LOCK_LOCK_Locked <<
         CTRLAPPERI_SECUREAPPROTECT_LOCK_LOCK_Msk;
 
-#elif defined(NRF54L15_ENGA_XXAA)
-	// TODO: NCSDK-25047: Support nRF54L
 #else
-
 #error "Unrecognized platform"
 
 #endif
