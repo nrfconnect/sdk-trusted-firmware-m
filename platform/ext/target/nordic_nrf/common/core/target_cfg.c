@@ -1230,8 +1230,11 @@ static const uint8_t target_peripherals[] = {
      * register fields are not accessible. That's why it is placed here.
      */
 #ifdef NRF53_SERIES
+#if defined(CONFIG_SOC_ENABLE_LFXO) && CONFIG_SOC_ENABLE_LFXO == 1
+/* CONFIG_SOC_ENABLE_LFXO doesn't exist for 54L15 target, might be changed in future */
     nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_PERIPHERAL);
     nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_PERIPHERAL);
+#endif /* CONFIG_SOC_ENABLE_LFXO */
 #endif
 #ifdef NRF54L15_ENGA_XXAA
     /* NRF54L has a different define */
