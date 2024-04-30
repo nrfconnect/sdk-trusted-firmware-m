@@ -18,7 +18,11 @@
 #define PS_CRYPTO_AEAD_ALG PSA_ALG_GCM
 #endif
 
-#ifndef PS_CRYPTO_KDF_ALG
+/* CMake can't handle round brackets for compile defines so PSA_ALG_HKDF(PSA_ALG_SHA_256) doesn't
+ * work, therefore we have to use a own defined for the C code where
+ * PSA_ALG_HKDF_PSA_ALG_SHA_256 gets translated to PSA_ALG_HKDF_PSA_ALG_SHA_256
+ */
+#if !defined(PS_CRYPTO_KDF_ALG)
 #define PS_CRYPTO_KDF_ALG PSA_ALG_HKDF(PSA_ALG_SHA_256)
 #endif
 
