@@ -12,6 +12,3 @@ set(SECURE_UART1                        ON         CACHE BOOL      "Enable secur
 set(NRF_NS_STORAGE                      OFF        CACHE BOOL      "Enable non-secure storage partition")
 set(BL2                                 OFF        CACHE BOOL      "Whether to build BL2")
 set(NRF_NS_SECONDARY                    OFF        CACHE BOOL      "Enable non-secure secondary partition")
-
-# NCSDK-26630: Not supported yet
-set(PS_ENCRYPTION OFF CACHE BOOL "")
