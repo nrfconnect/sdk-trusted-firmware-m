@@ -963,10 +963,30 @@ enum tfm_plat_err_t nrf_mpc_init_cfg(void)
 	/* On 54l the NRF_MPC00->REGION[]'s are fixed in HW and the
 	 * OVERRIDE indexes (that are useful to us) start at 0 and end
 	 * (inclusive) at 4.
+	 *
+	 * Note that the MPC regions configure all volatile and non-volatile memory as secure, so we only
+	 * need to explicitly OVERRIDE the non-secure addresses to permit non-secure access.
+	 *
+	 * Explicitly configuring memory as secure is not necessary.
+	 *
+	 * The last OVERRIDE in 54L is fixed in HW and exists to prevent
+	 * other bus masters than the KMU from accessing CRACEN protected RAM.
+	 *
+	 * Note that we must take care not to configure an OVERRIDE that
+	 * affects an active bus transaction.
+	 *
+	 * Note that we don't configure the NSC region to be NS because
+	 * from the MPC's perspective it is secure. NSC is only configurable from the SAU.
+	 *
+	 * Note that OVERRIDE[n].MASTERPORT has a reasonable reset value
+	 * so it is left unconfigured.
+	 *
+	 * Note that there are two owners in 54L. KMU with owner ID 1, and everything else with owner ID 0.
 	 */
-	uint32_t index = 0;
 
-	/* Configure the non-secure partition of the non-volatile
+	uint32_t index = 0;
+	/*
+	 * Configure the non-secure partition of the non-volatile
 	 * memory. This MPC region is intended to cover both the
 	 * non-secure partition in the NVM and also the FICR. The FICR
 	 * starts after the NVM and ends just before the UICR.
@@ -1001,13 +1021,8 @@ enum tfm_plat_err_t nrf_mpc_init_cfg(void)
 		tfm_core_panic();
 	}
 
-	/* TODO: NCSDK-25050: Review configuration. Any other addresses we need to override? */
 
-	/* Note that we don't configure the NSC region to be NS because it is secure */
 
-	/* Note that OVERRIDE[n].MASTERPORT has a reasonable reset value
-	 * so it is left unconfigured.
-	 */
 
 	return TFM_PLAT_ERR_SUCCESS;
 }
