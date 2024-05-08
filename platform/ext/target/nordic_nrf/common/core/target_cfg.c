@@ -44,6 +44,11 @@
 
 #endif
 
+#define SPU_ADDRESS_REGION    (0x50000000)
+#define GET_SPU_SLAVE_INDEX(periph) ((periph.periph_start & 0x0003F000) >> 12)
+#define GET_SPU_INSTANCE(periph) ((NRF_SPU_Type*)(SPU_ADDRESS_REGION | (periph.periph_start & 0x00FC0000)))
+
+
 #ifdef CACHE_PRESENT
 #include <hal/nrf_cache.h>
 #endif
@@ -260,6 +265,34 @@ struct platform_data_t tfm_peripheral_twis3 = {
 struct platform_data_t tfm_peripheral_uarte3 = {
     NRF_UARTE3_S_BASE,
     NRF_UARTE3_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_UARTE00_SECURE
+struct platform_data_t tfm_peripheral_uarte00 = {
+    NRF_UARTE00_S_BASE,
+    NRF_UARTE00_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_UARTE20_SECURE
+struct platform_data_t tfm_peripheral_uarte20 = {
+    NRF_UARTE20_S_BASE,
+    NRF_UARTE20_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_UARTE21_SECURE
+struct platform_data_t tfm_peripheral_uarte21 = {
+    NRF_UARTE21_S_BASE,
+    NRF_UARTE21_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_UARTE22_SECURE
+struct platform_data_t tfm_peripheral_uarte22 = {
+    NRF_UARTE22_S_BASE,
+    NRF_UARTE22_S_BASE + (sizeof(NRF_UARTE_Type) - 1),
 };
 #endif
 
@@ -1051,8 +1084,7 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 			}
 		}
 
-		/* TODO: NCSDK-22597: Configure UART30 pins as secure */
-
+		/* TODO: NCSDK-22597: Make peripherals configurable */
 		for(uint8_t index = 0; index < ARRAY_SIZE(spu_instance->PERIPH); index++) {
 			if(!nrf_spu_periph_perm_present_get(spu_instance, index)) {
 				/* Peripheral is not present, nothing to configure */
@@ -1072,16 +1104,34 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 			}
 
 			/* Note that we don't configure dmasec because it has no effect when secattr is non-secure */
-
-			/* nrf_spu_periph_perm_lock_enable TODO: NCSDK-25009: Lock it down without breaking TF-M UART */
 		}
 	}
 
-	/* Configure TF-M's UART30 peripheral to be secure with secure DMA */
+	/* Configure TF-M's UART peripheral to be secure with secure DMA */
+#if NRF_SECURE_UART_INSTANCE == 00
+    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte00);
+    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte00);
+#endif
+#if NRF_SECURE_UART_INSTANCE == 20
+    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte20);
+    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte20);
+#endif
+#if NRF_SECURE_UART_INSTANCE == 21
+    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte21);
+    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte21);
+#endif
+#if NRF_SECURE_UART_INSTANCE == 22
+    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte22);
+    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte22);
+#endif
+#if NRF_SECURE_UART_INSTANCE == 30
+    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte30);
+    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte30);
+#endif
 	bool enable = true; /* true means secure */
-	uint32_t UART30_SLAVE_INDEX = (NRF_UARTE30_S_BASE & 0x0003F000) >> 12;
-	nrf_spu_periph_perm_secattr_set(NRF_SPU30, UART30_SLAVE_INDEX, enable);
-	nrf_spu_periph_perm_dmasec_set(NRF_SPU30, UART30_SLAVE_INDEX, enable);
+	nrf_spu_periph_perm_secattr_set(p_spu_instance, UART_SPU_SLAVE_INDEX, enable);
+	nrf_spu_periph_perm_dmasec_set(p_spu_instance, UART_SPU_SLAVE_INDEX, enable);
+    nrf_spu_periph_perm_lock_enable(p_spu_instance,UART_SPU_SLAVE_INDEX);
 
 #else
 static const uint8_t target_peripherals[] = {
@@ -1124,9 +1174,22 @@ static const uint8_t target_peripherals[] = {
 #endif
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM2),
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM3),
-    /* When UART30 is a secure peripheral we need to leave Serial-Box 30 as Secure */
-#if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 30)
-    // TODO: NCSDK-25009: spu_peripheral_config_non_secure((uint32_t)NRF_SPIM30, false);
+
+/* For Moonlight if a UART instance is selected to be the secure instance leave it as secure */
+#if NRF_SECURE_UART_INSTANCE == 00
+    NRFX_PERIPHERAL_ID_GET(NRF_SPIM00),
+#endif
+#if NRF_SECURE_UART_INSTANCE == 20
+    NRFX_PERIPHERAL_ID_GET(NRF_SPIM20),
+#endif
+#if NRF_SECURE_UART_INSTANCE == 21
+    NRFX_PERIPHERAL_ID_GET(NRF_SPIM21),
+#endif
+#if NRF_SECURE_UART_INSTANCE == 22
+    NRFX_PERIPHERAL_ID_GET(NRF_SPIM22),
+#endif
+#if NRF_SECURE_UART_INSTANCE == 30
+    NRFX_PERIPHERAL_ID_GET(NRF_SPIM30),
 #endif
 
 #ifdef NRF_SPIM4
