@@ -116,7 +116,7 @@ static int32_t ARM_USARTx_Initialize(ARM_USART_SignalEvent_t cb_event,
     ARG_UNUSED(cb_event);
 
 #ifdef SPU_CONFIGURE_UART
-    spu_peripheral_config_secure(NRFX_PERIPHERAL_ID_GET((uint32_t)uart_resources->uarte.p_reg), false);
+    spu_peripheral_config_secure((uint32_t)uart_resources->uarte.p_reg, false);
     NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET((uint32_t)uart_resources->uarte.p_reg));
 #endif
 
@@ -149,7 +149,7 @@ static int32_t ARM_USARTx_Uninitialize(UARTx_Resources *uart_resources)
     uart_resources->initialized = false;
 
 #ifdef SPU_CONFIGURE_UART
-    spu_peripheral_config_non_secure(NRFX_PERIPHERAL_ID_GET((uint32_t)uart_resources->uarte.p_reg), false);
+    spu_peripheral_config_non_secure((uint32_t)uart_resources->uarte.p_reg, false);
     NVIC_SetTargetState(NRFX_IRQ_NUMBER_GET((uint32_t)uart_resources->uarte.p_reg));
 #endif
 

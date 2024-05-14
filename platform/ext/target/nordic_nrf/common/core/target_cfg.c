@@ -1201,32 +1201,32 @@ static const uint32_t target_peripherals[] = {
      * The UART Driver will configure it as non-secure when it uninitializes.
      */
 #if defined(NRF54L15_ENGA_XXAA)
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM00),
+    NRF_SPIM00_S_BASE,
 #else
 #if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 0)
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM0),
+    NRF_SPIM0_S_BASE,
 #endif /* !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 0) */
 #endif /* NRF54L15_ENGA_XXAA */
 
     /* When UART1 is a secure peripheral we need to leave Serial-Box 1 as Secure */
 #if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 1)
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM1),
+    NRF_SPIM1_S_BASE,
 #endif
     NRF_SPIM2_S_BASE,
     NRF_SPIM3_S_BASE,
 
 /* For Moonlight if a UART instance is selected to be the secure instance leave it as secure */
 #if NRF_SECURE_UART_INSTANCE == 20
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM20),
+    NRF_SPIM20_S_BASE,
 #endif
 #if NRF_SECURE_UART_INSTANCE == 21
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM21),
+    NRF_SPIM21_S_BASE,
 #endif
 #if NRF_SECURE_UART_INSTANCE == 22
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM22),
+    NRF_SPIM22_S_BASE,
 #endif
 #if NRF_SECURE_UART_INSTANCE == 30
-    NRFX_PERIPHERAL_ID_GET(NRF_SPIM30),
+    NRF_SPIM30_S_BASE,
 #endif
 
 #ifdef NRF_SPIM4
