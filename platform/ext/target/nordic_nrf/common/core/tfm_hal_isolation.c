@@ -132,7 +132,7 @@ tfm_hal_bind_boundary(const struct partition_load_info_t *p_ldinf,
         }
 
 #ifdef NRF_SPU
-        spu_peripheral_config_secure(NRFX_PERIPHERAL_ID_GET(plat_data_ptr->periph_start),
+        spu_peripheral_config_secure(plat_data_ptr->periph_start,
                                      SPU_LOCK_CONF_LOCKED);
 #else
 		// TODO: NCSDK-22597: Support configuring peripherals as secure
