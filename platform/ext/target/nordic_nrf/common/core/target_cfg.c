@@ -1325,15 +1325,48 @@ static const uint32_t target_peripherals[] = {
 	dppi_channel_configuration();
 
     /* GPIO pin configuration */
-#ifdef NRF_SPU
-
-	nrf_spu_gpio_config_set(NRF_SPU, 0, TFM_PERIPHERAL_GPIO0_PIN_MASK_SECURE, SPU_LOCK_CONF_LOCKED);
+	uint32_t secure_pins[] = {
+		TFM_PERIPHERAL_GPIO0_PIN_MASK_SECURE,
 #ifdef TFM_PERIPHERAL_GPIO1_PIN_MASK_SECURE
-	nrf_spu_gpio_config_set(NRF_SPU, 1, TFM_PERIPHERAL_GPIO1_PIN_MASK_SECURE, SPU_LOCK_CONF_LOCKED);
+		TFM_PERIPHERAL_GPIO1_PIN_MASK_SECURE,
 #endif
+#ifdef TFM_PERIPHERAL_GPIO2_PIN_MASK_SECURE
+		TFM_PERIPHERAL_GPIO2_PIN_MASK_SECURE,
+#endif
+	};
 
+	/* Note that there are two different API's for SPU configuration */
+#if NRF_SPU_HAS_MEMORY
+
+	for(int port = 0; port < ARRAY_SIZE(secure_pins); port++){
+		nrf_spu_gpio_config_set(NRF_SPU, port, secure_pins[port], SPU_LOCK_CONF_LOCKED);
+	}
+
+#elif NRF_SPU_HAS_PERIPHERAL_ACCESS
+
+	for(int port = 0; port < ARRAY_SIZE(secure_pins); port++) {
+		for (int pin = 0; pin < 32; pin++) {
+			if (secure_pins[port] & (1 << pin)) {
+				bool enable = true; // secure
+
+				/*
+				 * Unfortunately, NRF_P0 is not configured by NRF_SPU00, etc.
+				 * so it is a bit convoluted to find the SPU instance for port x.
+				 */
+				uint32_t gpio_port_addr[2] = {
+					NRF_P0_S_BASE,
+					NRF_P1_S_BASE,
+				};
+
+				NRF_SPU_Type * spu_instance = spu_instance_from_peripheral_addr(gpio_port_addr[port]);
+
+				nrf_spu_feature_secattr_set(spu_instance, NRF_SPU_FEATURE_GPIO_PIN, port, pin, enable);
+				nrf_spu_feature_lock_enable(spu_instance, NRF_SPU_FEATURE_GPIO_PIN, port, pin);
+			}
+		}
+	}
 #else
-	/* TODO: NCSDK-22597: Support configuring pins as secure or non-secure on nrf54L */
+#error "Expected either NRF_SPU_HAS_MEMORY or NRF_SPU_HAS_PERIPHERAL_ACCESS to be true"
 #endif
 
     /* Configure properly the XL1 and XL2 pins so that the low-frequency crystal
