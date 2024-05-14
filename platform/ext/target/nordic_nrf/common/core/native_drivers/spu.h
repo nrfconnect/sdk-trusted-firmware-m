@@ -151,6 +151,19 @@ void spu_peripheral_config_non_secure(const uint32_t periph_base_address, bool p
 uint32_t spu_get_peri_addr(void);
 
 /**
+ * Return the SPU instance that can be used to configure the
+ * peripheral at the given base address.
+ */
+static inline NRF_SPU_Type * spu_instance_from_peripheral_addr(uint32_t peripheral_addr)
+{
+	/* See the SPU chapter in the IPS for how this is calculated */
+
+	uint32_t apb_bus_number = peripheral_addr & 0x00FC0000;
+
+	return (NRF_SPU_Type *)(0x50000000 | apb_bus_number);
+}
+
+/**
  * \brief Return base address of a Flash SPU regions
  *
  * Get the base (lowest) address of a particular Flash SPU region
