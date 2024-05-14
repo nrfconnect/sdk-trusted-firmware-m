@@ -1021,8 +1021,18 @@ enum tfm_plat_err_t nrf_mpc_init_cfg(void)
 		tfm_core_panic();
 	}
 
+	/* Lock and disable any unused MPC overrides to prevent malicious configuration */
+	while(index <= 4) {
+		struct mpc_region_override override;
 
+		init_mpc_region_override(&override);
 
+		override.config.enable = false;
+
+		override.index = index++;
+
+		mpc_configure_override(NRF_MPC00, &override);
+	}
 
 	return TFM_PLAT_ERR_SUCCESS;
 }
