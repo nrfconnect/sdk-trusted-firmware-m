@@ -1093,11 +1093,6 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 	 *
 	 * Just after memsetting to 0 we explicitly configure the
 	 * peripherals that should be secure back to secure again.
-	 *
-	 * At the moment we also have some redundant code that is
-	 * configuring things to 0/NonSecure because it is not clear if
-	 * this strategy is safe and we want to keep this code in case we
-	 * need it later.
 	 */
 	// TODO: NCSDK-22597: Evaluate if it is safe to memset everything
 	// in NRF_SPU to 0.
@@ -1106,42 +1101,6 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 	memset(NRF_SPU20, 0, sizeof(NRF_SPU_Type));
 	memset(NRF_SPU30, 0, sizeof(NRF_SPU_Type));
 
-	/* Configure peripherals to be non-secure */
-	for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
-		NRF_SPU_Type * spu_instance = spu_instances[i];
-
-		/* Configure all pins as non-secure */
-		bool spu_has_GPIO = i != 1;
-		if(spu_has_GPIO) {
-			for(int j = 0; j < ARRAY_SIZE(spu_instance->FEATURE.GPIO); j++) {
-				for(int pin = 0; pin < 32; pin++) {
-					spu_instance->FEATURE.GPIO[j].PIN[pin] = 0;
-				}
-			}
-		}
-
-		/* TODO: NCSDK-22597: Make peripherals configurable */
-		for(uint8_t index = 0; index < ARRAY_SIZE(spu_instance->PERIPH); index++) {
-			if(!nrf_spu_periph_perm_present_get(spu_instance, index)) {
-				/* Peripheral is not present, nothing to configure */
-				continue;
-			}
-
-			nrf_spu_securemapping_t securemapping = nrf_spu_periph_perm_securemapping_get(spu_instance, index);
-
-			bool secattr_has_effect =
-				securemapping == NRF_SPU_SECUREMAPPING_USERSELECTABLE ||
-				securemapping == NRF_SPU_SECUREMAPPING_SPLIT;
-
-			if(secattr_has_effect) {
-				bool enable = false;  /* false means non-secure */
-
-				nrf_spu_periph_perm_secattr_set(spu_instance, index, enable);
-			}
-
-			/* Note that we don't configure dmasec because it has no effect when secattr is non-secure */
-		}
-	}
 
 	/* Configure TF-M's UART peripheral to be secure with secure DMA */
 #if NRF_SECURE_UART_INSTANCE == 00
