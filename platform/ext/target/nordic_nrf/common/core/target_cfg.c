@@ -1101,32 +1101,23 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 	memset(NRF_SPU20, 0, sizeof(NRF_SPU_Type));
 	memset(NRF_SPU30, 0, sizeof(NRF_SPU_Type));
 
-
-	/* Configure TF-M's UART peripheral to be secure with secure DMA */
+	/* Configure TF-M's UART peripheral to be secure */
 #if NRF_SECURE_UART_INSTANCE == 00
-    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte00);
-    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte00);
+    uint32_t uart_periph_start = tfm_peripheral_uarte00.periph_start;
 #endif
 #if NRF_SECURE_UART_INSTANCE == 20
-    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte20);
-    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte20);
+    uint32_t uart_periph_start = tfm_peripheral_uarte20.periph_start;
 #endif
 #if NRF_SECURE_UART_INSTANCE == 21
-    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte21);
-    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte21);
+    uint32_t uart_periph_start = tfm_peripheral_uarte21.periph_start;
 #endif
 #if NRF_SECURE_UART_INSTANCE == 22
-    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte22);
-    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte22);
+    uint32_t uart_periph_start = tfm_peripheral_uarte22.periph_start;
 #endif
 #if NRF_SECURE_UART_INSTANCE == 30
-    uint32_t UART_SPU_SLAVE_INDEX = GET_SPU_SLAVE_INDEX(tfm_peripheral_uarte30);
-    NRF_SPU_Type * p_spu_instance = GET_SPU_INSTANCE(tfm_peripheral_uarte30);
+    uint32_t uart_periph_start = tfm_peripheral_uarte30.periph_start;
 #endif
-	bool enable = true; /* true means secure */
-	nrf_spu_periph_perm_secattr_set(p_spu_instance, UART_SPU_SLAVE_INDEX, enable);
-	nrf_spu_periph_perm_dmasec_set(p_spu_instance, UART_SPU_SLAVE_INDEX, enable);
-    nrf_spu_periph_perm_lock_enable(p_spu_instance,UART_SPU_SLAVE_INDEX);
+	spu_peripheral_config_secure(uart_periph_start, SPU_LOCK_CONF_LOCKED);
 
 #else
 static const uint32_t target_peripherals[] = {
