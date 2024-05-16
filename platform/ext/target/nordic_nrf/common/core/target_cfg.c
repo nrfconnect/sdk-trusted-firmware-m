@@ -1119,6 +1119,29 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 #endif
 	spu_peripheral_config_secure(uart_periph_start, SPU_LOCK_CONF_LOCKED);
 
+	/* Configure the CTRL-AP mailbox interface to be secure as it is used by the secure ADAC service */
+	spu_peripheral_config_secure(NRF_CTRLAP_S_BASE, SPU_LOCK_CONF_LOCKED);
+
+	/* Configure NRF_MEMCONF to be secure as it could otherwise be used to corrupt secure RAM. */
+	spu_peripheral_config_secure(NRF_MEMCONF_S_BASE, SPU_LOCK_CONF_LOCKED);
+
+	/* Configure trace to be secure, as the security implications of non-secure trace are not understood */
+	spu_peripheral_config_secure(NRF_TAD_S_BASE, SPU_LOCK_CONF_LOCKED);
+
+	/* Configure these HW features, which are not in the MDK, to be
+	 * secure, as the security implications of them being non-secure
+	 * are not understood
+	 */
+	uint32_t base_addresses[4] = {
+		0x50056000,
+		0x5008C000,
+		0x500E6000,
+		0x5010F000
+	};
+	for(int i = 0; i < 4; i++) {
+		spu_peripheral_config_secure(base_addresses[i], SPU_LOCK_CONF_LOCKED);
+	}
+
 #else
 static const uint32_t target_peripherals[] = {
     /* The following peripherals share ID:
