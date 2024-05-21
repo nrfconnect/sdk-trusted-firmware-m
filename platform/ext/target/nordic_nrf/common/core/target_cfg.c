@@ -70,6 +70,12 @@
 /* On nRF54L15 XL1 and XL2 are(P1.00) and XL2(P1.01) */
 #define PIN_XL1 32
 #define PIN_XL2 33
+
+/* During TF-M system initialization we invoke a function that comes
+ * from Zephyr. This function does not have a header file so we
+ * declare it's prototype here.
+ */
+int nordicsemi_nrf54l_init(void);
 #endif
 
 #if TFM_PERIPHERAL_DCNF_SECURE
@@ -1142,6 +1148,13 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 		spu_peripheral_config_secure(base_addresses[i], SPU_LOCK_CONF_LOCKED);
 	}
 
+	/* Configure NRF_REGULATORS, and NRF_OSCILLATORS to be secure as NRF_REGULATORS.POFCON is needed
+	 * to prevent glitches when the power supply is attacked.
+	 *
+	 * NB: Note that NRF_OSCILLATORS and NRF_REGULATORS have the same base address and must therefore
+	 * have the same security configuration.
+	 */
+	spu_peripheral_config_secure(NRF_REGULATORS_S_BASE, SPU_LOCK_CONF_LOCKED);
 #else
 static const uint32_t target_peripherals[] = {
     /* The following peripherals share ID:
@@ -1408,6 +1421,14 @@ static const uint32_t target_peripherals[] = {
 		return err;
 	}
 #endif /* RRAMC_PRESENT */
+
+#ifdef NRF54L15_ENGA_XXAA
+	/* SOC configuration from Zephyr's soc.c. */
+	int soc_err = nordicsemi_nrf54l_init();
+	if(soc_err) {
+		return soc_err;
+	}
+#endif
 
 #if NRF_SPU_HAS_MEMORY
     /* Enforce that the nRF5340 Network MCU is in the Non-Secure
