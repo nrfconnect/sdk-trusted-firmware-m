@@ -131,12 +131,8 @@ tfm_hal_bind_boundary(const struct partition_load_info_t *p_ldinf,
             continue;
         }
 
-#ifdef NRF_SPU
         spu_peripheral_config_secure(plat_data_ptr->periph_start,
                                      SPU_LOCK_CONF_LOCKED);
-#else
-		// TODO: NCSDK-22597: Support configuring peripherals as secure
-#endif
 
         /*
          * Static boundaries are set. Set up MPU region for MMIO.
