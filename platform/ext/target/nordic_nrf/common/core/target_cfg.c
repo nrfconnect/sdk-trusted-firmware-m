@@ -1439,8 +1439,6 @@ static const uint32_t target_peripherals[] = {
      * it doesn't get changed by accident.
      */
     nrf_spu_extdomain_set(NRF_SPU, 0, false, true);
-#else
-	/* TODO: NCSDK-22597: Configure VPR to be non-secure on nrf54L */
 #endif
 
     return TFM_PLAT_ERR_SUCCESS;
