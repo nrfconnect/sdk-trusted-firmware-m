@@ -76,6 +76,21 @@ const uintptr_t partition_named_mmio_list[] = {
 #if TFM_PERIPHERAL_PWM20_SECURE
     (uintptr_t)TFM_PERIPHERAL_PWM20,
 #endif
+#if TFM_PERIPHERAL_UARTE00_SECURE
+    (uintptr_t)TFM_PERIPHERAL_UARTE00,
+#endif
+#if TFM_PERIPHERAL_UARTE20_SECURE
+    (uintptr_t)TFM_PERIPHERAL_UARTE20,
+#endif
+#if TFM_PERIPHERAL_UARTE21_SECURE
+    (uintptr_t)TFM_PERIPHERAL_UARTE21,
+#endif
+#if TFM_PERIPHERAL_UARTE22_SECURE
+    (uintptr_t)TFM_PERIPHERAL_UARTE22,
+#endif
+#if TFM_PERIPHERAL_UARTE30_SECURE
+    (uintptr_t)TFM_PERIPHERAL_UARTE30,
+#endif
 };
 
 #ifdef __cplusplus
