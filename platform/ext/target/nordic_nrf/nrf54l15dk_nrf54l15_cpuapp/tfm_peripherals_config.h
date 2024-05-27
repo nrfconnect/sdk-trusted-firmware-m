@@ -16,6 +16,10 @@ extern "C" {
 #define TFM_PERIPHERAL_UARTE30_SECURE 1
 #endiff
 
+#if TFM_PARTITION_SLIH_TEST || TFM_PARTITION_FLIH_TEST
+#define TFM_PERIPHERAL_TIMER00_SECURE 1
+#endif
+
 
 #if defined(NRF54L15_ENGA_XXAA)
     #include <tfm_peripherals_config_nrf54l15.h>

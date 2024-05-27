@@ -135,7 +135,7 @@ psa_status_t tfm_hal_its_get_aead(struct tfm_hal_its_auth_crypt_ctx *ctx,
         return TFM_HAL_ERROR_INVALID_INPUT;
     }
 
-    if (encrypt && (output_size < PSA_AEAD_ENCRYPT_OUTPUT_SIZE(PSA_KEY_TYPE_CHACHA20,
+    if (encrypt && (output_size < PSA_AEAD_UPDATE_OUTPUT_SIZE(PSA_KEY_TYPE_CHACHA20,
                                                                TFM_ITS_AEAD_ALG,
                                                                input_size))){
         return TFM_HAL_ERROR_INVALID_INPUT;

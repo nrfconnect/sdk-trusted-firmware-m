@@ -24,5 +24,6 @@ target_sources(platform_ns
 target_compile_definitions(platform_ns
     PUBLIC
         NRF_TRUSTZONE_NONSECURE
+        NRF_SKIP_CLOCK_CONFIGURATION
         DOMAIN_NS=1
 )
