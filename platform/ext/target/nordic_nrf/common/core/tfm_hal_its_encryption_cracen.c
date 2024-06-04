@@ -110,10 +110,10 @@ static bool ctx_is_valid(struct tfm_hal_its_auth_crypt_ctx *ctx)
 }
 
 psa_status_t tfm_hal_its_get_aead(struct tfm_hal_its_auth_crypt_ctx *ctx,
-                                  const uint8_t *plaintext,
-                                  const size_t plaintext_size,
-                                  uint8_t *ciphertext,
-                                  const size_t ciphertext_size,
+                                  const uint8_t *input,
+                                  const size_t input_size,
+                                  uint8_t *output,
+                                  const size_t output_size,
                                   uint8_t *tag,
                                   const size_t tag_size,
                                   bool encrypt)
@@ -121,7 +121,8 @@ psa_status_t tfm_hal_its_get_aead(struct tfm_hal_its_auth_crypt_ctx *ctx,
     psa_status_t status;
     uint8_t key_out[CHACHA20_KEY_SIZE];
     psa_key_attributes_t attributes = PSA_KEY_ATTRIBUTES_INIT;
-    size_t ciphertext_length;
+    cracen_aead_operation_t operation = {0};
+    size_t out_length;
     size_t tag_length = PSA_AEAD_TAG_LENGTH(PSA_KEY_TYPE_CHACHA20,
                                             PSA_BYTES_TO_BITS(CHACHA20_KEY_SIZE),
                                             TFM_ITS_AEAD_ALG);
@@ -134,12 +135,11 @@ psa_status_t tfm_hal_its_get_aead(struct tfm_hal_its_auth_crypt_ctx *ctx,
         return TFM_HAL_ERROR_INVALID_INPUT;
     }
 
-    if (encrypt && (ciphertext_size < PSA_AEAD_ENCRYPT_OUTPUT_SIZE(PSA_KEY_TYPE_CHACHA20,
-                                                                   TFM_ITS_AEAD_ALG,
-                                                                   plaintext_size))){
+    if (encrypt && (output_size < PSA_AEAD_ENCRYPT_OUTPUT_SIZE(PSA_KEY_TYPE_CHACHA20,
+                                                               TFM_ITS_AEAD_ALG,
+                                                               input_size))){
         return TFM_HAL_ERROR_INVALID_INPUT;
     }
-
 
     status = hw_unique_key_derive_key(HUK_KEYSLOT_MKEK, NULL, 0, ctx->deriv_label, ctx->deriv_label_size, key_out, sizeof(key_out));
     if (status != HW_UNIQUE_KEY_SUCCESS) {
@@ -152,40 +152,35 @@ psa_status_t tfm_hal_its_get_aead(struct tfm_hal_its_auth_crypt_ctx *ctx,
     psa_set_key_bits(&attributes, PSA_BYTES_TO_BITS(CHACHA20_KEY_SIZE));
 
     if (encrypt) {
-        status = cracen_aead_encrypt(&attributes,
-                                  key_out,
-                                  sizeof(key_out),
-                                  TFM_ITS_AEAD_ALG,
-                                  ctx->nonce,
-                                  ctx->nonce_size,
-                                  ctx->aad,
-                                  ctx->add_size,
-                                  plaintext,
-                                  plaintext_size,
-                                  ciphertext,
-                                  ciphertext_size,
-                                  &ciphertext_length);
+        status = cracen_aead_encrypt_setup(&operation, &attributes, key_out, sizeof(key_out), TFM_ITS_AEAD_ALG);
     } else {
-        status = cracen_aead_decrypt(&attributes,
-                                  key_out,
-                                  sizeof(key_out),
-                                  TFM_ITS_AEAD_ALG,
-                                  ctx->nonce,
-                                  ctx->nonce_size,
-                                  ctx->aad,
-                                  ctx->add_size,
-                                  plaintext,
-                                  plaintext_size,
-                                  ciphertext,
-                                  ciphertext_size,
-                                  &ciphertext_length);
+        status = cracen_aead_decrypt_setup(&operation, &attributes, key_out, sizeof(key_out), TFM_ITS_AEAD_ALG);
     }
-    if(status != PSA_SUCCESS){
+
+    if (status != PSA_SUCCESS) {
         return status;
     }
 
-    /* copy tag from ciphertext buffer to tag buffer */
-    memcpy(tag, ciphertext + ciphertext_length - tag_length, tag_length);
+    status = cracen_aead_set_nonce(&operation, ctx->nonce, ctx->nonce_size);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    status = cracen_aead_update_ad(&operation, ctx->aad, ctx->add_size);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    status = cracen_aead_update(&operation, input, input_size, output, output_size, &out_length);
+    if (status != PSA_SUCCESS) {
+        return status;
+    }
+
+    if (encrypt) {
+        status = cracen_aead_finish(&operation, output + out_length, output_size - out_length, &out_length, tag, tag_size, &tag_length);
+    } else {
+        status = cracen_aead_verify(&operation, output + out_length, output_size - out_length, &out_length , tag, tag_size);
+    }
 
     return status;
 }
