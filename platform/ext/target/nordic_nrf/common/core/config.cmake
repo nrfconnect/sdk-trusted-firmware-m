@@ -33,6 +33,9 @@ if (NRF_HW_INIT_NRF_PERIPHERALS AND NOT NRF_HW_INIT_RESET_ON_BOOT)
         message(FATAL_ERROR "NRF_HW_INIT_NRF_PERIPHERALS depends on NRF_HW_INIT_RESET_ON_BOOT")
 endif()
 
+set(NRF_APPROTECT                       OFF        CACHE BOOL      "Enable approtect")
+set(NRF_SECURE_APPROTECT                OFF        CACHE BOOL      "Enable secure approtect")
+
 # Platform-specific configurations
 set(CONFIG_TFM_USE_TRUSTZONE            ON)
 set(TFM_MULTI_CORE_TOPOLOGY             OFF)
