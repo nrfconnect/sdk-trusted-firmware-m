@@ -28,7 +28,6 @@
 #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 #endif
 
-// TODO: NCSDK-22597: Support configuring peripherals as secure
 #if !(DOMAIN_NS == 1U) && defined(CONFIG_TFM_LOG_SHARE_UART) && defined(NRF_SPU)
 #define SPU_CONFIGURE_UART
 #include <spu.h>

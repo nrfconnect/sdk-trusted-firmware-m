@@ -128,6 +128,48 @@ struct platform_data_t tfm_peripheral_spim0 = {
 };
 #endif
 
+#if TFM_PERIPHERAL_SPIM00_SECURE
+struct platform_data_t tfm_peripheral_spim00 = {
+    NRF_SPIM00_S_BASE,
+    NRF_SPIM00_S_BASE + (sizeof(NRF_SPIM_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_SPIM20_SECURE
+struct platform_data_t tfm_peripheral_spim20 = {
+    NRF_SPIM20_S_BASE,
+    NRF_SPIM20_S_BASE + (sizeof(NRF_SPIM_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_SPIM22_SECURE
+struct platform_data_t tfm_peripheral_spim21 = {
+    NRF_SPIM21_S_BASE,
+    NRF_SPIM21_S_BASE + (sizeof(NRF_SPIM_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_SPIM22_SECURE
+struct platform_data_t tfm_peripheral_spim22 = {
+    NRF_SPIM22_S_BASE,
+    NRF_SPIM22_S_BASE + (sizeof(NRF_SPIM_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_SPIM23_SECURE
+struct platform_data_t tfm_peripheral_spim23 = {
+    NRF_SPIM23_S_BASE,
+    NRF_SPIM23_S_BASE + (sizeof(NRF_SPIM_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_SPIM30_SECURE
+struct platform_data_t tfm_peripheral_spim30 = {
+    NRF_SPIM30_S_BASE,
+    NRF_SPIM30_S_BASE + (sizeof(NRF_SPIM_Type) - 1),
+};
+#endif
+
 #if TFM_PERIPHERAL_SPIS0_SECURE
 struct platform_data_t tfm_peripheral_spis0 = {
     NRF_SPIS0_S_BASE,
@@ -317,6 +359,55 @@ struct platform_data_t tfm_peripheral_timer0 = {
 };
 #endif
 
+#if TFM_PERIPHERAL_TIMER00_SECURE
+struct platform_data_t tfm_peripheral_timer00 = {
+    NRF_TIMER00_S_BASE,
+    NRF_TIMER00_S_BASE + (sizeof(NRF_TIMER_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_TIMER10_SECURE
+struct platform_data_t tfm_peripheral_timer10 = {
+    NRF_TIMER10_S_BASE,
+    NRF_TIMER10_S_BASE + (sizeof(NRF_TIMER_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_TIMER20_SECURE
+struct platform_data_t tfm_peripheral_timer20 = {
+    NRF_TIMER20_S_BASE,
+    NRF_TIMER20_S_BASE + (sizeof(NRF_TIMER_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_TIMER21_SECURE
+struct platform_data_t tfm_peripheral_timer21 = {
+    NRF_TIMER21_S_BASE,
+    NRF_TIMER21_S_BASE + (sizeof(NRF_TIMER_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_TIMER22_SECURE
+struct platform_data_t tfm_peripheral_timer22 = {
+    NRF_TIMER22_S_BASE,
+    NRF_TIMER22_S_BASE + (sizeof(NRF_TIMER_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_TIMER23_SECURE
+struct platform_data_t tfm_peripheral_timer23 = {
+    NRF_TIMER23_S_BASE,
+    NRF_TIMER23_S_BASE + (sizeof(NRF_TIMER_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_TIMER24_SECURE
+struct platform_data_t tfm_peripheral_timer24 = {
+    NRF_TIMER24_S_BASE,
+    NRF_TIMER24_S_BASE + (sizeof(NRF_TIMER_Type) - 1),
+};
+#endif
+
 #if TFM_PERIPHERAL_TIMER1_SECURE
 struct platform_data_t tfm_peripheral_timer1 = {
     NRF_TIMER1_S_BASE,
@@ -429,6 +520,20 @@ struct platform_data_t tfm_peripheral_egu5 = {
 };
 #endif
 
+#if TFM_PERIPHERAL_EGU10_SECURE
+struct platform_data_t tfm_peripheral_egu10 = {
+    NRF_EGU10_S_BASE,
+    NRF_EGU10_S_BASE + (sizeof(NRF_EGU_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_EGU20_SECURE
+struct platform_data_t tfm_peripheral_egu20 = {
+    NRF_EGU20_S_BASE,
+    NRF_EGU20_S_BASE + (sizeof(NRF_EGU_Type) - 1),
+};
+#endif
+
 #if TFM_PERIPHERAL_PWM0_SECURE
 struct platform_data_t tfm_peripheral_pwm0 = {
     NRF_PWM0_S_BASE,
@@ -454,6 +559,27 @@ struct platform_data_t tfm_peripheral_pwm2 = {
 struct platform_data_t tfm_peripheral_pwm3 = {
     NRF_PWM3_S_BASE,
     NRF_PWM3_S_BASE + (sizeof(NRF_PWM_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_PWM20_SECURE
+struct platform_data_t tfm_peripheral_pwm20 = {
+    NRF_PWM20_S_BASE,
+    NRF_PWM20_S_BASE + (sizeof(NRF_PWM_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_PWM21_SECURE
+struct platform_data_t tfm_peripheral_pwm21 = {
+    NRF_PWM21_S_BASE,
+    NRF_PWM21_S_BASE + (sizeof(NRF_PWM_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_PWM22_SECURE
+struct platform_data_t tfm_peripheral_pwm22 = {
+    NRF_PWM22_S_BASE,
+    NRF_PWM22_S_BASE + (sizeof(NRF_PWM_Type) - 1),
 };
 #endif
 
@@ -566,6 +692,13 @@ struct platform_data_t tfm_peripheral_gpio0 = {
 struct platform_data_t tfm_peripheral_gpio1 = {
     NRF_P1_S_BASE,
     NRF_P1_S_BASE + (sizeof(NRF_GPIO_Type) - 1),
+};
+#endif
+
+#if TFM_PERIPHERAL_GPIOTE20_SECURE
+struct platform_data_t tfm_peripheral_gpiote20 = {
+    NRF_GPIOTE20_S_BASE,
+    NRF_GPIOTE20_S_BASE + (sizeof(NRF_GPIOTE_Type) - 1),
 };
 #endif
 
@@ -1187,20 +1320,6 @@ static const uint32_t target_peripherals[] = {
 #endif
     NRF_SPIM2_S_BASE,
     NRF_SPIM3_S_BASE,
-
-/* For Moonlight if a UART instance is selected to be the secure instance leave it as secure */
-#if NRF_SECURE_UART_INSTANCE == 20
-    NRF_SPIM20_S_BASE,
-#endif
-#if NRF_SECURE_UART_INSTANCE == 21
-    NRF_SPIM21_S_BASE,
-#endif
-#if NRF_SECURE_UART_INSTANCE == 22
-    NRF_SPIM22_S_BASE,
-#endif
-#if NRF_SECURE_UART_INSTANCE == 30
-    NRF_SPIM30_S_BASE,
-#endif
 
 #ifdef NRF_SPIM4
     NRF_SPIM4_S_BASE,
