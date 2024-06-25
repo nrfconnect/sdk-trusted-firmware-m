@@ -261,6 +261,15 @@ SECTIONS
     VENEERS()
 #endif
 
+#if defined(CONFIG_PSA_NEED_CRACEN_KMU_DRIVER)
+    .nrf_kmu_reserved_push_area S_DATA_START:
+    {
+        __nrf_kmu_reserved_push_area = .;
+        *(.nrf_kmu_reserved_push_area)
+        __nrf_kmu_reserved_push_area_end = .;
+    } > RAM
+#endif /* CONFIG_PSA_NEED_CRACEN_KMU_DRIVER */
+
     /**** Base address of secure data area */
     .tfm_secure_data_start :
     {
