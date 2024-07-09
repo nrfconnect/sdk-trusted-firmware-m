@@ -11,6 +11,8 @@
 #include "tfm_plat_defs.h"
 #include "uart_stdout.h"
 
+int init_tampc(void);
+
 extern const struct memory_region_limits memory_regions;
 enum tfm_hal_status_t tfm_hal_platform_common_init(void)
 {
@@ -42,6 +44,12 @@ enum tfm_hal_status_t tfm_hal_platform_common_init(void)
     }
 
     plat_err = nvic_interrupt_enable();
+    if (plat_err != TFM_PLAT_ERR_SUCCESS) {
+        return TFM_HAL_ERROR_GENERIC;
+    }
+
+    /***/
+    plat_err = init_tampc();
     if (plat_err != TFM_PLAT_ERR_SUCCESS) {
         return TFM_HAL_ERROR_GENERIC;
     }

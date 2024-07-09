@@ -110,3 +110,15 @@ __attribute__((naked)) void MPC00_IRQHandler(void)
     );
 }
 #endif
+
+#ifdef NRF_TAMPC
+__attribute__((naked)) void TAMPC_IRQHandler(void)
+{
+    EXCEPTION_INFO();
+
+    __ASM volatile(
+        "BL        TAMPC_Handler             \n"
+        "B         .                       \n"
+    );
+}
+#endif
