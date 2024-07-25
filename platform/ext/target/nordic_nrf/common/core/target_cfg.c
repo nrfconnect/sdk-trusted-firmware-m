@@ -920,6 +920,7 @@ enum tfm_plat_err_t nvic_interrupt_enable(void)
 	}
 
 #ifdef MPC_PRESENT
+    mpc_clear_events();
     /* MPC interrupt enabling */
     mpc_enable_interrupts();
 
