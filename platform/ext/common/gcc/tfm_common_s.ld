@@ -262,7 +262,7 @@ SECTIONS
 #endif
 
 #if defined(CONFIG_PSA_NEED_CRACEN_KMU_DRIVER)
-    .nrf_kmu_reserved_push_area S_DATA_START:
+    .nrf_kmu_reserved_push_area S_DATA_START (NOLOAD):
     {
         __nrf_kmu_reserved_push_area = .;
         *(.nrf_kmu_reserved_push_area)
