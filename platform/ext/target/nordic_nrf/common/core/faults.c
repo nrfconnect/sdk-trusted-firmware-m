@@ -86,8 +86,10 @@ __attribute__((naked)) void SPU30_IRQHandler(void)
 #endif
 
 #ifdef NRF_MPC00
-void MPC_Handler(void)
+__attribute__((naked)) void MPC_Handler(void)
 {
+    EXCEPTION_INFO();
+
 #ifdef TFM_EXCEPTION_INFO_DUMP
     nrf_exception_info_store_context();
 #endif
@@ -98,15 +100,31 @@ void MPC_Handler(void)
     NVIC_ClearPendingIRQ(MPC00_IRQn);
 
     tfm_core_panic();
-}
-
-__attribute__((naked)) void MPC00_IRQHandler(void)
-{
-    EXCEPTION_INFO();
 
     __ASM volatile(
-        "BL        MPC_Handler             \n"
-        "B         .                       \n"
+    "B         .                       \n"
     );
+}
+
+void MPC00_IRQHandler(void)
+{
+    /* Address 0xFFFFFFFE is used by TF-M as a return address in some cases
+     * (e.g., THRD_GENERAL_EXIT). This causes the debugger to access this
+     * address when analyzing stack frames upon hitting a breakpoint in TF-M.
+     * Attempting to access this address triggers the MPC MEMACCERR event,
+     * disrupting debugging. To prevent this, we ignore events from this address.
+     * Note that this does not affect exception information in MPC_Handler,
+     * except for scratch registers (R0-R3).
+     **/
+    if( nrf_mpc_event_check(NRF_MPC00, NRF_MPC_EVENT_MEMACCERR)){
+        if(NRF_MPC00->MEMACCERR.ADDRESS == 0xFFFFFFFE)
+        {
+            mpc_clear_events();
+            NVIC_ClearPendingIRQ(MPC00_IRQn);
+            return;
+        }
+    }
+
+    MPC_Handler();
 }
 #endif
