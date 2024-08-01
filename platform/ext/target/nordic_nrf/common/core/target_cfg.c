@@ -1339,13 +1339,9 @@ static const uint32_t target_peripherals[] = {
     /* When UART0 is a secure peripheral we need to leave Serial-Box 0 as Secure.
      * The UART Driver will configure it as non-secure when it uninitializes.
      */
-#if defined(NRF54L15_ENGA_XXAA)
-    NRF_SPIM00_S_BASE,
-#else
 #if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 0)
     NRF_SPIM0_S_BASE,
 #endif /* !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 0) */
-#endif /* NRF54L15_ENGA_XXAA */
 
     /* When UART1 is a secure peripheral we need to leave Serial-Box 1 as Secure */
 #if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 1)
