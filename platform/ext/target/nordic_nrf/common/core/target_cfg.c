@@ -872,6 +872,9 @@ enum tfm_plat_err_t init_debug(void)
     return TFM_PLAT_ERR_SUCCESS;
 }
 
+#define NRF_UARTE_INSTANCE(id) NRF_UARTE ## id
+#define NRF_UARTE_INSTANCE_GET(id) NRF_UARTE_INSTANCE(id)
+
 /*----------------- NVIC interrupt target state to NS configuration ----------*/
 enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
 {
@@ -893,26 +896,8 @@ enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
 #endif
 
 #ifdef SECURE_UART1
-#if NRF_SECURE_UART_INSTANCE == 0
-    /* UARTE0 is a secure peripheral, so its IRQ has to target S state */
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE0));
-#elif NRF_SECURE_UART_INSTANCE == 1
-    /* UARTE1 is a secure peripheral, so its IRQ has to target S state */
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE1));
-#elif NRF_SECURE_UART_INSTANCE == 30
-    /* UARTE30 is a secure peripheral, so its IRQ has to target S state */
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE30));
-#elif NRF_SECURE_UART_INSTANCE == 00
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE00));
-#elif NRF_SECURE_UART_INSTANCE == 20
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE20));
-#elif NRF_SECURE_UART_INSTANCE == 21
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE21));
-#elif NRF_SECURE_UART_INSTANCE == 22
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE22));
-#elif NRF_SECURE_UART_INSTANCE == 30
-    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE30));
-#endif
+    /* IRQ for the selected secure UART has to target S state */
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE_INSTANCE_GET(NRF_SECURE_UART_INSTANCE)));
 #endif
 
     return TFM_PLAT_ERR_SUCCESS;
