@@ -28,7 +28,7 @@
 #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 #endif
 
-#if !(DOMAIN_NS == 1U) && defined(CONFIG_TFM_LOG_SHARE_UART) && defined(NRF_SPU)
+#if !(DOMAIN_NS == 1U) && defined(CONFIG_TFM_LOG_SHARE_UART) && (defined(NRF_SPU) || defined(NRF_SPU00))
 #define SPU_CONFIGURE_UART
 #include <spu.h>
 #endif
