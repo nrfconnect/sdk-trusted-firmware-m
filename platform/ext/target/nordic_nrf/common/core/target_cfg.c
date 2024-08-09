@@ -902,6 +902,16 @@ enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
 #elif NRF_SECURE_UART_INSTANCE == 30
     /* UARTE30 is a secure peripheral, so its IRQ has to target S state */
     NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE30));
+#elif NRF_SECURE_UART_INSTANCE == 00
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE00));
+#elif NRF_SECURE_UART_INSTANCE == 20
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE20));
+#elif NRF_SECURE_UART_INSTANCE == 21
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE21));
+#elif NRF_SECURE_UART_INSTANCE == 22
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE22));
+#elif NRF_SECURE_UART_INSTANCE == 30
+    NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_UARTE30));
 #endif
 #endif
 
@@ -1260,6 +1270,7 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 	memset(NRF_SPU20, 0, sizeof(NRF_SPU_Type));
 	memset(NRF_SPU30, 0, sizeof(NRF_SPU_Type));
 
+#if SECURE_UART1
 	/* Configure TF-M's UART peripheral to be secure */
 #if NRF_SECURE_UART_INSTANCE == 00
     uint32_t uart_periph_start = tfm_peripheral_uarte00.periph_start;
@@ -1277,6 +1288,7 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
     uint32_t uart_periph_start = tfm_peripheral_uarte30.periph_start;
 #endif
 	spu_peripheral_config_secure(uart_periph_start, SPU_LOCK_CONF_LOCKED);
+#endif
 
 	/* Configure the CTRL-AP mailbox interface to be secure as it is used by the secure ADAC service */
 	spu_peripheral_config_secure(NRF_CTRLAP_S_BASE, SPU_LOCK_CONF_LOCKED);
