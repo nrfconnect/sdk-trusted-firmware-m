@@ -17,6 +17,8 @@
  */
 
 #include "target_cfg.h"
+#include "native_drivers/spu.h"
+#include "nrf54l15_enga_global.h"
 #include "region_defs.h"
 #include "tfm_plat_defs.h"
 #include "tfm_peripherals_config.h"
