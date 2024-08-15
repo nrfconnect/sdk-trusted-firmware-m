@@ -494,6 +494,30 @@ psa_verify_hash_interruptible_operation_init(void)
     return v;
 }
 
+struct psa_pake_cipher_suite_s {
+    psa_algorithm_t algorithm;
+    psa_pake_primitive_t primitive;
+    uint32_t key_confirmation;
+};
+
+#define PSA_PAKE_CIPHER_SUITE_INIT {PSA_ALG_NONE, 0, 0}
+static inline struct psa_pake_cipher_suite_s psa_pake_cipher_suite_init(void)
+{
+    const struct psa_pake_cipher_suite_s v = PSA_PAKE_CIPHER_SUITE_INIT;
+    return v;
+}
+
+struct psa_pake_operation_s {
+    uint32_t handle;
+};
+
+#define PSA_PAKE_OPERATION_INIT {0}
+static inline struct psa_pake_operation_s psa_pake_operation_init(void)
+{
+    const struct psa_pake_operation_s v = PSA_PAKE_OPERATION_INIT;
+    return v;
+}
+
 #ifdef __cplusplus
 }
 #endif

@@ -481,4 +481,51 @@ typedef struct psa_key_production_parameters_s psa_key_production_parameters_t;
 
 /**@}*/
 
+/** The type of the data structure for PAKE cipher suites.
+ *
+ * This is an implementation-defined \c struct. Applications should not
+ * make any assumptions about the content of this structure.
+ * Implementation details can change in future versions without notice.
+ */
+typedef struct psa_pake_cipher_suite_s psa_pake_cipher_suite_t;
+
+/** Encoding of the type of the PAKE's primitive.
+*
+* Values defined by this standard will never be in the range 0x80-0xff.
+* Vendors who define additional types must use an encoding in this range.
+*
+* For more information see the documentation of individual
+* \c PSA_PAKE_PRIMITIVE_TYPE_XXX constants.
+*/
+typedef uint8_t psa_pake_primitive_type_t;
+
+/** \brief Encoding of the family of the primitive associated with the PAKE.
+*
+* For more information see the documentation of individual
+* \c PSA_PAKE_PRIMITIVE_TYPE_XXX constants.
+*/
+typedef uint8_t psa_pake_family_t;
+
+/** \brief Encoding of the primitive associated with the PAKE.
+*
+* For more information see the documentation of the #PSA_PAKE_PRIMITIVE macro.
+*/
+typedef uint32_t psa_pake_primitive_t;
+
+/** \brief Encoding of the application role of PAKE
+ *
+ * Encodes the application's role in the algorithm being executed. For more
+ * information see the documentation of individual \c PSA_PAKE_ROLE_XXX
+ * constants.
+ */
+typedef uint8_t psa_pake_role_t;
+
+/** Encoding of input and output indicators for PAKE.
+ *
+ * Some PAKE algorithms need to exchange more data than just a single key share.
+ * This type is for encoding additional input and output data for such
+ * algorithms.
+ */
+typedef uint8_t psa_pake_step_t;
+
 #endif /* PSA_CRYPTO_TYPES_H */
