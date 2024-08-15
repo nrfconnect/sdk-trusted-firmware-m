@@ -351,7 +351,9 @@ void spu_peripheral_config_secure(const uint32_t periph_base_address, bool perip
 
 	nrf_spu_periph_perm_secattr_set(nrf_spu, index, true /* Secure */);
 	nrf_spu_periph_perm_dmasec_set(nrf_spu, index, true /* Secure */);
-	nrf_spu_periph_perm_lock_enable(nrf_spu, index);
+	if (periph_lock) {
+		nrf_spu_periph_perm_lock_enable(nrf_spu, index);
+	}
 #endif
 }
 
@@ -379,6 +381,8 @@ void spu_peripheral_config_non_secure(const uint32_t periph_base_address, bool p
 
 	nrf_spu_periph_perm_secattr_set(nrf_spu, index, false /* Non-Secure */);
 	nrf_spu_periph_perm_dmasec_set(nrf_spu, index, false /* Non-Secure */);
-	nrf_spu_periph_perm_lock_enable(nrf_spu, index);
+	if (periph_lock) {
+		nrf_spu_periph_perm_lock_enable(nrf_spu, index);
+	}
 #endif
 }
