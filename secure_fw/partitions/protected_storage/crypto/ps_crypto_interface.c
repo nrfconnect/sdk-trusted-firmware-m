@@ -22,6 +22,14 @@
 #define PS_CRYPTO_AEAD_ALG PSA_ALG_GCM
 #endif
 
+/* CMake can't handle round brackets for compile defines so PSA_ALG_HKDF(PSA_ALG_SHA_256) doesn't
+ * work, therefore we have to use a own defined for the C code where
+ * PSA_ALG_HKDF_PSA_ALG_SHA_256 gets translated to PSA_ALG_HKDF_PSA_ALG_SHA_256
+ */
+#if !defined(PS_CRYPTO_KDF_ALG)
+#define PS_CRYPTO_KDF_ALG PSA_ALG_HKDF(PSA_ALG_SHA_256)
+#endif
+
 /* The PSA key type used by this implementation */
 #define PS_KEY_TYPE PSA_KEY_TYPE_AES
 /* The PSA key usage required by this implementation */
@@ -83,7 +91,7 @@ static psa_status_t ps_crypto_setkey(psa_key_id_t *ps_key,
     psa_set_key_type(&attributes, PS_KEY_TYPE);
     psa_set_key_bits(&attributes, PSA_BYTES_TO_BITS(PS_KEY_LEN_BYTES));
 
-    status = psa_key_derivation_setup(&op, PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    status = psa_key_derivation_setup(&op, PS_CRYPTO_KDF_ALG);
     if (status != PSA_SUCCESS) {
         return status;
     }
@@ -96,7 +104,8 @@ static psa_status_t ps_crypto_setkey(psa_key_id_t *ps_key,
     }
 
     /* Supply the PS key label as an input to the key derivation */
-    status = psa_key_derivation_input_bytes(&op, PSA_KEY_DERIVATION_INPUT_INFO,
+    status = psa_key_derivation_input_bytes(&op, PS_CRYPTO_KDF_ALG == PSA_ALG_SP800_108_COUNTER_CMAC ?
+                                            PSA_KEY_DERIVATION_INPUT_LABEL : PSA_KEY_DERIVATION_INPUT_INFO,
                                             key_label,
                                             key_label_len);
     if (status != PSA_SUCCESS) {
