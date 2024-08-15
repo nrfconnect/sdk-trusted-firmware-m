@@ -741,6 +741,14 @@
  */
 #define PSA_DH_FAMILY_RFC7919            ((psa_dh_family_t) 0x03)
 
+/** Diffie-Hellman groups defined in RFC 3526.
+ *
+ * This family includes groups with the following key sizes (in bits):
+ * 1536, 2048, 3072, 4096, 6144, 8192. A given implementation may support
+ * all of these sizes or only a subset.
+ */
+#define PSA_DH_FAMILY_RFC3526            ((psa_dh_family_t) 0x05)  /*!!OM*/
+
 #define PSA_GET_KEY_TYPE_BLOCK_SIZE_EXPONENT(type)      \
     (((type) >> 8) & 7)
 /** The block size of a block cipher.
@@ -2133,6 +2141,35 @@
 #define PSA_ALG_IS_PBKDF2(kdf_alg)                                      \
     (PSA_ALG_IS_PBKDF2_HMAC(kdf_alg) || \
      ((kdf_alg) == PSA_ALG_PBKDF2_AES_CMAC_PRF_128))
+
+#define PSA_ALG_SRP_PASSWORD_HASH_BASE          ((psa_algorithm_t) 0x08800300)
+ /** The SRP password to password-hash KDF.
+ * It takes the password p, the salt s, and the user id u.
+ * It calculates the password hash h as
+ * h = H(salt || H(u || ":" || p))
+ * where H is the given hash algorithm.
+ *
+ * This key derivation algorithm uses the following inputs, which must be
+ * provided in the following order:
+ * - #PSA_KEY_DERIVATION_INPUT_INFO is the user id.
+ * - #PSA_KEY_DERIVATION_INPUT_PASSWORD is the password.
+ * - #PSA_KEY_DERIVATION_INPUT_SALT is the salt.
+ * The output has to be read as a key of type PSA_KEY_TYPE_SRP_KEY_PAIR.
+ */
+#define PSA_ALG_SRP_PASSWORD_HASH(hash_alg)                            \
+    (PSA_ALG_SRP_PASSWORD_HASH_BASE | ((hash_alg) & PSA_ALG_HASH_MASK))
+
+ /** Whether the specified algorithm is a key derivation algorithm constructed
+ * using #PSA_ALG_SRP_PASSWORD_HASH(\p hash_alg).
+ *
+ * \param alg An algorithm identifier (value of type #psa_algorithm_t).
+ *
+ * \return 1 if \p alg is a key derivation algorithm constructed using #PSA_ALG_SRP_PASSWORD_HASH(),
+ *         0 otherwise. This macro may return either 0 or 1 if \c alg is not a supported
+ *         key derivation algorithm identifier.
+ */
+#define PSA_ALG_IS_SRP_PASSWORD_HASH(alg)                         \
+    (((alg) & ~PSA_ALG_HASH_MASK) == PSA_ALG_SRP_PASSWORD_HASH_BASE)
 
 #define PSA_ALG_KEY_DERIVATION_MASK             ((psa_algorithm_t) 0xfe00ffff)
 #define PSA_ALG_KEY_AGREEMENT_MASK              ((psa_algorithm_t) 0xffff0000)
