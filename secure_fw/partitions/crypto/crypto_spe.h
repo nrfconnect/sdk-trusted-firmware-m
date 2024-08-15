@@ -166,5 +166,23 @@
         PSA_FUNCTION_NAME(psa_asymmetric_decrypt)
 #define psa_generate_key \
         PSA_FUNCTION_NAME(psa_generate_key)
+#define psa_pake_setup \
+        PSA_FUNCTION_NAME(psa_pake_setup)
+#define psa_pake_set_role \
+        PSA_FUNCTION_NAME(psa_pake_set_role)
+#define psa_pake_set_user \
+        PSA_FUNCTION_NAME(psa_pake_set_user)
+#define psa_pake_set_peer \
+        PSA_FUNCTION_NAME(psa_pake_set_peer)
+#define psa_pake_set_context \
+        PSA_FUNCTION_NAME(psa_pake_set_context)
+#define psa_pake_output \
+        PSA_FUNCTION_NAME(psa_pake_output)
+#define psa_pake_input \
+        PSA_FUNCTION_NAME(psa_pake_input)
+#define psa_pake_get_shared_key \
+        PSA_FUNCTION_NAME(psa_pake_get_shared_key)
+#define psa_pake_abort \
+        PSA_FUNCTION_NAME(psa_pake_abort)
 
 #endif /* CRYPTO_SPE_H */
