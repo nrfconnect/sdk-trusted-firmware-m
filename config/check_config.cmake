@@ -17,6 +17,8 @@ tfm_invalid_config(TFM_MULTI_CORE_TOPOLOGY AND TFM_NS_MANAGE_NSID)
 tfm_invalid_config(TFM_PLAT_SPECIFIC_MULTI_CORE_COMM AND NOT TFM_MULTI_CORE_TOPOLOGY)
 tfm_invalid_config(TFM_ISOLATION_LEVEL EQUAL 3 AND CONFIG_TFM_STACK_WATERMARKS)
 
+tfm_invalid_config(CONFIG_TFM_LOG_SHARE_UART AND NOT SECURE_UART1)
+
 ########################## BL1 #################################################
 
 tfm_invalid_config(TFM_BL1_2_IN_OTP AND TFM_BL1_2_IN_FLASH)
