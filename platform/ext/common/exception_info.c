@@ -9,6 +9,7 @@
 #include "tfm_spm_log.h"
 /* "exception_info.h" must be the last include because of the IAR pragma */
 #include "exception_info.h"
+#include "uart_stdout.h"
 
 static struct exception_info_t exception_info;
 
@@ -167,6 +168,10 @@ static void dump_exception_info(bool stack_error,
 static void dump_error(const struct exception_info_t *ctx)
 {
     bool stack_error = false;
+
+#if defined(CONFIG_TFM_LOG_SHARE_UART)
+    stdio_init();
+#endif
 
     SPMLOG_ERRMSG("FATAL ERROR: ");
     switch (ctx->VECTACTIVE) {
