@@ -10,6 +10,7 @@
 #include "tfm_log.h"
 /* "exception_info.h" must be the last include because of the IAR pragma */
 #include "exception_info.h"
+#include "uart_stdout.h"
 
 #if TFM_EXCEPTION_DUMP_LVL == LOG_LEVEL_ERROR
 #define DUMP_MSG_RAW    ERROR_RAW
@@ -186,6 +187,11 @@ static void dump_error(const struct exception_info_t *ctx)
     bool stack_error = false;
 
     ERROR_RAW("FATAL ERROR: ");
+
+#if defined(CONFIG_TFM_LOG_SHARE_UART)
+    stdio_init();
+#endif
+
     switch (ctx->VECTACTIVE) {
     case EXCEPTION_TYPE_HARDFAULT:
         ERROR_RAW("HardFault\n");
