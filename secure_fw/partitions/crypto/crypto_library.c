@@ -98,6 +98,7 @@ void tfm_crypto_library_get_library_key_id_set_owner(int32_t owner, psa_key_attr
     attr->MBEDTLS_PRIVATE(id).MBEDTLS_PRIVATE(owner) = owner;
 }
 
+#ifdef PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER
 /**
  * \brief This function is required by mbed TLS to enable support for
  *        platform builtin keys in the PSA Crypto core layer implemented
@@ -126,4 +127,5 @@ psa_status_t mbedtls_psa_platform_get_builtin_key(
 
     return PSA_ERROR_DOES_NOT_EXIST;
 }
+#endif
 /*!@}*/
