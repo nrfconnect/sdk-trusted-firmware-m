@@ -60,6 +60,7 @@ struct tfm_crypto_pack_iovec {
         uint32_t capacity;   /*!< Key derivation capacity */
         uint64_t value;      /*!< Key derivation integer for update*/
     };
+    psa_pake_role_t role;    /*!< PAKE role */
 };
 
 /**
@@ -76,7 +77,8 @@ enum tfm_crypto_group_id_t {
     TFM_CRYPTO_GROUP_ID_AEAD            = UINT8_C(6),
     TFM_CRYPTO_GROUP_ID_ASYM_SIGN       = UINT8_C(7),
     TFM_CRYPTO_GROUP_ID_ASYM_ENCRYPT    = UINT8_C(8),
-    TFM_CRYPTO_GROUP_ID_KEY_DERIVATION  = UINT8_C(9)
+    TFM_CRYPTO_GROUP_ID_KEY_DERIVATION  = UINT8_C(9),
+    TFM_CRYPTO_GROUP_ID_PAKE            = UINT8_C(10)
 };
 
 /* Set of X macros describing each of the available PSA Crypto APIs */
@@ -165,6 +167,17 @@ enum tfm_crypto_group_id_t {
 
 #define BASE__VALUE(x) ((uint16_t)((((uint16_t)(x)) << 8) & 0xFF00))
 
+#define PAKE_FUNCS                                  \
+    X(TFM_CRYPTO_PAKE_SETUP)                        \
+    X(TFM_CRYPTO_PAKE_SET_ROLE)                     \
+    X(TFM_CRYPTO_PAKE_SET_USER)                     \
+    X(TFM_CRYPTO_PAKE_SET_PEER)                     \
+    X(TFM_CRYPTO_PAKE_SET_CONTEXT)                  \
+    X(TFM_CRYPTO_PAKE_OUTPUT)                       \
+    X(TFM_CRYPTO_PAKE_INPUT)                        \
+    X(TFM_CRYPTO_PAKE_GET_SHARED_KEY)               \
+    X(TFM_CRYPTO_PAKE_ABORT)
+
 /**
  * \brief This type defines numerical progressive values identifying a function API
  *        exposed through the interfaces (S or NS). It's used to dispatch the requests
@@ -197,6 +210,8 @@ enum tfm_crypto_func_sid_t {
     ASYM_ENCRYPT_FUNCS
     BASE__KEY_DERIVATION = BASE__VALUE(TFM_CRYPTO_GROUP_ID_KEY_DERIVATION) - 1,
     KEY_DERIVATION_FUNCS
+    BASE__PAKE           = BASE__VALUE(TFM_CRYPTO_GROUP_ID_PAKE) - 1,
+    PAKE_FUNCS
 #undef X
 };
 
