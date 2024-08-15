@@ -931,8 +931,11 @@ static const uint32_t target_peripherals[] = {
      * This configuration can be done only from secure code, as otherwise those
      * register fields are not accessible. That's why it is placed here.
      */
+#if defined(CONFIG_SOC_ENABLE_LFXO) && CONFIG_SOC_ENABLE_LFXO == 1
+/* CONFIG_SOC_ENABLE_LFXO doesn't exist for 54L15 target, might be changed in future */
     nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_PERIPHERAL);
     nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_PERIPHERAL);
+#endif /* CONFIG_SOC_ENABLE_LFXO */
 #endif
 
 	/*
