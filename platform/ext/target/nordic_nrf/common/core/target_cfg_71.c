@@ -314,7 +314,12 @@ void peripheral_configuration(void)
 #else
 #error "Unsupported NRF_SECURE_UART_INSTANCE for nrf71 series. Supported instances: 00, 20, 21, 22, 30"
 #endif
+
+#if defined(CONFIG_TFM_LOG_SHARE_UART)
+	spu_peripheral_config_secure(uart_periph_start, SPU_LOCK_CONF_UNLOCKED);
+#else
 	spu_peripheral_config_secure(uart_periph_start, SPU_LOCK_CONF_LOCKED);
+#endif
 #endif /* SECURE_UART1 */
 
 	/* Configure the CTRL-AP mailbox interface to be secure as it is used by the secure ADAC
