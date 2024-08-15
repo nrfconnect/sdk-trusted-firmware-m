@@ -96,6 +96,8 @@ set(CONFIG_TFM_STACK_WATERMARKS         OFF         CACHE BOOL      "Whether to 
 
 set(CONFIG_TFM_BRANCH_PROTECTION_FEAT   BRANCH_PROTECTION_DISABLED   CACHE STRING    "Set default branch protection usage to disabled")
 
+set(CONFIG_TFM_LOG_SHARE_UART           OFF         CACHE BOOL      "Allow TF-M and the non-secure application to share the UART instance. TF-M will use it while it is booting, after which the non-secure application will use it until an eventual fatal error is handled and logged by TF-M. Logging from TF-M will therefore otherwise be suppressed")
+
 ############################ Platform ##########################################
 
 set(NUM_MAILBOX_QUEUE_SLOT              1           CACHE BOOL      "Number of mailbox queue slots")
