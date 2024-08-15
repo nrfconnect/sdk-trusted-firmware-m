@@ -31,6 +31,7 @@ enum tfm_crypto_operation_type {
     TFM_CRYPTO_HASH_OPERATION = 3,
     TFM_CRYPTO_KEY_DERIVATION_OPERATION = 4,
     TFM_CRYPTO_AEAD_OPERATION = 5,
+    TFM_CRYPTO_PAKE_OPERATION = 6,
 
     /* Used to force the enum size */
     TFM_CRYPTO_OPERATION_TYPE_MAX = INT_MAX
@@ -199,6 +200,19 @@ psa_status_t tfm_crypto_random_interface(psa_invec in_vec[],
  */
 psa_status_t tfm_crypto_hash_interface(psa_invec in_vec[],
                                        psa_outvec out_vec[]);
+
+/**
+ * \brief This function acts as interface for the PAKE module
+ *
+ * \param[in]  in_vec   Array of invec parameters
+ * \param[out] out_vec  Array of outvec parameters
+ * \param[in]  encoded_key Key encoded with partition_id and key_id
+ *
+ * \return Return values as described in \ref psa_status_t
+ */
+psa_status_t tfm_crypto_pake_interface(psa_invec in_vec[],
+                                                 psa_outvec out_vec[],
+                                                 struct tfm_crypto_key_id_s *encoded_key);
 
 #ifdef __cplusplus
 }
