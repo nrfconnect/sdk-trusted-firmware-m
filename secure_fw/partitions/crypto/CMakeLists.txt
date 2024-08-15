@@ -57,6 +57,7 @@ target_sources(tfm_psa_rot_partition_crypto
         crypto_key_management.c
         crypto_rng.c
         crypto_library.c
+        crypto_pake.c
         $<$<BOOL:${CRYPTO_TFM_BUILTIN_KEYS_DRIVER}>:psa_driver_api/tfm_builtin_key_loader.c>
 )
 
