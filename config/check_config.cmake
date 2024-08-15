@@ -21,6 +21,8 @@ tfm_invalid_config(TFM_HYBRID_PLATFORM_API_BROKER AND NOT TFM_MULTI_CORE_TOPOLOG
 tfm_invalid_config(TFM_ISOLATION_LEVEL EQUAL 3 AND CONFIG_TFM_STACK_WATERMARKS)
 tfm_invalid_config(CONFIG_TFM_INCLUDE_STDLIBC AND CMAKE_C_COMPILER_ID STREQUAL Clang)
 
+tfm_invalid_config(CONFIG_TFM_LOG_SHARE_UART AND NOT SECURE_UART1)
+
 ########################## BL1 #################################################
 
 tfm_invalid_config(TFM_BL1_2_IN_OTP AND TFM_BL1_2_IN_FLASH)

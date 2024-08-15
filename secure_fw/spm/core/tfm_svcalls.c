@@ -229,6 +229,7 @@ static uint32_t handle_spm_svc_requests(uint32_t svc_number, uint32_t exc_return
         exc_return = tfm_spm_init();
         TFM_COVERITY_DEVIATE_LINE(MISRA_C_2023_Rule_2_2, "Parameters can be changed by user and this code will make effect")
         tfm_arch_check_msp_sealing();
+
         /* The following call does not return */
         tfm_arch_free_msp_and_exc_ret(SPM_BOOT_STACK_BOTTOM, exc_return);
         break;
