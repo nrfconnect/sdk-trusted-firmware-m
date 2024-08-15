@@ -204,6 +204,7 @@ static uint32_t handle_spm_svc_requests(uint32_t svc_number, uint32_t exc_return
     case TFM_SVC_SPM_INIT:
         exc_return = tfm_spm_init();
         tfm_arch_check_msp_sealing();
+
         /* The following call does not return */
         tfm_arch_free_msp_and_exc_ret(SPM_BOOT_STACK_BOTTOM, exc_return);
         break;
