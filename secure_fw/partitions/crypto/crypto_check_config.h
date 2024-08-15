@@ -118,4 +118,14 @@
 #error "CRYPTO_KEY_DERIVATION_MODULE_ENABLED enabled, but not all prerequisites (missing key derivation algorithms)!"
 #endif
 
+#if CRYPTO_PAKE_MODULE_ENABLED && \
+    (!defined(PSA_WANT_ALG_JPAKE) && \
+     !defined(PSA_WANT_ALG_SPAKE2P_HMAC) && \
+     !defined(PSA_WANT_ALG_SPAKE2P_CMAC) && \
+     !defined(PSA_WANT_ALG_SPAKE2P_MATTER) && \
+     !defined(PSA_WANT_ALG_SRP_6) && \
+     !defined(PSA_WANT_ALG_SRP_PASSWORD_HASH))
+#error "CRYPTO_PAKE_MODULE_ENABLED enabled, but not all prerequisites (missing PAKE algorithms)!"
+#endif
+
 #endif /* __CRYPTO_CHECK_CONFIG_H__ */
