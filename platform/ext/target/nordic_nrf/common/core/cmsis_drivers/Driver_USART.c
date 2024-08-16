@@ -28,8 +28,7 @@
 #define ARRAY_SIZE(arr) (sizeof(arr)/sizeof(arr[0]))
 #endif
 
-// TODO: NCSDK-22597: Support configuring peripherals as secure
-#if !(DOMAIN_NS == 1U) && defined(CONFIG_TFM_LOG_SHARE_UART) && defined(NRF_SPU)
+#if !(DOMAIN_NS == 1U) && defined(CONFIG_TFM_LOG_SHARE_UART) && (defined(NRF_SPU) || defined(NRF_SPU00))
 #define SPU_CONFIGURE_UART
 #include <spu.h>
 #endif
@@ -40,7 +39,8 @@
 
 #define ARM_USART_DRV_VERSION  ARM_DRIVER_VERSION_MAJOR_MINOR(2, 2)
 
-#if RTE_USART0 || RTE_USART1 || RTE_USART2 || RTE_USART3 || RTE_USART20 || RTE_USART22
+#if RTE_USART0 || RTE_USART1 || RTE_USART2 || RTE_USART3 || \
+    RTE_UART00 || RTE_USART20 || RTE_UART21 || RTE_UART22 || RTE_USART30
 
 #define PSEL_DISCONNECTED 0xFFFFFFFFUL
 
@@ -439,13 +439,24 @@ DRIVER_USART(2);
 DRIVER_USART(3);
 #endif
 
-// TODO: NCSDK-25009: Support choosing an instance for TF-M
+#if RTE_USART00
+DRIVER_USART(00);
+#endif
+
 #if RTE_USART20
 DRIVER_USART(20);
+#endif
+
+#if RTE_USART21
+DRIVER_USART(21);
 #endif
 
 #if RTE_USART22
 DRIVER_USART(22);
 #endif
 
-#endif /* RTE_USART0 || RTE_USART1 || etc. */
+#if RTE_USART30
+DRIVER_USART(30);
+#endif
+
+#endif /* RTE_USART0 || RTE_USART1 || RTE_USART2 || RTE_USART3 || RTE_USART20 || RTE_USART22 */
