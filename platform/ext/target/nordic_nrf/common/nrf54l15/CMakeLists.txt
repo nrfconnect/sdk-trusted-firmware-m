@@ -22,6 +22,7 @@ target_include_directories(platform_s
 target_sources(platform_s
     PRIVATE
         ${HAL_NORDIC_PATH}/nrfx/mdk/system_nrf54l.c
+        tampc.c
 )
 
 target_compile_definitions(platform_s
