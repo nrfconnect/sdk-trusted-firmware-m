@@ -16,6 +16,10 @@ target_include_directories(tfm_sprt
         ${CMAKE_SOURCE_DIR}/secure_fw/include
 )
 
+if(PSA_CRYPTO_EXTERNAL_CORE)
+    include(${TARGET_PLATFORM_PATH}/../external_core.cmake)
+endif()
+
 target_sources(tfm_sprt
     PUBLIC
         $<$<BOOL:${CONFIG_GNU_SYSCALL_STUB_ENABLED}>:${CMAKE_SOURCE_DIR}/platform/ext/common/syscalls_stub.c>
