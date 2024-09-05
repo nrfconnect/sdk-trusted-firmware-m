@@ -16,6 +16,10 @@ target_include_directories(tfm_sprt
         ${CMAKE_SOURCE_DIR}/secure_fw/include
 )
 
+if(PSA_CRYPTO_EXTERNAL_CORE)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
+endif()
+
 target_sources(tfm_sprt
     PUBLIC
         $<$<BOOL:${CONFIG_PICOLIBC}>:${CMAKE_SOURCE_DIR}/platform/ext/common/picolibc.c>
