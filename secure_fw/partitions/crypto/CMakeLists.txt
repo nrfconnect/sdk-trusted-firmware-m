@@ -13,25 +13,35 @@ set(is_v8.xm    "$<OR:${is_v8.1m},${is_v8.0m}>")
 
 ############################### PSA CRYPTO CONFIG ##############################
 # Make sure these are available even if the TFM_PARTITION_CRYPTO is not defined
-
 add_library(psa_crypto_config INTERFACE)
-target_compile_definitions(psa_crypto_config
-    INTERFACE
-        MBEDTLS_PSA_CRYPTO_CONFIG_FILE="${TFM_MBEDCRYPTO_PSA_CRYPTO_CONFIG_PATH}"
-        MBEDTLS_CONFIG_FILE="${TFM_MBEDCRYPTO_CONFIG_CLIENT_PATH}"
-)
+
 # The following is required for tfm_plat_crypto_nv_seed.h
 target_include_directories(psa_crypto_config
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../platform/include>
 )
-# This defines the configuration files for the users of the library directly
-add_library(psa_crypto_library_config INTERFACE)
-target_compile_definitions(psa_crypto_library_config
+
+if(PSA_CRYPTO_EXTERNAL_CORE)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
+else()
+    target_compile_definitions(psa_crypto_config
     INTERFACE
         MBEDTLS_PSA_CRYPTO_CONFIG_FILE="${TFM_MBEDCRYPTO_PSA_CRYPTO_CONFIG_PATH}"
-        MBEDTLS_CONFIG_FILE="${TFM_MBEDCRYPTO_CONFIG_PATH}"
-)
+        MBEDTLS_CONFIG_FILE="${TFM_MBEDCRYPTO_CONFIG_CLIENT_PATH}"
+    )
+endif()
+
+# This defines the configuration files for the users of the library directly
+add_library(psa_crypto_library_config INTERFACE)
+if(PSA_CRYPTO_EXTERNAL_CORE)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
+else()
+    target_compile_definitions(psa_crypto_library_config
+        INTERFACE
+            MBEDTLS_PSA_CRYPTO_CONFIG_FILE="${TFM_MBEDCRYPTO_PSA_CRYPTO_CONFIG_PATH}"
+            MBEDTLS_CONFIG_FILE="${TFM_MBEDCRYPTO_CONFIG_PATH}"
+    )
+endif()
 
 if (NOT TFM_PARTITION_CRYPTO)
     return()
@@ -72,13 +82,24 @@ target_sources(tfm_partitions
         ${CMAKE_BINARY_DIR}/generated/secure_fw/partitions/crypto/auto_generated/load_info_tfm_crypto.c
 )
 
+
 # Set include directory
 target_include_directories(tfm_psa_rot_partition_crypto
     PRIVATE
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_BINARY_DIR}/generated/secure_fw/partitions/crypto
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../interface/include>
 )
+
+if(PSA_CRYPTO_EXTERNAL_CORE)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
+else()
+    target_include_directories(tfm_psa_rot_partition_crypto
+        PRIVATE
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../interface/include>
+    )
+endif()
+
 target_include_directories(tfm_partitions
     INTERFACE
         ${CMAKE_BINARY_DIR}/generated/secure_fw/partitions/crypto
@@ -109,12 +130,25 @@ target_compile_definitions(tfm_config
         TFM_PARTITION_CRYPTO
 )
 
+target_link_libraries(tfm_config
+    INTERFACE
+        psa_crypto_config
+)
+
 ############################### MBEDCRYPTO #####################################
 add_library(crypto_service_mbedcrypto_config INTERFACE)
+if(PSA_CRYPTO_EXTERNAL_CORE)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
+else()
+    target_compile_definitions(crypto_service_mbedcrypto_config
+        INTERFACE
+            MBEDTLS_CONFIG_FILE="${TFM_MBEDCRYPTO_CONFIG_PATH}"
+            $<$<BOOL:${TFM_MBEDCRYPTO_PLATFORM_EXTRA_CONFIG_PATH}>:MBEDTLS_USER_CONFIG_FILE="${TFM_MBEDCRYPTO_PLATFORM_EXTRA_CONFIG_PATH}">
+    )
+endif()
 
 target_compile_definitions(crypto_service_mbedcrypto_config
     INTERFACE
-        $<$<BOOL:${TFM_MBEDCRYPTO_PLATFORM_EXTRA_CONFIG_PATH}>:MBEDTLS_USER_CONFIG_FILE="${TFM_MBEDCRYPTO_PLATFORM_EXTRA_CONFIG_PATH}">
         $<$<BOOL:${PLATFORM_DEFAULT_NV_SEED}>:PLATFORM_DEFAULT_NV_SEED>
         $<$<BOOL:${PLATFORM_DEFAULT_CRYPTO_KEYS}>:PLATFORM_DEFAULT_CRYPTO_KEYS>
         $<$<BOOL:${CRYPTO_TFM_BUILTIN_KEYS_DRIVER}>:PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY_LOADER>
@@ -156,13 +190,22 @@ if(NOT TARGET ${MBEDTLS_TARGET_PREFIX}mbedcrypto)
     Hint: The command might be `cd ${MBEDCRYPTO_PATH} && git apply ${CMAKE_SOURCE_DIR}/lib/ext/mbedcrypto/*.patch`")
 endif()
 
-target_include_directories(${MBEDTLS_TARGET_PREFIX}mbedcrypto
-    PUBLIC
+target_include_directories(psa_crypto_library_config
+    INTERFACE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/psa_driver_api
-        # The following is required for psa/error.h
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../interface/include>
 )
+
+if(PSA_CRYPTO_EXTERNAL_CORE)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
+else()
+    target_include_directories(${MBEDTLS_TARGET_PREFIX}mbedcrypto
+        PUBLIC
+            # The following is required for psa/error.h
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../../interface/include>
+    )
+endif()
+
 
 # Fix platform_s and crypto_service_mbedcrypto libraries cyclic linking
 set_target_properties(${MBEDTLS_TARGET_PREFIX}mbedcrypto PROPERTIES LINK_INTERFACE_MULTIPLICITY 3)
