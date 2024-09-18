@@ -107,7 +107,6 @@ static bool valid_mcu_select(uint32_t mcu)
 	case NRF_GPIO_PIN_SEL_GPIO:
 	case NRF_GPIO_PIN_SEL_VPR:
 	case NRF_GPIO_PIN_SEL_GRTC:
-	case NRF_GPIO_PIN_SEL_TND:
 #else
 	case NRF_GPIO_PIN_SEL_APP:
 	case NRF_GPIO_PIN_SEL_NETWORK:
