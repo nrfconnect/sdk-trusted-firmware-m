@@ -1351,7 +1351,8 @@ static const uint8_t target_peripherals[] = {
      */
 #if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 0)
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM0),
-#ifndef SECURE_UART1
+#endif
+#if !(defined(SECURE_UART1) && NRF_SECURE_UART_INSTANCE == 1)
     /* UART1 is a secure peripheral, so we need to leave Serial-Box 1 as Secure */
     NRFX_PERIPHERAL_ID_GET(NRF_SPIM1),
 #endif
@@ -1435,12 +1436,12 @@ static const uint8_t target_peripherals[] = {
 #endif
 #ifdef NRF_USBREGULATOR
     NRFX_PERIPHERAL_ID_GET(NRF_USBREGULATOR),
-#endif
+#endif /* NRF_USBREGULATOR */
     NRFX_PERIPHERAL_ID_GET(NRF_NVMC),
     NRFX_PERIPHERAL_ID_GET(NRF_P0),
 #ifdef NRF_P1
     NRFX_PERIPHERAL_ID_GET(NRF_P1),
-#endif
+#endif /*NRF_P1 */
     NRFX_PERIPHERAL_ID_GET(NRF_VMC),
 };
 
@@ -1448,7 +1449,7 @@ static const uint8_t target_peripherals[] = {
         spu_peripheral_config_non_secure(target_peripherals[i], SPU_LOCK_CONF_UNLOCKED);
     }
 
-#endif /* Moonlight */
+#endif /* NRF54L15_ENGA_XXAA */
 
     /* DPPI channel configuration */
 	dppi_channel_configuration();
@@ -1507,7 +1508,6 @@ static const uint8_t target_peripherals[] = {
     nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_PERIPHERAL);
     nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_PERIPHERAL);
 #endif /* CONFIG_SOC_ENABLE_LFXO */
-#endif
 #ifdef NRF54L15_ENGA_XXAA
     /* NRF54L has a different define */
     nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_GPIO);
