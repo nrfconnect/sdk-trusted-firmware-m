@@ -14,7 +14,9 @@
 #include "io_flash.h"
 #include "tfm_sp_log.h"
 
+#ifndef ARRAY_LENGTH
 #define ARRAY_LENGTH(array) (sizeof(array) / sizeof(*(array)))
+#endif
 
 extern ARM_DRIVER_FLASH Driver_FLASH0;
 extern ARM_DRIVER_FLASH Driver_TEST_FLASH;
