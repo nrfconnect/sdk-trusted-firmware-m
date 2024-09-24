@@ -24,7 +24,7 @@ endif()
 # At the time of writing there is no systematic way to identify which
 # NVM technology is used by the SoC from the Kconfig, so we just
 # hardcode this information here instead.
-if((NRF_SOC_VARIANT STREQUAL nrf54l15) OR (target STREQUAL nrf54l15) OR (PSA_API_TEST_TARGET STREQUAL nrf54l15))
+if(NRF_SOC_VARIANT STREQUAL nrf54l15  OR (PSA_API_TEST_TARGET STREQUAL nrf54l15))
   # Maybe we only need to check one of these options but these
   # variables keep changing so we check both to be future proof
   set(HAS_RRAMC 1)
@@ -274,4 +274,3 @@ install(DIRECTORY   native_drivers
 
 install(FILES       ${PLATFORM_DIR}/ext/common/gcc/tfm_common_ns.ld
         DESTINATION ${INSTALL_PLATFORM_NS_DIR}/linker_scripts)
-

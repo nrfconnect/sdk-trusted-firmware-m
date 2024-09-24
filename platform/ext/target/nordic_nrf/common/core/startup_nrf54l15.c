@@ -21,9 +21,6 @@
  * Git SHA: 2b7495b8535bdcb306dac29b9ded4cfb679d7e5c
  */
 
-// TODO: NCSDK-25033: Support interrupt handling in TF-M. The IRQs
-// below correspond to nrf53, not nrf54L.
-
 /*
  * Define __VECTOR_TABLE_ATTRIBUTE (which can be provided by cmsis.h)
  * before including cmsis.h because TF-M's linker script
