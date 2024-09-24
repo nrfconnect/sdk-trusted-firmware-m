@@ -15,7 +15,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "target_cfg.h"
 #include "region_defs.h"
 #include "tfm_plat_defs.h"
@@ -66,14 +65,15 @@
 #define PIN_XL1 0
 #define PIN_XL2 1
 #endif
-#ifdef NRF54L15_ENGA_XXAA
+
+#ifdef NRF54L15_XXAA
 /* On nRF54L15 XL1 and XL2 are(P1.00) and XL2(P1.01) */
 #define PIN_XL1 32
 #define PIN_XL2 33
 
 /* During TF-M system initialization we invoke a function that comes
  * from Zephyr. This function does not have a header file so we
- * declare it's prototype here.
+ * declare its prototype here.
  */
 int nordicsemi_nrf54l_init(void);
 #endif
@@ -833,7 +833,7 @@ enum tfm_plat_err_t init_debug(void)
     }
 #endif
 
-#elif defined(NRF91_SERIES) || defined(NRF54L15_ENGA_XXAA)
+#elif defined(NRF91_SERIES) || defined(NRF54L15_XXAA)
 
 #if !defined(DAUTH_CHIP_DEFAULT)
 #error "Debug access on this platform can only be configured by programming the corresponding registers in UICR."
@@ -939,7 +939,7 @@ void sau_and_idau_cfg(void)
 	 * (53/91) and new (54++) platforms. New platforms have a proper SAU
 	 * and IDAU, whereas old platforms do not.
 	 */
-#ifdef NRF54L15_ENGA_XXAA
+#ifdef NRF54L15_XXAA
 	/*
 	 * This SAU configuration aligns with ARM's RSS implementation of
 	 * sau_and_idau_cfg when possible.
@@ -1230,7 +1230,7 @@ static void dppi_channel_configuration(void)
 enum tfm_plat_err_t spu_periph_init_cfg(void)
 {
     /* Peripheral configuration */
-#ifdef NRF54L15_ENGA_XXAA
+#ifdef NRF54L15_XXAA
 	/* Configure features to be non-secure */
 
 	/*
@@ -1259,21 +1259,17 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 	/* Configure TF-M's UART peripheral to be secure */
 #if NRF_SECURE_UART_INSTANCE == 00
     uint32_t uart_periph_start = tfm_peripheral_uarte00.periph_start;
-#endif
-#if NRF_SECURE_UART_INSTANCE == 20
+#elif NRF_SECURE_UART_INSTANCE == 20
     uint32_t uart_periph_start = tfm_peripheral_uarte20.periph_start;
-#endif
-#if NRF_SECURE_UART_INSTANCE == 21
+#elif NRF_SECURE_UART_INSTANCE == 21
     uint32_t uart_periph_start = tfm_peripheral_uarte21.periph_start;
-#endif
-#if NRF_SECURE_UART_INSTANCE == 22
+#elif NRF_SECURE_UART_INSTANCE == 22
     uint32_t uart_periph_start = tfm_peripheral_uarte22.periph_start;
-#endif
-#if NRF_SECURE_UART_INSTANCE == 30
+#elif NRF_SECURE_UART_INSTANCE == 30
     uint32_t uart_periph_start = tfm_peripheral_uarte30.periph_start;
 #endif
 	spu_peripheral_config_secure(uart_periph_start, SPU_LOCK_CONF_LOCKED);
-#endif
+#endif /* SECURE_UART1 */
 
 	/* Configure the CTRL-AP mailbox interface to be secure as it is used by the secure ADAC service */
 	spu_peripheral_config_secure(NRF_CTRLAP_S_BASE, SPU_LOCK_CONF_LOCKED);
@@ -1305,7 +1301,7 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 	 * have the same security configuration.
 	 */
 	spu_peripheral_config_secure(NRF_REGULATORS_S_BASE, SPU_LOCK_CONF_LOCKED);
-#else
+#else /* NRF54L15_XXAA */
 static const uint32_t target_peripherals[] = {
     /* The following peripherals share ID:
      * - FPU (FPU cannot be configured in NRF91 series, it's always NS)
@@ -1482,7 +1478,7 @@ static const uint32_t target_peripherals[] = {
         spu_peripheral_config_non_secure(target_peripherals[i], SPU_LOCK_CONF_UNLOCKED);
     }
 
-#endif /* NRF54L15_ENGA_XXAA */
+#endif /* NRF54L15_XXAA */
 
     /* DPPI channel configuration */
 	dppi_channel_configuration();
@@ -1540,8 +1536,8 @@ static const uint32_t target_peripherals[] = {
 #ifdef NRF53_SERIES
     nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_PERIPHERAL);
     nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_PERIPHERAL);
-#endif /* CONFIG_SOC_ENABLE_LFXO */
-#ifdef NRF54L15_ENGA_XXAA
+#endif /* NRF53_SERIES */
+#ifdef NRF54L15_XXAA
     /* NRF54L has a different define */
     nrf_gpio_pin_control_select(PIN_XL1, NRF_GPIO_PIN_SEL_GPIO);
     nrf_gpio_pin_control_select(PIN_XL2, NRF_GPIO_PIN_SEL_GPIO);
@@ -1597,10 +1593,10 @@ static const uint32_t target_peripherals[] = {
 	}
 #endif /* RRAMC_PRESENT */
 
-#ifdef NRF54L15_ENGA_XXAA
+#ifdef NRF54L15_XXAA
 	/* SOC configuration from Zephyr's soc.c. */
 	int soc_err = nordicsemi_nrf54l_init();
-	if(soc_err) {
+	if (soc_err) {
 		return soc_err;
 	}
 #endif
