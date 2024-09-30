@@ -9,6 +9,8 @@
 cmake_policy(SET CMP0076 NEW)
 set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+include(${CMAKE_CURRENT_LIST_DIR}/config.cmake)
+
 if (NOT NRF_BOARD_SELECTED)
     if (${TFM_PLATFORM} STREQUAL "nordic_nrf/nrf5340")
         set(hint nordic_nrf/nrf5340dk_nrf5340_cpuapp)
