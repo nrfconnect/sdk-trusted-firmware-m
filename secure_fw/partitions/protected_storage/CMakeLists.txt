@@ -75,11 +75,11 @@ target_sources(tfm_partitions
 
 target_link_libraries(tfm_app_rot_partition_ps
     PRIVATE
-        psa_crypto_config
         secure_fw
         platform_s
         tfm_config
         tfm_sprt
+        psa_crypto_config
 )
 
 target_compile_definitions(tfm_app_rot_partition_ps
