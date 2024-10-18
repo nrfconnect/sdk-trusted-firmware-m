@@ -16,14 +16,8 @@
 
 #include "spu.h"
 #include "region_defs.h"
-#include "array.h"
 
 /* Platform-specific configuration */
-#if NRF_SPU_HAS_MEMORY
-
-#define DEVICE_FLASH_BASE_ADDRESS FLASH_BASE_ADDRESS
-#define DEVICE_SRAM_BASE_ADDRESS SRAM_BASE_ADDRESS
-
 #define FLASH_SECURE_ATTRIBUTION_REGION_SIZE SPU_FLASH_REGION_SIZE
 #define SRAM_SECURE_ATTRIBUTION_REGION_SIZE  SPU_SRAM_REGION_SIZE
 
@@ -34,6 +28,9 @@
     (FLASH_TOTAL_SIZE / FLASH_SECURE_ATTRIBUTION_REGION_SIZE)
 #define NUM_SRAM_SECURE_ATTRIBUTION_REGIONS \
     (TOTAL_RAM_SIZE / SRAM_SECURE_ATTRIBUTION_REGION_SIZE)
+
+#define DEVICE_FLASH_BASE_ADDRESS FLASH_BASE_ADDRESS
+#define DEVICE_SRAM_BASE_ADDRESS SRAM_BASE_ADDRESS
 
 /* Convenience macros for SPU Non-Secure Callable (NCS) attribution */
 
@@ -59,24 +56,37 @@
  */
 #define FLASH_NSC_SIZE_REG(size) ((31 - __builtin_clz(size)) - 4)
 
-#if defined(REGION_PCD_SRAM_ADDRESS)
-static bool spu_region_is_sram_region_in_address_range(uint8_t region_id, uint32_t start_address, uint32_t end_address)
+
+void spu_enable_interrupts(void)
 {
-    size_t start_id = (start_address - DEVICE_SRAM_BASE_ADDRESS) / SRAM_SECURE_ATTRIBUTION_REGION_SIZE;
-    size_t end_id = (end_address - DEVICE_SRAM_BASE_ADDRESS) / SRAM_SECURE_ATTRIBUTION_REGION_SIZE;
-    return region_id >= start_id && region_id <= end_id;
+    nrf_spu_int_enable(NRF_SPU,
+        NRF_SPU_INT_FLASHACCERR_MASK |
+        NRF_SPU_INT_RAMACCERR_MASK |
+        NRF_SPU_INT_PERIPHACCERR_MASK);
 }
-#endif
 
-static bool spu_region_is_pcd_region(NRF_SPU_Type * p_reg, uint8_t region_id)
+uint32_t spu_events_get(void)
 {
-    bool is_pcd = false;
+    uint32_t events = 0;
 
-#ifdef PM_PCD_SRAM_ADDRESS
-    is_pcd = is_pcd || spu_region_is_sram_region_in_address_range(region_id, PM_PCD_SRAM_ADDRESS, PM_PCD_SRAM_END_ADDRESS);
-#endif
+    if (nrf_spu_event_check(NRF_SPU, NRF_SPU_EVENT_RAMACCERR)) {
+        events |= SPU_EVENT_RAMACCERR;
+    }
+    if (nrf_spu_event_check(NRF_SPU, NRF_SPU_EVENT_FLASHACCERR)) {
+        events |= SPU_EVENT_FLASHACCERR;
+    }
+    if (nrf_spu_event_check(NRF_SPU, NRF_SPU_EVENT_PERIPHACCERR)) {
+        events |= SPU_EVENT_PERIPHACCERR;
+    }
 
-    return is_pcd;
+    return events;
+}
+
+void spu_clear_events(void)
+{
+    nrf_spu_event_clear(NRF_SPU, NRF_SPU_EVENT_RAMACCERR);
+    nrf_spu_event_clear(NRF_SPU, NRF_SPU_EVENT_FLASHACCERR);
+    nrf_spu_event_clear(NRF_SPU, NRF_SPU_EVENT_PERIPHACCERR);
 }
 
 #if defined(REGION_MCUBOOT_ADDRESS) || defined(REGION_B0_ADDRESS) || defined(REGION_S0_ADDRESS) || defined(REGION_S1_ADDRESS)
@@ -84,6 +94,15 @@ static bool spu_region_is_flash_region_in_address_range(uint8_t region_id, uint3
 {
     size_t start_id = (start_address - DEVICE_FLASH_BASE_ADDRESS) / FLASH_SECURE_ATTRIBUTION_REGION_SIZE;
     size_t end_id = (end_address - DEVICE_FLASH_BASE_ADDRESS) / FLASH_SECURE_ATTRIBUTION_REGION_SIZE;
+    return region_id >= start_id && region_id <= end_id;
+}
+#endif
+
+#if defined(REGION_PCD_SRAM_ADDRESS)
+static bool spu_region_is_sram_region_in_address_range(uint8_t region_id, uint32_t start_address, uint32_t end_address)
+{
+    size_t start_id = (start_address - DEVICE_SRAM_BASE_ADDRESS) / SRAM_SECURE_ATTRIBUTION_REGION_SIZE;
+    size_t end_id = (end_address - DEVICE_SRAM_BASE_ADDRESS) / SRAM_SECURE_ATTRIBUTION_REGION_SIZE;
     return region_id >= start_id && region_id <= end_id;
 }
 #endif
@@ -108,98 +127,17 @@ static bool spu_region_is_bootloader_region(NRF_SPU_Type * p_reg, uint8_t region
     return is_bootloader;
 }
 
-#endif /* NRF_SPU_HAS_MEMORY */
-
-void spu_enable_interrupts(void)
+static bool spu_region_is_pcd_region(NRF_SPU_Type * p_reg, uint8_t region_id)
 {
-	uint32_t mask = 0;
+    bool is_pcd = false;
 
-#if NRF_SPU_HAS_MEMORY
-    mask |= NRF_SPU_INT_RAMACCERR_MASK;
-	mask |= NRF_SPU_INT_FLASHACCERR_MASK;
+#ifdef PM_PCD_SRAM_ADDRESS
+    is_pcd = is_pcd || spu_region_is_sram_region_in_address_range(region_id, PM_PCD_SRAM_ADDRESS, PM_PCD_SRAM_END_ADDRESS);
 #endif
 
-    mask |= NRF_SPU_INT_PERIPHACCERR_MASK;
-
-	for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
-		nrf_spu_int_enable(spu_instances[i], mask);
-	}
+    return is_pcd;
 }
 
-uint32_t spu_events_get(void)
-{
-    uint32_t events = 0;
-
-    for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
-        if(nrf_spu_event_check(spu_instances[i], NRF_SPU_EVENT_PERIPHACCERR)){
-            events |= SPU_EVENT_PERIPHACCERR;
-        }
-#if NRF_SPU_HAS_MEMORY
-        if (nrf_spu_event_check(spu_instances[i], NRF_SPU_EVENT_RAMACCERR)) {
-            events |= SPU_EVENT_RAMACCERR;
-        }
-        if (nrf_spu_event_check(spu_instances[i], NRF_SPU_EVENT_FLASHACCERR)) {
-            events |= SPU_EVENT_FLASHACCERR;
-        }
-#endif /* NRF_SPU_HAS_MEMORY */
-    }
-
-    return events;
-}
-
-#ifdef MPC_PRESENT
-void mpc_enable_interrupts(void)
-{
-    uint32_t mask = NRF_MPC_INT_MEMACCERR_MASK;
-    nrf_mpc_int_enable(NRF_MPC00, mask);
-}
-
-uint32_t mpc_events_get(void)
-{
-    uint32_t events = 0;
-
-    if (nrf_mpc_event_check(NRF_MPC00, NRF_MPC_EVENT_MEMACCERR)){
-        events |= MPC_EVENT_MEMACCERR;
-    }
-
-    return events;
-}
-
-void mpc_clear_events()
-{
-    nrf_mpc_event_clear(NRF_MPC00, NRF_MPC_EVENT_MEMACCERR);
-}
-#endif /* MPC_PRESENT */
-
-void spu_clear_events(void)
-{
-	for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
-#if NRF_SPU_HAS_MEMORY
-		nrf_spu_event_clear(spu_instances[i], NRF_SPU_EVENT_RAMACCERR);
-		nrf_spu_event_clear(spu_instances[i], NRF_SPU_EVENT_FLASHACCERR);
-#endif
-		nrf_spu_event_clear(spu_instances[i], NRF_SPU_EVENT_PERIPHACCERR);
-	}
-}
-
-#ifdef SPU_PERIPHACCERR_ADDRESS_ADDRESS_Msk
-uint32_t spu_get_peri_addr(void) {
-    uint32_t addr = 0;
-
-    for(int i = 0; i < ARRAY_SIZE(spu_instances); i++) {
-        if(spu_instances[i]->EVENTS_PERIPHACCERR){
-            /* Only the lower 16 bits of the address are captured into the register. The upper
-             * 16 bits correspond to the upper 16 bits of the SPU's base address.
-             */
-            addr = spu_instances[i]->PERIPHACCERR.ADDRESS | ((uint32_t)spu_instances[i] & 0xFFFF0000);
-        }
-    }
-
-    return addr;
-}
-#endif
-
-#if NRF_SPU_HAS_MEMORY
 void spu_regions_reset_unlocked_secure(void)
 {
     for (size_t i = 0; i < NUM_FLASH_SECURE_ATTRIBUTION_REGIONS ; i++) {
