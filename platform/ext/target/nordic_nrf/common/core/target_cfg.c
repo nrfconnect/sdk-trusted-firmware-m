@@ -814,7 +814,7 @@ enum tfm_plat_err_t init_debug(void)
 #error "Debug access controlled by NRF_APPROTECT and NRF_SECURE_APPROTECT."
 #endif
 
-#if defined(NRF_APPROTECT)
+#if defined(NRF_APPROTECT) && !defined(NRF54L15_XXAA)
     /* For nRF53 and nRF91x1 already active. For nRF9160, active in the next boot.*/
     if (nrfx_nvmc_word_writable_check((uint32_t)&NRF_UICR_S->APPROTECT,
                                     UICR_APPROTECT_PALL_Protected)) {
@@ -823,7 +823,7 @@ enum tfm_plat_err_t init_debug(void)
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
 #endif
-#if defined(NRF_SECURE_APPROTECT)
+#if defined(NRF_SECURE_APPROTECT) && !defined(NRF54L15_XXAA)
     /* For nRF53 and nRF91x1 already active. For nRF9160, active in the next boot. */
     if (nrfx_nvmc_word_writable_check((uint32_t)&NRF_UICR_S->SECUREAPPROTECT,
                                     UICR_SECUREAPPROTECT_PALL_Protected)) {
