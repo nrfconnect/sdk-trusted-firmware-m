@@ -189,14 +189,10 @@ static int32_t ARM_Flash_EraseSector(uint32_t addr)
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 #else
-    for (uint32_t *erase_word_ptr = (uint32_t *)addr;
-		 (uint32_t)erase_word_ptr < addr + FLASH_AREA_IMAGE_SECTOR_SIZE; erase_word_ptr++) {
-		if(*erase_word_ptr != 0xFFFFFFFFU) {
-			nrfx_rramc_word_write((uint32_t)erase_word_ptr, 0xFFFFFFFFU);
-		}
-    }
-
-	nrf_rramc_task_trigger(NRF_RRAMC, NRF_RRAMC_TASK_COMMIT_WRITEBUF);
+    /*
+     * Erasure is not needed on RRAM.
+     * Save lifetime and execution time by not emulating a flash erase.
+     */
 #endif
 
     return ARM_DRIVER_OK;
