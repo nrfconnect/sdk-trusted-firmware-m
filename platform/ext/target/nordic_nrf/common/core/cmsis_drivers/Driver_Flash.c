@@ -165,16 +165,15 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
 #ifdef NRF_NVMC_S
     nrfx_nvmc_words_write(addr, data, cnt);
 #else
+	nrf_rramc_config_t rramc_config;
+	nrf_rramc_config_get(NRF_RRAMC, &rramc_config);
+	const nrf_rramc_config_t orig_rramc_config = rramc_config;
+	rramc_config.write_buff_size = 0;
+	nrf_rramc_config_set(NRF_RRAMC, &rramc_config);
+
 	nrfx_rramc_words_write(addr, data, cnt);
 
-	/* At time of writing, the Zephyr driver commits writes, but the
-	 * nrfx driver does not, so we commit here using the HAL to align
-	 * Zephyr and TF-M behaviour.
-	 *
-	 * Not committing may cause data loss and/or high power
-	 * consumption.
-	 */
-	nrf_rramc_task_trigger(NRF_RRAMC, NRF_RRAMC_TASK_COMMIT_WRITEBUF);
+	nrf_rramc_config_set(NRF_RRAMC, &orig_rramc_config);
 #endif
 
     return cnt;
