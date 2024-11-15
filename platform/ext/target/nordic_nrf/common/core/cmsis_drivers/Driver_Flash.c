@@ -31,11 +31,7 @@
 #elif defined(NRF_RRAMC_S)
 #include <nrfx_rramc.h>
 
-#if CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE > 0
-#define WRITE_BUFFER_SIZE CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE
-#else
 #define WRITE_BUFFER_SIZE 0
-#endif
 
 #else
 #error "Unrecognized platform"
@@ -164,9 +160,10 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
 
 #ifdef NRF_NVMC_S
     nrfx_nvmc_words_write(addr, data, cnt);
-#else
+#else /* NRF_RRAMC_S */
 	nrfx_rramc_words_write(addr, data, cnt);
 
+#if WRITE_BUFFER_SIZE != 0
 	/* At time of writing, the Zephyr driver commits writes, but the
 	 * nrfx driver does not, so we commit here using the HAL to align
 	 * Zephyr and TF-M behaviour.
@@ -176,6 +173,8 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
 	 */
 	nrf_rramc_task_trigger(NRF_RRAMC, NRF_RRAMC_TASK_COMMIT_WRITEBUF);
 #endif
+
+#endif /* NRF_NVMC_S */
 
     return cnt;
 }
