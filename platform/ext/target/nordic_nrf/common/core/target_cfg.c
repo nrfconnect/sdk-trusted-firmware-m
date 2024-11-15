@@ -36,7 +36,11 @@
 #include <nrfx_rramc.h>
 #include <hal/nrf_rramc.h>
 
+#if CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE > 0
+#define WRITE_BUFFER_SIZE CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE
+#else
 #define WRITE_BUFFER_SIZE 0
+#endif
 
 #endif
 
