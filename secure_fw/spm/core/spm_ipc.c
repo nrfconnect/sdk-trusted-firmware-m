@@ -40,7 +40,6 @@
 #include "load/spm_load_api.h"
 #include "tfm_nspm.h"
 #include "private/assert.h"
-#include "uart_stdout.h"
 
 /* Partition and service runtime data list head/runtime data table */
 static struct service_head_t services_listhead;
@@ -398,10 +397,6 @@ uint32_t tfm_spm_init(void)
 
         backend_init_comp_assuredly(partition, service_setting);
     }
-
-    #if defined(CONFIG_TFM_LOG_SHARE_UART)
-        stdio_uninit();
-    #endif
 
     return backend_system_run();
 }
