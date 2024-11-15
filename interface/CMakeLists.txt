@@ -19,15 +19,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/psa/framework_feature.h.in
 
 add_library(psa_interface INTERFACE)
 
-if(PSA_CRYPTO_EXTERNAL_CORE)
-    include(${TARGET_PLATFORM_PATH}/../external_core.cmake)
-else()
-    target_include_directories(psa_interface
-        INTERFACE
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    )
-endif()
-
 target_include_directories(psa_interface
     INTERFACE
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
