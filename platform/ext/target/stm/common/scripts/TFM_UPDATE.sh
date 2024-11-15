@@ -19,11 +19,8 @@ sn_option="sn=$1"
 fi
 # Absolute path to this script
 SCRIPT=$(readlink -f $0)
-SCRIPTPATH=`dirname $SCRIPT`
-#copy tfm_ns_signed to the true path
-cp $SCRIPTPATH/../../build_ns/bin/tfm_ns_signed.bin image_signing/scripts
-
 # Absolute path this script
+SCRIPTPATH=`dirname $SCRIPT`
 BINPATH_SPE="$SCRIPTPATH/bin"
 BINPATH_BL2="$SCRIPTPATH/bin"
 BINPATH_NSPE="$SCRIPTPATH/image_signing/scripts"
