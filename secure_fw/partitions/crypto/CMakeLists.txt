@@ -195,8 +195,8 @@ if(NOT TARGET ${MBEDTLS_TARGET_PREFIX}mbedcrypto)
     Hint: The command might be `cd ${MBEDCRYPTO_PATH} && git apply ${CMAKE_SOURCE_DIR}/lib/ext/mbedcrypto/*.patch`")
 endif()
 
-target_include_directories(psa_crypto_library_config
-    INTERFACE
+target_include_directories(${MBEDTLS_TARGET_PREFIX}mbedcrypto
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/psa_driver_api
 )
