@@ -24,19 +24,8 @@
 
 #include <nrf.h>
 
-#include <autoconf.h>
-
 #if defined(NRF_NVMC_S)
 #include <nrfx_nvmc.h>
-#elif defined(NRF_RRAMC_S)
-#include <nrfx_rramc.h>
-
-#if CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE > 0
-#define WRITE_BUFFER_SIZE CONFIG_NRF_RRAM_WRITE_BUFFER_SIZE
-#else
-#define WRITE_BUFFER_SIZE 0
-#endif
-
 #else
 #error "Unrecognized platform"
 #endif
@@ -98,30 +87,6 @@ static int32_t ARM_Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
     ARG_UNUSED(cb_event);
 
 
-#ifdef RRAMC_PRESENT
-	nrfx_rramc_config_t config = NRFX_RRAMC_DEFAULT_CONFIG(WRITE_BUFFER_SIZE);
-
-	config.mode_write = true;
-
-#if CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE > 0
-	config.preload_timeout_enable = true;
-	config.preload_timeout = CONFIG_NRF_RRAM_READYNEXT_TIMEOUT_VALUE;
-#else
-	config.preload_timeout_enable = false;
-	config.preload_timeout = 0;
-#endif
-
-	/* Don't use an event handler until it's understood whether we
-	 * want it or not
-	 */
-	nrfx_rramc_evt_handler_t handler = NULL;
-
-	nrfx_err_t err = nrfx_rramc_init(&config, handler);
-
-	if(err != NRFX_SUCCESS && err != NRFX_ERROR_ALREADY) {
-		return err;
-	}
-#endif /* RRAMC_PRESENT */
     return ARM_DRIVER_OK;
 }
 
@@ -162,42 +127,18 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 
-#ifdef NRF_NVMC_S
     nrfx_nvmc_words_write(addr, data, cnt);
-#else
-	nrfx_rramc_words_write(addr, data, cnt);
-
-	/* At time of writing, the Zephyr driver commits writes, but the
-	 * nrfx driver does not, so we commit here using the HAL to align
-	 * Zephyr and TF-M behaviour.
-	 *
-	 * Not committing may cause data loss and/or high power
-	 * consumption.
-	 */
-	nrf_rramc_task_trigger(NRF_RRAMC, NRF_RRAMC_TASK_COMMIT_WRITEBUF);
-#endif
 
     return cnt;
 }
 
 static int32_t ARM_Flash_EraseSector(uint32_t addr)
 {
-#ifdef NRF_NVMC_S
     nrfx_err_t err_code = nrfx_nvmc_page_erase(addr);
 
     if (err_code != NRFX_SUCCESS) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
-#else
-    for (uint32_t *erase_word_ptr = (uint32_t *)addr;
-		 (uint32_t)erase_word_ptr < addr + FLASH_AREA_IMAGE_SECTOR_SIZE; erase_word_ptr++) {
-		if(*erase_word_ptr != 0xFFFFFFFFU) {
-			nrfx_rramc_word_write((uint32_t)erase_word_ptr, 0xFFFFFFFFU);
-		}
-    }
-
-	nrf_rramc_task_trigger(NRF_RRAMC, NRF_RRAMC_TASK_COMMIT_WRITEBUF);
-#endif
 
     return ARM_DRIVER_OK;
 }
