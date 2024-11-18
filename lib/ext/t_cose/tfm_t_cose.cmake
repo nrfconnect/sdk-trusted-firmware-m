@@ -29,6 +29,7 @@ target_compile_definitions(tfm_t_cose_defs
         $<$<BOOL:${SYMMETRIC_INITIAL_ATTESTATION}>:T_COSE_DISABLE_SIGN1>
         $<$<NOT:$<BOOL:${SYMMETRIC_INITIAL_ATTESTATION}>>:T_COSE_DISABLE_MAC0>
         $<$<NOT:$<BOOL:${ATTEST_INCLUDE_TEST_CODE}>>:T_COSE_DISABLE_SHORT_CIRCUIT_SIGN>
+        $<$<BOOL:${ATTEST_SIGN_MESSAGE}>:T_COSE_SIGN_MESSAGE>
 )
 
 ############################### t_cose common ##################################

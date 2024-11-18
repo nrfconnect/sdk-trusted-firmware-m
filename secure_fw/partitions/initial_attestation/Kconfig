@@ -32,6 +32,14 @@ config ATTEST_KEY_BITS
     help
       The size of the initial attestation key in bits
 
+config ATTEST_SIGN_MESSAGE
+    bool "Sign message instead of hash"
+    default n
+    help
+        By default attestation calculates a hash of the payload and signs that.
+        Use this to instead sign the payload/message directly.
+
+
 config PSA_INITIAL_ATTEST_MAX_TOKEN_SIZE
     hex  "The maximum possible size of a token"
     default 0x250
