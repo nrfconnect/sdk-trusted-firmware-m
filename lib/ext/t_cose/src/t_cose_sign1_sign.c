@@ -43,6 +43,18 @@
 #error COSE algorithm identifier definitions are in error
 #endif
 
+/**
+ * This is the size of the first part of the CBOR encoded TBS
+ * bytes. It is around 30 bytes. See create_tbs_hash().
+ */
+#define T_COSE_SIZE_OF_TBS \
+    1 + /* For opening the array */ \
+    sizeof(COSE_SIG_CONTEXT_STRING_SIGNATURE1) + /* "Signature1" */ \
+    2 + /* Overhead for encoding string */ \
+    T_COSE_SIGN1_MAX_SIZE_PROTECTED_PARAMETERS + /* entire protected params */ \
+    1 + /* Empty bstr for absent external_aad */ \
+    220 /* The max CBOR length encoding for start of payload */
+
 
 #ifndef T_COSE_DISABLE_SHORT_CIRCUIT_SIGN
 /**
@@ -323,14 +335,27 @@ t_cose_sign1_encode_signature(struct t_cose_sign1_sign_ctx *me,
      */
     enum t_cose_err_t            return_value;
     QCBORError                   cbor_err;
+    /* Pointer to useful_buf used for the signature*/
+    struct q_useful_buf_c        *tbs;
+#ifndef T_COSE_SIGN_MESSAGE
     /* pointer and length of the completed tbs hash */
     struct q_useful_buf_c        tbs_hash;
+#else
+    /* pointer and length of the completed tbs message */
+    struct q_useful_buf_c        tbs_message;
+    QCBOREncodeContext           cbor_Sig_structure_ctx;
+    /* Pointer and length of the completed signature */
+    QCBORError                  qcbor_result;
+    Q_USEFUL_BUF_MAKE_STACK_UB( buffer_for_tbs_message, T_COSE_SIZE_OF_TBS);
+#endif
     /* Pointer and length of the completed signature */
     struct q_useful_buf_c        signature;
     /* Buffer for the actual signature */
     Q_USEFUL_BUF_MAKE_STACK_UB(  buffer_for_signature, T_COSE_MAX_SIG_SIZE);
+#ifndef T_COSE_SIGN_MESSAGE
     /* Buffer for the tbs hash. */
     Q_USEFUL_BUF_MAKE_STACK_UB(  buffer_for_tbs_hash, T_COSE_CRYPTO_MAX_HASH_SIZE);
+#endif
     struct q_useful_buf_c        signed_payload;
 
     QCBOREncode_CloseBstrWrap(cbor_encode_ctx, &signed_payload);
@@ -359,6 +384,7 @@ t_cose_sign1_encode_signature(struct t_cose_sign1_sign_ctx *me,
                                               &signature.len);
      } else {
 
+    #ifndef T_COSE_SIGN_MESSAGE
         /* Create the hash of the to-be-signed bytes. Inputs to the
          * hash are the protected parameters, the payload that is
          * getting signed, the cose signature alg from which the hash
@@ -374,6 +400,7 @@ t_cose_sign1_encode_signature(struct t_cose_sign1_sign_ctx *me,
         if(return_value) {
             goto Done;
         }
+    #endif
 
         /* Compute the signature using public key crypto. The key and
          * algorithm ID are passed in to know how and what to sign
@@ -388,9 +415,41 @@ t_cose_sign1_encode_signature(struct t_cose_sign1_sign_ctx *me,
          */
         if(!(me->option_flags & T_COSE_OPT_SHORT_CIRCUIT_SIG)) {
             /* Normal, non-short-circuit signing */
+    #ifdef T_COSE_SIGN_MESSAGE
+            QCBOREncode_Init(&cbor_Sig_structure_ctx, buffer_for_tbs_message);
+            QCBOREncode_OpenArray(&cbor_Sig_structure_ctx);
+
+            /* context */
+            QCBOREncode_AddSZString(&cbor_Sig_structure_ctx, COSE_SIG_CONTEXT_STRING_SIGNATURE1);
+            /* body_protected */
+            QCBOREncode_AddBytes(&cbor_Sig_structure_ctx, me->protected_parameters);
+
+            /* sign_protected is not used for COSE_Sign1 */
+
+            /* external_aad. There is none so an empty bstr */
+            QCBOREncode_AddBytes(&cbor_Sig_structure_ctx, NULL_Q_USEFUL_BUF_C);
+
+            /* payload  */
+            QCBOREncode_AddBytes(&cbor_Sig_structure_ctx, signed_payload);
+
+            /* Close off the array */
+            QCBOREncode_CloseArray(&cbor_Sig_structure_ctx);
+
+            qcbor_result = QCBOREncode_Finish(&cbor_Sig_structure_ctx, &tbs_message);
+            if(qcbor_result) {
+                /* Mainly means that the protected_parameters were too big
+                 * (which should never happen) */
+                return_value = T_COSE_ERR_SIG_STRUCT;
+                goto Done;
+            }
+
+            tbs = &tbs_message;
+    #else
+            tbs = &tbs_hash;
+    #endif
             return_value = t_cose_crypto_pub_key_sign(me->cose_algorithm_id,
                                                       me->signing_key,
-                                                      tbs_hash,
+                                                      *tbs,
                                                       buffer_for_signature,
                                                       &signature);
         } else {

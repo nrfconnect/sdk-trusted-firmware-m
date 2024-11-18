@@ -412,7 +412,7 @@ device. System integrators might need to re-implement the following functions
 if they want to use initial attestation service with a different cryptographic
 library than Crypto service:
 
-- ``t_cose_crypto_pub_key_sign()``: Calculates the signature over a hash value.
+- ``t_cose_crypto_pub_key_sign()``: Calculates the signature over a value.
 - ``t_cose_crypto_get_ec_pub_key()``: Get the public key to create the key
   identifier.
 - ``t_cose_crypto_hash_start()``: Start a multipart hash operation.

@@ -155,10 +155,10 @@ t_cose_crypto_sig_size(int32_t            cose_algorithm_id,
                        struct t_cose_key  signing_key,
                        size_t            *sig_size);
 
-
 /**
- * \brief Perform public key signing. Part of the t_cose crypto
- * adaptation layer.
+ * \brief Perform public key signing of a payload. Can sign either
+ * a message or message hash. Part of the t_cose crypto adaptation
+ * layer.
  *
  * \param[in] cose_algorithm_id The algorithm to sign with. The IDs are
  *                              defined in [COSE (RFC 8152)]
@@ -169,8 +169,7 @@ t_cose_crypto_sig_size(int32_t            cose_algorithm_id,
  *                              locally (\c \#define) if the needed
  *                              one hasn't been registered.
  * \param[in] signing_key       Indicates or contains key to sign with.
- * \param[in] hash_to_sign      The bytes to sign. Typically, a hash of
- *                              a payload.
+ * \param[in] to_sign           The bytes to sign.
  * \param[in] signature_buffer  Pointer and length of buffer into which
  *                              the resulting signature is put.
  * \param[in] signature         Pointer and length of the signature
@@ -215,7 +214,7 @@ t_cose_crypto_sig_size(int32_t            cose_algorithm_id,
 enum t_cose_err_t
 t_cose_crypto_pub_key_sign(int32_t                cose_algorithm_id,
                            struct t_cose_key      signing_key,
-                           struct q_useful_buf_c  hash_to_sign,
+                           struct q_useful_buf_c  to_sign,
                            struct q_useful_buf    signature_buffer,
                            struct q_useful_buf_c *signature);
 

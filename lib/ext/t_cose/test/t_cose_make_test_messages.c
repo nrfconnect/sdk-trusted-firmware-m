@@ -475,14 +475,18 @@ t_cose_sign1_test_message_output_signature(struct t_cose_sign1_sign_ctx *me,
      */
     enum t_cose_err_t            return_value;
     QCBORError                   cbor_err;
+    /* Pointer to useful_buf used for the signature*/
+    struct q_useful_buf_c        *tbs;
     /* pointer and length of the completed tbs hash */
     struct q_useful_buf_c        tbs_hash;
     /* Pointer and length of the completed signature */
     struct q_useful_buf_c        signature;
     /* Buffer for the actual signature */
     Q_USEFUL_BUF_MAKE_STACK_UB(  buffer_for_signature, T_COSE_MAX_SIG_SIZE);
+#ifndef T_COSE_SIGN_MESSAGE
     /* Buffer for the tbs hash. */
     Q_USEFUL_BUF_MAKE_STACK_UB(  buffer_for_tbs_hash, T_COSE_CRYPTO_MAX_HASH_SIZE);
+#endif
     struct q_useful_buf_c        signed_payload;
 
     QCBOREncode_CloseBstrWrap(cbor_encode_ctx, &signed_payload);
@@ -501,6 +505,8 @@ t_cose_sign1_test_message_output_signature(struct t_cose_sign1_sign_ctx *me,
         goto Done;
     }
 
+    if(!(me->option_flags & T_COSE_OPT_SIGN_MESSAGE)) {
+#ifndef T_COSE_SIGN_MESSAGE
     /* Create the hash of the to-be-signed bytes. Inputs to the hash
      * are the protected parameters, the payload that is getting signed, the
      * cose signature alg from which the hash alg is determined. The
@@ -516,6 +522,7 @@ t_cose_sign1_test_message_output_signature(struct t_cose_sign1_sign_ctx *me,
     if(return_value != T_COSE_SUCCESS) {
         goto Done;
     }
+#endif
 
     /* Compute the signature using public key crypto. The key selector
      * and algorithm ID are passed in to know how and what to sign
@@ -529,11 +536,17 @@ t_cose_sign1_test_message_output_signature(struct t_cose_sign1_sign_ctx *me,
      */
     if(!(me->option_flags & T_COSE_OPT_SHORT_CIRCUIT_SIG)) {
         /* Normal, non-short-circuit signing */
+        if(!(me->option_flags & T_COSE_OPT_SIGN_MESSAGE)) {
+            tbs = &tbs_hash;
+        } else {
+            tbs = &(me->protected_parameters);
+        }
         return_value = t_cose_crypto_pub_key_sign(me->cose_algorithm_id,
                                                   me->signing_key,
-                                                  tbs_hash,
+                                                  *tbs,
                                                   buffer_for_signature,
-                                                  &signature);
+                                                  &signature,
+                                                  me->option_flags);
     } else {
 #ifndef T_COSE_DISABLE_SHORT_CIRCUIT_SIGN
         return_value = short_circuit_sign(me->cose_algorithm_id,

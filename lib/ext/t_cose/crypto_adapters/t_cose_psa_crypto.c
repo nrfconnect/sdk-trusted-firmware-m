@@ -164,7 +164,7 @@ t_cose_crypto_pub_key_verify(int32_t               cose_algorithm_id,
 enum t_cose_err_t
 t_cose_crypto_pub_key_sign(int32_t                cose_algorithm_id,
                            struct t_cose_key      signing_key,
-                           struct q_useful_buf_c  hash_to_sign,
+                           struct q_useful_buf_c  to_sign,
                            struct q_useful_buf    signature_buffer,
                            struct q_useful_buf_c *signature)
 {
@@ -196,13 +196,24 @@ t_cose_crypto_pub_key_sign(int32_t                cose_algorithm_id,
     /* It is assumed that this call is checking the signature_buffer
      * length and won't write off the end of it.
      */
+
+#ifdef T_COSE_SIGN_MESSAGE
+    psa_result = psa_sign_message(signing_key_psa,
+                                  psa_alg_id,
+                                  to_sign.ptr,
+                                  to_sign.len,
+                                  signature_buffer.ptr, /* Sig buf */
+                                  signature_buffer.len, /* Sig buf size */
+                                  &signature_len);      /* Sig length */
+#else
     psa_result = psa_sign_hash(signing_key_psa,
                                psa_alg_id,
-                               hash_to_sign.ptr,
-                               hash_to_sign.len,
+                               to_sign.ptr,
+                               to_sign.len,
                                signature_buffer.ptr, /* Sig buf */
                                signature_buffer.len, /* Sig buf size */
                                &signature_len);      /* Sig length */
+#endif
 
     return_value = psa_status_to_t_cose_error_signing(psa_result);
 
