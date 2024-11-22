@@ -80,7 +80,8 @@
            "*tfm_*partition_crypto.*",
            "*mbedcrypto.*",
          ]
-      }
+      },
+      "non_ffm_attributes": ['weak_dependencies']
     },
     {
       "description": "TFM Platform Partition",
