@@ -323,14 +323,20 @@ t_cose_sign1_encode_signature(struct t_cose_sign1_sign_ctx *me,
      */
     enum t_cose_err_t            return_value;
     QCBORError                   cbor_err;
+    /* Pointer to useful_buf used for the signature*/
+    struct q_useful_buf_c        *tbs;
+#ifndef T_COSE_SIGN_MESSAGE
     /* pointer and length of the completed tbs hash */
     struct q_useful_buf_c        tbs_hash;
+#endif
     /* Pointer and length of the completed signature */
     struct q_useful_buf_c        signature;
     /* Buffer for the actual signature */
     Q_USEFUL_BUF_MAKE_STACK_UB(  buffer_for_signature, T_COSE_MAX_SIG_SIZE);
+#ifndef T_COSE_SIGN_MESSAGE
     /* Buffer for the tbs hash. */
     Q_USEFUL_BUF_MAKE_STACK_UB(  buffer_for_tbs_hash, T_COSE_CRYPTO_MAX_HASH_SIZE);
+#endif
     struct q_useful_buf_c        signed_payload;
 
     QCBOREncode_CloseBstrWrap(cbor_encode_ctx, &signed_payload);
@@ -359,6 +365,7 @@ t_cose_sign1_encode_signature(struct t_cose_sign1_sign_ctx *me,
                                               &signature.len);
      } else {
 
+    #ifndef T_COSE_SIGN_MESSAGE
         /* Create the hash of the to-be-signed bytes. Inputs to the
          * hash are the protected parameters, the payload that is
          * getting signed, the cose signature alg from which the hash
@@ -374,6 +381,7 @@ t_cose_sign1_encode_signature(struct t_cose_sign1_sign_ctx *me,
         if(return_value) {
             goto Done;
         }
+    #endif
 
         /* Compute the signature using public key crypto. The key and
          * algorithm ID are passed in to know how and what to sign
@@ -388,9 +396,14 @@ t_cose_sign1_encode_signature(struct t_cose_sign1_sign_ctx *me,
          */
         if(!(me->option_flags & T_COSE_OPT_SHORT_CIRCUIT_SIG)) {
             /* Normal, non-short-circuit signing */
+    #ifdef T_COSE_SIGN_MESSAGE
+            tbs = &(me->protected_parameters);
+    #else
+            tbs = &tbs_hash;
+    #endif
             return_value = t_cose_crypto_pub_key_sign(me->cose_algorithm_id,
                                                       me->signing_key,
-                                                      tbs_hash,
+                                                      *tbs,
                                                       buffer_for_signature,
                                                       &signature);
         } else {
