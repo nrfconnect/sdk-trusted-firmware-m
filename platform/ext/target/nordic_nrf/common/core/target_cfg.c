@@ -24,7 +24,9 @@
 #include "region.h"
 #include "array.h"
 
+#ifdef __NRF_TFM__
 #include <zephyr/autoconf.h>
+#endif
 
 #include <spu.h>
 #include <nrfx.h>

@@ -24,7 +24,9 @@
 
 #include <nrf.h>
 
+#ifdef __NRF_TFM__
 #include <zephyr/autoconf.h>
+#endif
 
 #if defined(NRF_NVMC_S)
 #include <nrfx_nvmc.h>
