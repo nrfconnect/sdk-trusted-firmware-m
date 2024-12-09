@@ -241,7 +241,6 @@ attest_token_encode_start(struct attest_token_encode_ctx *me,
     me->opt_flags  = opt_flags;
     me->key_select = key_select;
 
-
     if (opt_flags & TOKEN_OPT_SHORT_CIRCUIT_SIGN) {
         t_cose_options |= T_COSE_OPT_SHORT_CIRCUIT_SIG;
     } else {
