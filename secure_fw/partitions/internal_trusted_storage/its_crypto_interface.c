@@ -25,7 +25,7 @@
  *          data size of the file as addditional data.
  *
  * \param[out]  add       Additional data
- * \param[in]   add_size  Additional data size in bytes
+ * \param[in]   aad_size  Additional data size in bytes
  * \param[in]   fid       Identifier of the file
  * \param[in]   fid_size  Identifier of the file size in bytes
  * \param[in]   flags     Flags of the file
@@ -38,7 +38,7 @@
  *
  */
 static psa_status_t tfm_its_fill_enc_add(uint8_t *add,
-                                         const size_t add_size,
+                                         const size_t aad_size,
                                          const uint8_t *fid,
                                          const size_t fid_size,
                                          const uint32_t flags,
@@ -58,7 +58,7 @@ static psa_status_t tfm_its_fill_enc_add(uint8_t *add,
                                sizeof(user_flags) +
                                sizeof(data_size);
 
-    if (add_size != add_expected_size || add == NULL || fid == NULL) {
+    if (aad_size != add_expected_size || add == NULL || fid == NULL) {
         return PSA_ERROR_INVALID_ARGUMENT;
     }
 
@@ -163,4 +163,3 @@ psa_status_t tfm_its_crypt_file(struct its_flash_fs_file_info_t *finfo,
 
     return PSA_SUCCESS;
 }
-
