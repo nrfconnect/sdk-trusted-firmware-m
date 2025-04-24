@@ -13,8 +13,8 @@ endif()
 
 target_sources(${CC3XX_TARGET_NAME}
     PRIVATE
-        src/cc3xx_lcs.c
-        src/cc3xx_otp.c
+    #        src/cc3xx_lcs.c
+    #   src/cc3xx_otp.c
         src/cc3xx_rng.c
         src/cc3xx_hash.c
         src/cc3xx_aes.c
@@ -37,18 +37,10 @@ target_sources(${CC3XX_TARGET_NAME}
         src/cc3xx_ec_projective_point.c
         src/cc3xx_ecdh.c
         src/cc3xx_dcu.c
+        src/cc3xx_rsa.c
         ../common/cc3xx_stdlib.c
 )
 
-# This file is the performance-limit for ECDSA, so should be compiled with the
-# highest possible optimizations for speed, even when we are optimizing for
-# code size.
-string(TOLOWER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_LOWER)
-if (${BUILD_TYPE_LOWER} STREQUAL "release" OR ${BUILD_TYPE_LOWER} STREQUAL "minsizerel")
-    set_source_files_properties(src/cc3xx_pka.c
-        PROPERTIES COMPILE_FLAGS -Ofast
-    )
-endif()
 
 target_include_directories(${CC3XX_TARGET_NAME}
     PUBLIC

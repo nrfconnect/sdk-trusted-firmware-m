@@ -95,7 +95,7 @@ void cc3xx_lowlevel_pka_write_reg_swap_endian(cc3xx_pka_reg_id_t reg_id, const u
 /**
  * @brief                        Read data from a PKA register.
  *
- * @param[in]  id                The register ID to write data into.
+ * @param[in]  id                The register ID to write data into.  TYPO???? TO READ DATA FROM MAYBE? 
  * @param[out] data              Buffer the data will be written into.
  * @param[in]  len               The size in bytes of the data to be read. Must
  *                               be a multiple of sizeof(uint32_t). The buffer
