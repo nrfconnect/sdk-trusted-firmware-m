@@ -15,6 +15,14 @@
 #define PRIV_EXP_IN_BYTES 256
 
 
+// /*Should I just throw an error or ignore this?*/
+// #ifndef PSA_MAX_RSA_KEY_BITS
+//     #define PSA_MAX_RSA_KEY_BITS 2048
+// #endif
+
+// /*There has to exist macro for this "8" */
+// #define PSA_MAX_RSA_KEY_BYTES PSA_MAX_RSA_KEY_BITS/8
+
 typedef enum {
     VERSION = 0,
     MODULUS,
@@ -171,10 +179,10 @@ cc3xx_err_t  cc3xx_lowlevel_rsa_sign(
 
     /* BEFORE ANYTHING ELSE remember to check if pointers are valid */
     cc3xx_err_t err;
-
+    cc3xx_lowlevel_pka_init(PSA_MAX_RSA_KEY_BYTES); 
     //psa_status_t status;
     
-    /* ASSUME NON CTR---- CTR TO BE ADDED */
+    /* ASSUME NON CTR---- ?CTR TO BE ADDED? */
     /*s = m ^d mod n.*/
    cc3xx_pka_reg_id_t sig_reg;
    cc3xx_pka_reg_id_t input_reg;
@@ -191,12 +199,16 @@ cc3xx_err_t  cc3xx_lowlevel_rsa_sign(
    priv_exp_reg = cc3xx_lowlevel_pka_allocate_reg();
    barrett_reg = cc3xx_lowlevel_pka_allocate_reg();
    
-    uint32_t mod[64] = {0};
-    uint32_t priv_exp[64] = {0};
+    uint32_t mod[PSA_MAX_RSA_KEY_WORDS];
+    uint32_t priv_exp[PSA_MAX_RSA_KEY_WORDS];
 
     // Error handling needs to be added here
     err = cc3xx_get_rsa_key_component(key, priv_exp, PRIVATE_EXPONENT);
     err = cc3xx_get_rsa_key_component(key, mod, MODULUS);
+
+    if(err != CC3XX_ERR_SUCCESS ){
+        return err;
+    }
 
     cc3xx_lowlevel_pka_write_reg_swap_endian(mod_reg, mod, MODSIZE_IN_BYTES);
     cc3xx_lowlevel_pka_write_reg_swap_endian(priv_exp_reg, priv_exp, PRIV_EXP_IN_BYTES);
@@ -207,10 +219,17 @@ cc3xx_err_t  cc3xx_lowlevel_rsa_sign(
     
     cc3xx_lowlevel_pka_set_modulus(mod_reg, true, barrett_reg);
     
-    memset(priv_exp, 0, 64*sizeof(uint32_t));
     cc3xx_lowlevel_pka_mod_exp(input_reg, priv_exp_reg, sig_reg);
-
+    
     cc3xx_lowlevel_pka_read_reg_swap_endian(sig_reg, signature, input_size);
+
+    /*Clean up*/
+    
+    memset(priv_exp, 0, PSA_MAX_RSA_KEY_BYTES);
+    memset(mod, 0, PSA_MAX_RSA_KEY_BYTES);
+
+    
+    cc3xx_lowlevel_pka_uninit(); // Do I need more clean up then this? 
 
     return err;
 
@@ -241,7 +260,7 @@ int cc3xx_get_rsa_key_component(const uint8_t *key_buffer, uint32_t *output_buf,
             return -1;
         } 
         // TODO, needs to skip the length of the length field itself
-        key_p += (val_length + 1);
+        key_p += val_length;
 
         //Checks if the next field is an int and returns errors since we should only handle integers for now
         if(*key_p != 0x02){
@@ -251,14 +270,26 @@ int cc3xx_get_rsa_key_component(const uint8_t *key_buffer, uint32_t *output_buf,
     val_length = cc3xx_get_val_length(&key_p);
     // Ugly ugly, increasing the buffer past the length field itself
     // Need to skip 0x00 if that's the first byte. Also need a better impd obviously but let me check if this works       
-    if(component == MODULUS){
-        key_p ++;
-        key_p ++;
+    // What is this design choice!?! Why did they chose to slap on 0x00 sometimes just to ignore it later? 
+    
+    // if(*key_p == 0x00){
+    //     key_p ++;
+    // }
 
-    }else{
-
-        key_p ++;
+    while (*key_p == 0x00)
+    {
+        key_p++;
     }
+    
+
+    // if(component == MODULUS){
+    //     key_p ++;
+    //     key_p ++;
+
+    // }else{
+
+    //     key_p ++;
+    // }
     // Copy the value from the key_bufer to the output_buffer 
     // Maybe rather use cc3xx hardened copy function? 
     memcpy(output_buf, key_p, val_length);
@@ -269,20 +300,23 @@ size_t cc3xx_get_val_length(uint8_t **key_buffer){
     // Stolen from old driver, not quite sure if the syntax is valid
     size_t length;
     *key_buffer += 1;
-    if ((**key_buffer & 0x80) == 0) {    
-        return **key_buffer;
+    if ((**key_buffer & 0x80) == 0) {  
+        length = (size_t)(*key_buffer)[0];
+        *key_buffer += 1;
+        return length;   
     }else{
         switch (**key_buffer & 0x7F) {
         case 1:
-            *key_buffer += 1;
-            return **key_buffer;    
+            length = (size_t)(*key_buffer)[1];
+            *key_buffer += 2;
+            return length;    
         case 2:
             length = ((size_t)(*key_buffer)[1] << 8) | (*key_buffer)[2];
-            *key_buffer += 2; 
+            *key_buffer += 3; 
             return length;  
         case 3:
             length = ((size_t)(*key_buffer)[1] << 16) | ((size_t)(*key_buffer)[2] << 8) | (*key_buffer)[3];
-            *key_buffer += 3;
+            *key_buffer += 4;
             return length;
         case 4: // Up to case 4 since the old driver did this in this way ... anything past 2 is insane so maybe just have 2 cases? 
             length = ((size_t)(*key_buffer)[1] << 24) | ((size_t)(*key_buffer)[2] << 16) |

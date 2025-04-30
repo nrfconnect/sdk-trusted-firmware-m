@@ -43,12 +43,7 @@ static psa_status_t rsa_sign(const uint8_t *key, size_t key_length, psa_algorith
 
 	cc3xx_err_t err;
 	psa_status_t status = PSA_SUCCESS;
-	uint32_t encoded_msg_size = 256;
-
-	cc3xx_lowlevel_pka_init(encoded_msg_size); // Aka 2048 bit aka biggest supported key size
-    // Why does this work with enable bit disabled? 
-	// int *point = (int *)0x50844500;
-	// *point = 1;
+	uint32_t encoded_msg_size = PSA_MAX_RSA_KEY_BYTES;
 
 	psa_algorithm_t hash_alg;
 	hash_alg = PSA_ALG_SIGN_GET_HASH(alg);
