@@ -184,5 +184,9 @@
         PSA_FUNCTION_NAME(psa_pake_get_shared_key)
 #define psa_pake_abort \
         PSA_FUNCTION_NAME(psa_pake_abort)
+#define psa_key_derivation_verify_key \
+        PSA_FUNCTION_NAME(psa_key_derivation_verify_key)
+#define psa_key_derivation_verify_bytes \
+        PSA_FUNCTION_NAME(psa_key_derivation_verify_bytes)
 
 #endif /* CRYPTO_SPE_H */
