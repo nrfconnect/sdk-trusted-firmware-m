@@ -8,13 +8,7 @@
 # The 'TFM_VERSION_MANUAL' is used for fallback when Git tags are not available
 set(TFM_VERSION_MANUAL "2.2.2")
 
-execute_process(COMMAND git describe --tags --always
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    OUTPUT_VARIABLE TFM_VERSION_FULL
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-    RESULTS_VARIABLE GIT_RESULT)
-
-if(GIT_RESULT EQUAL 128)
+if(TRUE)
     # Git execution fails.
     # Applying a manual version assuming the code tree is a local copy.
     set(TFM_VERSION_FULL "v${TFM_VERSION_MANUAL}")
