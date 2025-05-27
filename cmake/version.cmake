@@ -16,7 +16,7 @@ execute_process(COMMAND git describe --always --candidates=1
     OUTPUT_STRIP_TRAILING_WHITESPACE
     RESULTS_VARIABLE GIT_RESULT)
 
-if(GIT_RESULT EQUAL 128)
+if(TRUE)
     # Git execution fails.
     # Applying a manual version assuming the code tree is a local copy.
     set(TFM_VERSION_FULL "v${TFM_VERSION_MANUAL}")
