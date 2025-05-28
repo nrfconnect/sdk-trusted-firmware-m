@@ -824,7 +824,7 @@ enum tfm_plat_err_t system_reset_cfg(void)
 
 enum tfm_plat_err_t init_debug(void)
 {
-#if defined(NRF_APPROTECT) || defined(NRF_SECURE_APPROTECT)
+#if defined(NRF_APPROTECT) || defined(NRF_SECURE_APPROTECT) || defined(NRF_ERASEPROTECT)
 
 #if !defined(DAUTH_CHIP_DEFAULT)
 #error "Debug access controlled by NRF_APPROTECT and NRF_SECURE_APPROTECT."
@@ -845,6 +845,15 @@ enum tfm_plat_err_t init_debug(void)
                                     UICR_SECUREAPPROTECT_PALL_Protected)) {
         nrfx_nvmc_word_write((uint32_t)&NRF_UICR_S->SECUREAPPROTECT,
             UICR_SECUREAPPROTECT_PALL_Protected);
+    } else {
+        return TFM_PLAT_ERR_SYSTEM_ERR;
+    }
+#endif
+#if defined(NRF_ERASEPROTECT) && !defined(NRF54L_SERIES)
+    if (nrfx_nvmc_word_writable_check((uint32_t)&NRF_UICR_S->ERASEPROTECT,
+                                    UICR_ERASEPROTECT_PALL_Protected)) {
+        nrfx_nvmc_word_write((uint32_t)&NRF_UICR_S->ERASEPROTECT,
+            UICR_ERASEPROTECT_PALL_Protected);
     } else {
         return TFM_PLAT_ERR_SYSTEM_ERR;
     }
