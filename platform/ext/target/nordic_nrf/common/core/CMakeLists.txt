@@ -234,6 +234,13 @@ if(NRF_SECURE_APPROTECT)
     )
 endif()
 
+if(NRF_ERASEPROTECT)
+    target_compile_definitions(tfm_spm
+    PRIVATE
+        NRF_ERASEPROTECT
+    )
+endif()
+
 #========================= Files for building NS side platform ================#
 
 configure_file(config_nordic_nrf_spe.cmake.in
