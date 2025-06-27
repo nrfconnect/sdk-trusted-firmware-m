@@ -128,3 +128,20 @@ void MPC00_IRQHandler(void)
     MPC_Handler();
 }
 #endif
+
+#ifdef NRF_TAMPC
+__attribute__((naked)) void TAMPC_IRQHandler(void)
+{
+    EXCEPTION_INFO();
+
+#ifdef TFM_EXCEPTION_INFO_DUMP
+    nrf_exception_info_store_context();
+#endif
+
+    tfm_core_panic();
+
+    __ASM volatile(
+        "B         .                       \n"
+    );
+}
+#endif

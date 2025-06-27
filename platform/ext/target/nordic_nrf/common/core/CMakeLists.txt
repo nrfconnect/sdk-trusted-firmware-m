@@ -102,6 +102,7 @@ target_sources(platform_s
         nrfx_glue.c
         native_drivers/mpu_armv8m_drv.c
         native_drivers/spu.c
+        $<$<BOOL:${NRF_TAMPC_ENABLE}>:${CMAKE_CURRENT_SOURCE_DIR}/native_drivers/tampc.c>
         $<$<BOOL:${TFM_EXCEPTION_INFO_DUMP}>:${CMAKE_CURRENT_SOURCE_DIR}/nrf_exception_info.c>
         $<$<OR:$<BOOL:${TFM_S_REG_TEST}>,$<BOOL:${TFM_NS_REG_TEST}>>:${CMAKE_CURRENT_SOURCE_DIR}/plat_test.c>
         $<$<BOOL:${TEST_PSA_API}>:${CMAKE_CURRENT_SOURCE_DIR}/pal_plat_test.c>
@@ -234,6 +235,13 @@ if(NRF_SECURE_APPROTECT)
     target_compile_definitions(tfm_spm
     PRIVATE
         NRF_SECURE_APPROTECT
+    )
+endif()
+
+if(NRF_TAMPC_ENABLE)
+    target_compile_definitions(tfm_spm
+    PRIVATE
+        NRF_TAMPC_ENABLE
     )
 endif()
 

@@ -30,6 +30,7 @@
 
 #include <spu.h>
 #include <nrfx.h>
+#include <tampc.h>
 
 #include <hal/nrf_gpio.h>
 #include <hal/nrf_spu.h>
@@ -456,6 +457,10 @@ enum tfm_plat_err_t spu_periph_init_cfg(void)
 	gpiote_channel_configuration();
 	gpio_configuration();
 
+#if defined(NRF_TAMPC_ENABLE)
+	tampc_configuration();
+#endif
+
 	nrf_cache_enable(NRF_ICACHE);
 
 	nrfx_err_t nrfx_err = rramc_configuration();
@@ -488,6 +493,7 @@ enum tfm_plat_err_t nvic_interrupt_target_state_cfg(void)
 
 	NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_CRACEN));
 	NVIC_ClearTargetState(MPC00_IRQn);
+	NVIC_ClearTargetState(NRFX_IRQ_NUMBER_GET(NRF_TAMPC));
 
 #ifdef SECURE_UART1
 	/* IRQ for the selected secure UART has to target S state */
@@ -519,6 +525,12 @@ enum tfm_plat_err_t nvic_interrupt_enable(void)
 	/* The CRACEN driver configures the NVIC for CRACEN and is
 	 * therefore omitted here.
 	 */
+
+#if defined(NRF_TAMPC_ENABLE)
+	tampc_enable_interrupts();
+	NVIC_ClearPendingIRQ(NRFX_IRQ_NUMBER_GET(NRF_TAMPC));
+	NVIC_EnableIRQ(NRFX_IRQ_NUMBER_GET(NRF_TAMPC));
+#endif
 
 	return TFM_PLAT_ERR_SUCCESS;
 }

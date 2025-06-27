@@ -44,6 +44,7 @@ void SPU30_IRQHandler(void);
 void MPC00_IRQHandler(void);
 
 void CRACEN_IRQHandler(void);
+void TAMPC_IRQHandler(void);
 
 /*
  * The default irq handler is used as a backup in case of
