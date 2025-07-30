@@ -38,6 +38,7 @@ set(BL2                                 ON         CACHE BOOL      "Whether to b
 set(NRF_NS_SECONDARY                    ${BL2}     CACHE BOOL      "Enable non-secure secondary partition")
 set(NRF_APPROTECT                       OFF        CACHE BOOL      "Enable approtect")
 set(NRF_SECURE_APPROTECT                OFF        CACHE BOOL      "Enable secure approtect")
+set(NRF_TAMPC_ENABLE                    ON         CACHE BOOL      "Enable the tamper controller (TAMPC)")
 
 # Platform-specific configurations
 set(CONFIG_TFM_USE_TRUSTZONE            ON)
