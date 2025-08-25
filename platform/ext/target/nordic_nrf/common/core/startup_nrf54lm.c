@@ -34,84 +34,18 @@
 #include "startup.h"
 #include "exception_info.h"
 
-__NO_RETURN __attribute__((naked)) void default_tfm_IRQHandler(void) {
-	EXCEPTION_INFO();
+/* Declarations for common nRF54L interrupt handlers (built separately) */
+#include "startup_nrf54l_common.h"
 
-	__ASM volatile(
-        "BL        default_irq_handler     \n"
-        "B         .                       \n"
-    );
-}
-
-DEFAULT_IRQ_HANDLER(NMI_Handler)
-DEFAULT_IRQ_HANDLER(HardFault_Handler)
-DEFAULT_IRQ_HANDLER(MemManage_Handler)
-DEFAULT_IRQ_HANDLER(BusFault_Handler)
-DEFAULT_IRQ_HANDLER(UsageFault_Handler)
-DEFAULT_IRQ_HANDLER(SecureFault_Handler)
-DEFAULT_IRQ_HANDLER(SVC_Handler)
-DEFAULT_IRQ_HANDLER(DebugMon_Handler)
-DEFAULT_IRQ_HANDLER(PendSV_Handler)
-DEFAULT_IRQ_HANDLER(SysTick_Handler)
-
-DEFAULT_IRQ_HANDLER(SWI00_IRQHandler)
-DEFAULT_IRQ_HANDLER(SWI01_IRQHandler)
-DEFAULT_IRQ_HANDLER(SWI02_IRQHandler)
-DEFAULT_IRQ_HANDLER(SWI03_IRQHandler)
-DEFAULT_IRQ_HANDLER(AAR00_CCM00_IRQHandler)
-DEFAULT_IRQ_HANDLER(ECB00_IRQHandler)
-DEFAULT_IRQ_HANDLER(SERIAL00_IRQHandler)
-DEFAULT_IRQ_HANDLER(RRAMC_IRQHandler)
-DEFAULT_IRQ_HANDLER(VPR00_IRQHandler)
-DEFAULT_IRQ_HANDLER(CTRLAP_IRQHandler)
-DEFAULT_IRQ_HANDLER(CM33SS_IRQHandler)
-DEFAULT_IRQ_HANDLER(TIMER00_IRQHandler)
-DEFAULT_IRQ_HANDLER(TIMER10_IRQHandler)
-DEFAULT_IRQ_HANDLER(RTC10_IRQHandler)
-DEFAULT_IRQ_HANDLER(EGU10_IRQHandler)
-DEFAULT_IRQ_HANDLER(AAR10_CCM10_IRQHandler)
-DEFAULT_IRQ_HANDLER(ECB10_IRQHandler)
-DEFAULT_IRQ_HANDLER(RADIO_0_IRQHandler)
-DEFAULT_IRQ_HANDLER(RADIO_1_IRQHandler)
-DEFAULT_IRQ_HANDLER(SERIAL20_IRQHandler)
-DEFAULT_IRQ_HANDLER(SERIAL21_IRQHandler)
-DEFAULT_IRQ_HANDLER(SERIAL22_IRQHandler)
-DEFAULT_IRQ_HANDLER(EGU20_IRQHandler)
-DEFAULT_IRQ_HANDLER(TIMER20_IRQHandler)
-DEFAULT_IRQ_HANDLER(TIMER21_IRQHandler)
-DEFAULT_IRQ_HANDLER(TIMER22_IRQHandler)
-DEFAULT_IRQ_HANDLER(TIMER23_IRQHandler)
-DEFAULT_IRQ_HANDLER(TIMER24_IRQHandler)
-DEFAULT_IRQ_HANDLER(PWM20_IRQHandler)
-DEFAULT_IRQ_HANDLER(PWM21_IRQHandler)
-DEFAULT_IRQ_HANDLER(PWM22_IRQHandler)
-DEFAULT_IRQ_HANDLER(SAADC_IRQHandler)
-DEFAULT_IRQ_HANDLER(NFCT_IRQHandler)
-DEFAULT_IRQ_HANDLER(TEMP_IRQHandler)
-DEFAULT_IRQ_HANDLER(GPIOTE20_1_IRQHandler)
-DEFAULT_IRQ_HANDLER(TAMPC_IRQHandler)
-DEFAULT_IRQ_HANDLER(I2S20_IRQHandler)
-DEFAULT_IRQ_HANDLER(QDEC20_IRQHandler)
-DEFAULT_IRQ_HANDLER(QDEC21_IRQHandler)
-DEFAULT_IRQ_HANDLER(GRTC_0_IRQHandler)
-DEFAULT_IRQ_HANDLER(GRTC_1_IRQHandler)
-DEFAULT_IRQ_HANDLER(GRTC_2_IRQHandler)
-DEFAULT_IRQ_HANDLER(GRTC_3_IRQHandler)
-DEFAULT_IRQ_HANDLER(SERIAL30_IRQHandler)
-DEFAULT_IRQ_HANDLER(CLOCK_POWER_IRQHandler)
-DEFAULT_IRQ_HANDLER(COMP_LPCOMP_IRQHandler)
-DEFAULT_IRQ_HANDLER(WDT30_IRQHandler)
-DEFAULT_IRQ_HANDLER(WDT31_IRQHandler)
-DEFAULT_IRQ_HANDLER(GPIOTE30_1_IRQHandler)
-
-#if defined(DOMAIN_NS) || defined(BL2)
-DEFAULT_IRQ_HANDLER(MPC00_IRQHandler)
-DEFAULT_IRQ_HANDLER(SPU00_IRQHandler)
-DEFAULT_IRQ_HANDLER(SPU10_IRQHandler)
-DEFAULT_IRQ_HANDLER(SPU20_IRQHandler)
-DEFAULT_IRQ_HANDLER(SPU30_IRQHandler)
-DEFAULT_IRQ_HANDLER(CRACEN_IRQHandler)
-#endif
+/* NRF54LM20A-specific interrupt handlers */
+DEFAULT_IRQ_HANDLER(EGU00_IRQHandler)
+DEFAULT_IRQ_HANDLER(USBHS_IRQHandler)
+DEFAULT_IRQ_HANDLER(PDM20_IRQHandler)
+DEFAULT_IRQ_HANDLER(PDM21_IRQHandler)
+DEFAULT_IRQ_HANDLER(TDM_IRQHandler)
+DEFAULT_IRQ_HANDLER(SERIAL23_IRQHandler)
+DEFAULT_IRQ_HANDLER(SERIAL24_IRQHandler)
+DEFAULT_IRQ_HANDLER(VREGUSB_IRQHandler)
 
 #if defined ( __GNUC__ )
 #pragma GCC diagnostic push
@@ -119,16 +53,16 @@ DEFAULT_IRQ_HANDLER(CRACEN_IRQHandler)
 #endif
 
 const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
-  (VECTOR_TABLE_Type)(&__INITIAL_SP),     /*      Initial Stack Pointer */
-/* Exceptions */
+    (VECTOR_TABLE_Type)(&__INITIAL_SP), /*      Initial Stack Pointer */
+                                        /* Exceptions */
     Reset_Handler,
     NMI_Handler,
     HardFault_Handler,
-    MemManage_Handler,           /* MPU Fault Handler */
+    MemManage_Handler, /* MPU Fault Handler */
     BusFault_Handler,
     UsageFault_Handler,
     SecureFault_Handler,
-    default_tfm_IRQHandler,
+    default_tfm_IRQHandler, /* SecureFault_IRQn */
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     SVC_Handler,
@@ -136,7 +70,7 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     PendSV_Handler,
     SysTick_Handler,
-/* Device specific interrupt handlers */
+    /* Device specific interrupt handlers */
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
@@ -207,26 +141,26 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
     AAR00_CCM00_IRQHandler,
     ECB00_IRQHandler,
-    CRACEN_IRQHandler,
-    default_tfm_IRQHandler,
-    SERIAL00_IRQHandler,
-    RRAMC_IRQHandler,
     VPR00_IRQHandler,
     default_tfm_IRQHandler,
-    default_tfm_IRQHandler,
+    RRAMC_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     CTRLAP_IRQHandler,
-    CM33SS_IRQHandler,
     default_tfm_IRQHandler,
+    CM33SS_IRQHandler,
     TIMER00_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
-    default_tfm_IRQHandler,
+    CRACEN_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
@@ -271,10 +205,10 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     TIMER10_IRQHandler,
-    RTC10_IRQHandler,
     EGU10_IRQHandler,
-    AAR10_CCM10_IRQHandler,
-    ECB10_IRQHandler,
+    EGU10_IRQHandler,
+    EGU10_IRQHandler,
+    default_tfm_IRQHandler,
     RADIO_0_IRQHandler,
     RADIO_1_IRQHandler,
     default_tfm_IRQHandler,
@@ -337,7 +271,7 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     SERIAL20_IRQHandler,
     SERIAL21_IRQHandler,
-    SERIAL22_IRQHandler,
+    default_tfm_IRQHandler,
     EGU20_IRQHandler,
     TIMER20_IRQHandler,
     TIMER21_IRQHandler,
@@ -347,18 +281,18 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
-    PWM20_IRQHandler,
-    PWM21_IRQHandler,
-    PWM22_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
     SAADC_IRQHandler,
-    NFCT_IRQHandler,
+    default_tfm_IRQHandler,
     TEMP_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
     GPIOTE20_1_IRQHandler,
-    TAMPC_IRQHandler,
-    I2S20_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     QDEC20_IRQHandler,
@@ -369,14 +303,14 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     GRTC_3_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
+    TDM_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
-    default_tfm_IRQHandler,
-    default_tfm_IRQHandler,
-    default_tfm_IRQHandler,
-    default_tfm_IRQHandler,
+    SERIAL23_IRQHandler,
+    SERIAL24_IRQHandler,
+    TAMPC_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
@@ -398,7 +332,7 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     SERIAL30_IRQHandler,
-    CLOCK_POWER_IRQHandler,
+    default_tfm_IRQHandler,
     COMP_LPCOMP_IRQHandler,
     default_tfm_IRQHandler,
     WDT30_IRQHandler,
@@ -407,6 +341,26 @@ const VECTOR_TABLE_Type __VECTOR_TABLE[] __VECTOR_TABLE_ATTRIBUTE = {
     default_tfm_IRQHandler,
     default_tfm_IRQHandler,
     GPIOTE30_1_IRQHandler,
+    CLOCK_POWER_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    default_tfm_IRQHandler,
+    VREGUSB_IRQHandler,
 };
 
 #if defined ( __GNUC__ )
