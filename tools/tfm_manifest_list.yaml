@@ -81,7 +81,8 @@
            "*mbedcrypto.*",
            "*mbedtls*acceleration.*",
          ]
-      }
+      },
+      "non_ffm_attributes": ['weak_dependencies']
     },
     {
       "description": "TFM Platform Partition",
