@@ -25,7 +25,4 @@
       "mm_iovec": "enable"
     },
   ],
-  "dependencies": [
-    "TFM_INTERNAL_TRUSTED_STORAGE_SERVICE"
-  ]
 }
