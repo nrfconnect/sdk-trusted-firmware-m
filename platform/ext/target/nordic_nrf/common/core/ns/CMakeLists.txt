@@ -16,12 +16,37 @@ target_compile_definitions(platform_region_defs
         $<$<BOOL:${NRF_NS_SECONDARY}>:NRF_NS_SECONDARY>
 )
 
+# Determine the startup file based on SOC variant
+if((NRF_SOC_VARIANT MATCHES "^nrf54l1[05]$") OR
+   (TFM_PLATFORM MATCHES "nordic_nrf/nrf54l15dk_nrf54l1[05]_cpuapp"))
+    # nrf54l10 and nrf54l15 share the same startup file
+    set(startup_file "startup_nrf54lx.c")
+elseif((NRF_SOC_VARIANT MATCHES "^nrf54lm20a?$") OR
+       (TFM_PLATFORM MATCHES "nordic_nrf/nrf54lm20dk_nrf54lm20a?_cpuapp"))
+    # nrf54lm20 has its own startup file
+    set(startup_file "startup_nrf54lm.c")
+elseif((NRF_SOC_VARIANT MATCHES "^nrf54lv10a?$") OR
+       (TFM_PLATFORM MATCHES "nordic_nrf/nrf54lv10dk_nrf54lv10a?_cpuapp"))
+    # nrf54lv10 has its own startup file
+    set(startup_file "startup_nrf54lv.c")
+else()
+    # Default to the original startup file for other targets
+    set(startup_file "startup_${target}.c")
+endif()
+
 # Startup sources should be put in the executable
 target_sources(${NS_TARGET_NAME}
     PRIVATE
         startup.c
-        $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/startup_${target}.c>
+        $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/${startup_file}>
 )
+
+if(HAS_RRAMC)
+    target_sources(${NS_TARGET_NAME}
+        PRIVATE
+        $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/startup_nrf54l_common.c>
+    )
+endif()
 
 # Additional NS API sources
 target_sources(tfm_api_ns
