@@ -161,6 +161,18 @@ if(TFM_SPM_LOG_RAW_ENABLED OR SECURE_UART1)
     )
 endif()
 
+if(TFM_NRF_SYSTEM_OFF_SERVICE)
+    target_sources(platform_s
+        PRIVATE
+            ${HAL_NORDIC_PATH}/nrfx/helpers/nrfx_ram_ctrl.c
+    )
+
+    target_compile_definitions(platform_s
+        PUBLIC
+            TFM_NRF_SYSTEM_OFF_SERVICE
+    )
+endif()
+
 target_compile_options(platform_s
     PUBLIC
         ${COMPILER_CMSE_FLAG}
