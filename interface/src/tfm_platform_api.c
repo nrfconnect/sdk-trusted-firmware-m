@@ -26,6 +26,21 @@ enum tfm_platform_err_t tfm_platform_system_reset(void)
 
 }
 
+enum tfm_platform_err_t tfm_platform_system_off(void)
+{
+    psa_status_t status = PSA_ERROR_CONNECTION_REFUSED;
+
+    status = psa_call(TFM_PLATFORM_SERVICE_HANDLE,
+                      TFM_PLATFORM_API_ID_SYSTEM_OFF,
+                      NULL, 0, NULL, 0);
+
+    if (status < PSA_SUCCESS) {
+        return TFM_PLATFORM_ERR_SYSTEM_ERROR;
+    } else {
+        return (enum tfm_platform_err_t)status;
+    }
+}
+
 enum tfm_platform_err_t
 tfm_platform_ioctl(tfm_platform_ioctl_req_t request,
                    psa_invec *input, psa_outvec *output)
