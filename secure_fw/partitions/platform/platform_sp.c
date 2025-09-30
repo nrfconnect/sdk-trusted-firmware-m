@@ -39,6 +39,24 @@ enum tfm_platform_err_t platform_sp_system_reset(void)
     return TFM_PLATFORM_ERR_SUCCESS;
 }
 
+#if TFM_NRF_SYSTEM_OFF_SERVICE
+enum tfm_platform_err_t platform_sp_system_off(void)
+{
+    /* FIXME: The system off functionality is only supported in isolation
+     *        level 1.
+     */
+
+    return tfm_platform_hal_system_off();
+}
+
+static psa_status_t platform_sp_system_off_psa_api(const psa_msg_t *msg)
+{
+    (void)msg; /* unused parameter */
+
+    return platform_sp_system_off();
+}
+#endif /* TFM_NRF_SYSTEM_OFF_SERVICE */
+
 static psa_status_t platform_sp_system_reset_psa_api(const psa_msg_t *msg)
 {
     (void)msg; /* unused parameter */
@@ -225,6 +243,10 @@ psa_status_t tfm_platform_service_sfn(const psa_msg_t *msg)
 #endif /* PLATFORM_NV_COUNTER_MODULE_DISABLED */
     case TFM_PLATFORM_API_ID_SYSTEM_RESET:
         return platform_sp_system_reset_psa_api(msg);
+#if TFM_NRF_SYSTEM_OFF_SERVICE
+    case TFM_PLATFORM_API_ID_SYSTEM_OFF:
+        return platform_sp_system_off_psa_api(msg);
+#endif /* TFM_NRF_SYSTEM_OFF_SERVICE */
     case TFM_PLATFORM_API_ID_IOCTL:
         return platform_sp_ioctl_psa_api(msg);
     default:
