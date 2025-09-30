@@ -28,6 +28,14 @@ extern "C" {
 TFM_LINK_SET_RO_IN_PARTITION_SECTION("TFM_SP_PLATFORM", "PSA-ROT")
 void tfm_platform_hal_system_reset(void);
 
+/**
+ * \brief Set system power state to off.
+ *
+ * \details Requests the system to enter a low-power state.
+ */
+TFM_LINK_SET_RO_IN_PARTITION_SECTION("TFM_SP_PLATFORM", "PSA-ROT")
+enum tfm_platform_err_t tfm_platform_hal_system_off(void);
+
 /*!
  * \brief Performs a platform-specific service
  *
