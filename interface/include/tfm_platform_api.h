@@ -27,6 +27,7 @@ extern "C" {
 #define TFM_PLATFORM_API_ID_NV_INCREMENT  (1011)
 #define TFM_PLATFORM_API_ID_SYSTEM_RESET  (1012)
 #define TFM_PLATFORM_API_ID_IOCTL         (1013)
+#define TFM_PLATFORM_API_ID_SYSTEM_OFF    (1014)
 
 /*!
  * \enum tfm_platform_err_t
@@ -52,6 +53,14 @@ typedef int32_t tfm_platform_ioctl_req_t;
  * \return Returns values as specified by the \ref tfm_platform_err_t
  */
 enum tfm_platform_err_t tfm_platform_system_reset(void);
+
+/*!
+ * \brief System off function to move the system to the lowest power state
+ *
+ * \return On success the processor will go to system off, in case of error it returns
+ *         values as specified by the \ref tfm_platform_err_t
+ */
+enum tfm_platform_err_t tfm_platform_system_off(void);
 
 /*!
  * \brief Performs a platform-specific service
