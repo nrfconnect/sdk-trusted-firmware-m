@@ -50,10 +50,10 @@ install(FILES       ../nrf54l/nrfx_config_nrf54l.h
                     ../nrf54l/config.cmake
                     ns/CMakeLists.txt
                     cpuarch.cmake
-        DESTINATION ${INSTALL_PLATFORM_NS_DIR}/common/nrf54lv10a
+        DESTINATION ${INSTALL_PLATFORM_NS_DIR}/common/nrf54lm20a
 )
 
 install(DIRECTORY    partition
                      tests
-        DESTINATION  ${INSTALL_PLATFORM_NS_DIR}/common/nrf54lv10a
+        DESTINATION  ${INSTALL_PLATFORM_NS_DIR}/common/nrf54lm20a
 )
