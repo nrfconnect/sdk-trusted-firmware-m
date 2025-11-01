@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <nrfx.h>
 #include <hal/nrf_oscillators.h>
+#include <hal/nrf_regulators.h>
 #include <nrf_erratas.h>
 
 #ifndef BIT_MASK
@@ -157,5 +158,6 @@ int  __attribute__((weak)) nordicsemi_nrf54l_init(void){
 	}
 
 
+	nrf_regulators_vreg_enable_set(NRF_REGULATORS, NRF_REGULATORS_VREG_MAIN, true);
         return 0;
 }
