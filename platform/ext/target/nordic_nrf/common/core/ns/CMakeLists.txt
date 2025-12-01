@@ -35,14 +35,14 @@ else()
 endif()
 
 # Startup sources should be put in the executable
-target_sources(${NS_TARGET_NAME}
+target_sources(platform_ns
     PRIVATE
         startup.c
         $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/${startup_file}>
 )
 
 if(HAS_RRAMC)
-    target_sources(${NS_TARGET_NAME}
+    target_sources(platform_ns
         PRIVATE
         $<$<C_COMPILER_ID:GNU>:${CMAKE_CURRENT_SOURCE_DIR}/startup_nrf54l_common.c>
     )
@@ -73,6 +73,15 @@ target_link_libraries(platform_ns
     PUBLIC
 	-Wl,--undefined=SystemInit
 )
+
+# The TF-M tests reference the __Vectors in their linker script and
+# we need to ensure that the symbol is not optimimized out.
+if(TEST_PSA_API OR TFM_S_REG_TEST OR TFM_NS_REG_TEST)
+target_link_libraries(platform_ns
+    PUBLIC
+	 -Wl,--undefined=__Vectors
+)
+endif()
 
 target_include_directories(platform_ns
     PUBLIC
