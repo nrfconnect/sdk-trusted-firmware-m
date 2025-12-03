@@ -142,7 +142,7 @@ attest_add_all_sw_components(struct attest_token_encode_ctx *token_ctx)
                                         (int64_t)NO_SW_COMPONENT_FIXED_VALUE);
 #else
         /* Mandatory to have SW components claim in the token */
-        LOG_ERRFMT("[ERR][Attest] Boot record is not available\r\n");
+        //LOG_ERRFMT("[ERR][Attest] Boot record is not available\r\n");
         return PSA_ATTEST_ERR_CLAIM_UNAVAILABLE;
 #endif
     }
@@ -267,14 +267,14 @@ attest_add_profile_definition(struct attest_token_encode_ctx *token_ctx)
 
     /* Check for mismatches between the value returned by HAL and Build options */
     if (size == 0) {
-        LOG_INFFMT("[Attest] The platform did not return a profile_definition\r\n");
+        //LOG_INFFMT("[Attest] The platform did not return a profile_definition\r\n");
         profile.ptr = profile_definition;
         profile.len = sizeof(profile_definition) - 1;
     } else if (size != (sizeof(profile_definition) - 1) || strncmp(profile_definition, (const char *)buf, size)) {
-        LOG_ERRFMT("[WRN][Attest] Using a mismatched profile_definition received from the HAL\r\n");
+        //LOG_ERRFMT("[WRN][Attest] Using a mismatched profile_definition received from the HAL\r\n");
     }
 
-    LOG_INFFMT("[Attest] Encoding profile_definition (size: %d): %s\r\n", profile.len, profile.ptr);
+    //LOG_INFFMT("[Attest] Encoding profile_definition (size: %d): %s\r\n", profile.len, profile.ptr);
     attest_token_encode_add_tstr(token_ctx,
                                  IAT_PROFILE_DEFINITION,
                                  &profile);
@@ -565,7 +565,7 @@ static enum psa_attest_err_t attest_get_t_cose_algorithm(
             return PSA_ATTEST_ERR_GENERAL;
         }
     } else {
-        LOG_DBGFMT("Attestation: Unexpected key_type for TFM_BUILTIN_KEY_ID_IAK. Key storage may be corrupted!\r\n");
+        //LOG_DBGFMT("Attestation: Unexpected key_type for TFM_BUILTIN_KEY_ID_IAK. Key storage may be corrupted!\r\n");
         return PSA_ATTEST_ERR_GENERAL;
     }
 
