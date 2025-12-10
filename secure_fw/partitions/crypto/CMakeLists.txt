@@ -22,7 +22,7 @@ target_include_directories(psa_crypto_config
 )
 
 if(PSA_CRYPTO_EXTERNAL_CORE)
-    include(${TARGET_PLATFORM_PATH}/../external_core.cmake)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
 else()
     target_compile_definitions(psa_crypto_config
     INTERFACE
@@ -34,7 +34,7 @@ endif()
 # This defines the configuration files for the users of the library directly
 add_library(psa_crypto_library_config INTERFACE)
 if(PSA_CRYPTO_EXTERNAL_CORE)
-    include(${TARGET_PLATFORM_PATH}/../external_core.cmake)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
 else()
     target_compile_definitions(psa_crypto_library_config
         INTERFACE
@@ -92,7 +92,7 @@ target_include_directories(tfm_psa_rot_partition_crypto
 )
 
 if(PSA_CRYPTO_EXTERNAL_CORE)
-    include(${TARGET_PLATFORM_PATH}/../external_core.cmake)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
 else()
     target_include_directories(tfm_psa_rot_partition_crypto
         PRIVATE
@@ -141,7 +141,7 @@ target_link_libraries(tfm_config
 ############################### MBEDCRYPTO #####################################
 add_library(crypto_service_mbedcrypto_config INTERFACE)
 if(PSA_CRYPTO_EXTERNAL_CORE)
-    include(${TARGET_PLATFORM_PATH}/../external_core.cmake)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
 else()
     target_compile_definitions(crypto_service_mbedcrypto_config
         INTERFACE
@@ -200,7 +200,7 @@ target_include_directories(psa_crypto_library_config
 )
 
 if(PSA_CRYPTO_EXTERNAL_CORE)
-    include(${TARGET_PLATFORM_PATH}/../external_core.cmake)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
 else()
     target_include_directories(${MBEDTLS_TARGET_PREFIX}mbedcrypto
         PUBLIC
