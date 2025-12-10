@@ -17,7 +17,7 @@ target_include_directories(tfm_sprt
 )
 
 if(PSA_CRYPTO_EXTERNAL_CORE)
-    include(${TARGET_PLATFORM_PATH}/../external_core.cmake)
+    include(${TFM_BOARDS_NRF_DIR}/external_core.cmake)
 endif()
 
 target_sources(tfm_sprt
