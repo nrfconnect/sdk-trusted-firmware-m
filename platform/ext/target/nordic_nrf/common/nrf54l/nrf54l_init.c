@@ -8,6 +8,7 @@
 #include <nrfx.h>
 #include <hal/nrf_oscillators.h>
 #include <hal/nrf_regulators.h>
+#include <nrf_erratas.h>
 
 #ifndef BIT_MASK
 /* Use Zephyr BIT_MASK for unasigned integers */
