@@ -18,7 +18,7 @@
 #ifndef __RTE_DEVICE_H
 #define __RTE_DEVICE_H
 
-#include <tfm-pinctrl.h>
+#include <nrf-pinctrl.h>
 
 #define RTE_USART0 1
 
