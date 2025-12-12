@@ -288,19 +288,16 @@ void peripheral_configuration(void)
 {
 #if SECURE_UART1
 	/* Configure TF-M's UART peripheral to be secure */
-	uint32_t uart_periph_start;
 #if NRF_SECURE_UART_INSTANCE == 00
-	uart_periph_start = tfm_peripheral_uarte00.periph_start;
+	uint32_t uart_periph_start = tfm_peripheral_uarte00.periph_start;
 #elif NRF_SECURE_UART_INSTANCE == 20
-	uart_periph_start = tfm_peripheral_uarte20.periph_start;
+	uint32_t uart_periph_start = tfm_peripheral_uarte20.periph_start;
 #elif NRF_SECURE_UART_INSTANCE == 21
-	uart_periph_start = tfm_peripheral_uarte21.periph_start;
+	uint32_t uart_periph_start = tfm_peripheral_uarte21.periph_start;
 #elif NRF_SECURE_UART_INSTANCE == 22
-	uart_periph_start = tfm_peripheral_uarte22.periph_start;
+	uint32_t uart_periph_start = tfm_peripheral_uarte22.periph_start;
 #elif NRF_SECURE_UART_INSTANCE == 30
-	uart_periph_start = tfm_peripheral_uarte30.periph_start;
-#else
-#error "Unsupported NRF_SECURE_UART_INSTANCE for nrf54l series. Supported instances: 00, 20, 21, 22, 30"
+	uint32_t uart_periph_start = tfm_peripheral_uarte30.periph_start;
 #endif
 	spu_peripheral_config_secure(uart_periph_start, SPU_LOCK_CONF_LOCKED);
 #endif /* SECURE_UART1 */
