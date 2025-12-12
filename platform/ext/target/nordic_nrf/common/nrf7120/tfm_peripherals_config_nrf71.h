@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2025 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
 
 #ifndef TFM_PERIPHERAL_TIMER00_SECURE
 #define TFM_PERIPHERAL_TIMER00_SECURE 0
