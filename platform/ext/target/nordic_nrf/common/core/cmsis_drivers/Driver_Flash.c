@@ -120,17 +120,17 @@ static int32_t ARM_Flash_Initialize(ARM_Flash_SignalEvent_t cb_event)
 	 */
 	nrfx_rramc_evt_handler_t handler = NULL;
 
-	int err = nrfx_rramc_init(&config, handler);
+	nrfx_err_t err = nrfx_rramc_init(&config, handler);
 
-	if(err != 0 && err != -EALREADY) {
+	if(err != NRFX_SUCCESS && err != NRFX_ERROR_ALREADY) {
 		return err;
 	}
 #elif defined(MRAMC_PRESENT)
 	nrfx_mramc_config_t config = NRFX_MRAMC_DEFAULT_CONFIG();
 
-	int err = nrfx_mramc_init(&config, NULL);
+	nrfx_err_t err = nrfx_mramc_init(&config, NULL);
 
-	if(err != 0 && err != -EALREADY) {
+	if(err != NRFX_SUCCESS && err != NRFX_ERROR_ALREADY) {
 		return err;
 	}
 #endif /* RRAMC_PRESENT or MRAMC_PRESENT*/
@@ -206,9 +206,9 @@ static int32_t ARM_Flash_ProgramData(uint32_t addr, const void *data,
 static int32_t ARM_Flash_EraseSector(uint32_t addr)
 {
 #ifdef NRF_NVMC_S
-    int err_code = nrfx_nvmc_page_erase(addr);
+    nrfx_err_t err_code = nrfx_nvmc_page_erase(addr);
 
-    if (err_code != 0) {
+    if (err_code != NRFX_SUCCESS) {
         return ARM_DRIVER_ERROR_PARAMETER;
     }
 #else
