@@ -84,7 +84,6 @@ static inline int32_t ARM_USARTx_PowerControl(UARTx_Resources *uart_dev,
      *           compiler to check that all the enumeration values are
      *           covered in the switch.*/
     }
-    return ARM_DRIVER_ERROR;
 }
 
 static inline int32_t ARM_USARTx_Send(UARTx_Resources *uart_dev,
