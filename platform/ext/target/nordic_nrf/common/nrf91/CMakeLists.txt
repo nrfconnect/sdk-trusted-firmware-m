@@ -64,7 +64,8 @@ target_sources(tfm_spm
 
 #========================= Files for building NS side platform ================#
 
-install(FILES       ns/CMakeLists.txt
+install(FILES       nrfx_config_nrf91.h
+                    ns/CMakeLists.txt
                     config.cmake
         DESTINATION ${INSTALL_PLATFORM_NS_DIR}/common/nrf91
 )
