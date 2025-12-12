@@ -1,9 +1,8 @@
-#-------------------------------------------------------------------------------
+#
 # Copyright (c) 2023, Nordic Semiconductor ASA.
 #
-# SPDX-License-Identifier: BSD-3-Clause
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
-#-------------------------------------------------------------------------------
 
 cmake_policy(SET CMP0076 NEW)
 set(CMAKE_CURRENT_SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR})

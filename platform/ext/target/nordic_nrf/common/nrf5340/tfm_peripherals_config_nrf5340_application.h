@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2021 Nordic Semiconductor ASA
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
 
 #ifndef TFM_PERIPHERAL_DCNF_SECURE
 #define TFM_PERIPHERAL_DCNF_SECURE 0
