@@ -8,4 +8,3 @@
 
 include(${PLATFORM_PATH}/common/nrf54l/config.cmake)
 
-set(NRF_SECURE_UART_INSTANCE            20         CACHE STRING    "The UART instance number to use for secure UART" FORCE)
