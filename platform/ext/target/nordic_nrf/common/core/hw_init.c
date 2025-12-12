@@ -6,6 +6,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <nrf.h>
 #include "array.h"
 
 #include <nrfx.h>
