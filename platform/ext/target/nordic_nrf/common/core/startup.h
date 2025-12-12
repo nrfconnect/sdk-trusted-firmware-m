@@ -13,9 +13,6 @@
 #ifndef __STARTUP_H__
 #define __STARTUP_H__
 
-#include <stdint.h>
-#include "cmsis.h"
-
 extern uint32_t __INITIAL_SP;
 extern uint32_t __STACK_LIMIT;
 
@@ -27,19 +24,8 @@ typedef void(*VECTOR_TABLE_Type)(void);
 
 __NO_RETURN void __PROGRAM_START(void);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-__NO_RETURN void default_tfm_IRQHandler(void);
-
-#ifdef __cplusplus
-}
-#endif
-
-#define DEFAULT_IRQ_HANDLER(handler_name) \
-void handler_name(void) __attribute__((weak)); \
-void handler_name(void) { default_tfm_IRQHandler(); }
+#define DEFAULT_IRQ_HANDLER(handler_name)  \
+__NO_RETURN void __attribute__((weak, alias("default_tfm_IRQHandler"))) handler_name(void);
 
 __NO_RETURN void Reset_Handler(void);
 __NO_RETURN void HardFault_Handler(void);
