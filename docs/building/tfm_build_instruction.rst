@@ -239,7 +239,7 @@ The following table lists the commonly used repos. For others, you can refer to 
 +----------------+---------------------+-----------------------------------------------------+
 | Dependency     | Cmake variable      | Git repo URL                                        |
 +================+=====================+=====================================================+
-| Mbed Crypto    | MBEDCRYPTO_PATH     | https://github.com/Mbed-TLS/mbedtls                 |
+| TF-PSA-Crypto  | TF_PSA_CRYPTO_PATH  | https://github.com/Mbed-TLS/TF-PSA-Crypto           |
 +----------------+---------------------+-----------------------------------------------------+
 | MCUboot        | MCUBOOT_PATH        | https://github.com/mcu-tools/mcuboot                |
 +----------------+---------------------+-----------------------------------------------------+
@@ -257,8 +257,8 @@ The recommended versions of the dependencies are listed in ``config/config_base.
    An alternative is to copy out the auto-downloaded repos under the ``<build_dir>/lib/ext``.
    They have been applied with patches and can be used directly.
 
-Example: building TF-M with local Mbed Crypto repo
---------------------------------------------------
+Example: building TF-M with local TF-PSA-Crypto repo
+----------------------------------------------------
 
 Preparing a local repository consists of 2 steps: cloning and patching.
 This is only required to be done once. For dependencies without ``.patch``
@@ -267,15 +267,15 @@ cloning the repo and checking out the correct branch.
 
 .. code-block:: bash
 
-    cd <Mbed Crypto base folder>
-    git clone https://github.com/ARMmbed/mbedtls
-    cd mbedtls
-    git checkout <MBEDCRYPTO_VERSION> from <TF-M source dir>/config/config_base.cmake>
-    git apply <TF-M source dir>/lib/ext/mbedcrypto/*.patch
+    cd <TF-PSA-Crypto base folder>
+    git clone https://github.com/Mbed-TLS/TF-PSA-Crypto
+    cd TF-PSA-Crypto
+    git checkout <TF_PSA_CRYPTO_VERSION> from <TF-M source dir>/config/config_base.cmake>
+    git apply <TF-M source dir>/lib/ext/tf-psa-crypto/*.patch
 
 .. Note::
 
-   ``<Mbed Crypto base folder>`` does not need to have any fixed position related
+   ``<TF-PSA-Crypto base folder>`` does not need to have any fixed position related
    to the TF-M repo so alternative method to get prepared dependency repos is to
    let TF-M download it once and then copy them out of the ``build/lib/ext`` folder.
 
@@ -284,7 +284,7 @@ Now build TF-M binaries
 .. code-block:: bash
 
     cd <TF-M source dir>
-    cmake -S . -B build -DTFM_PLATFORM=arm/mps2/an521 -DMBEDCRYPTO_PATH=<Mbed Crypto base folder>/mbedtls
+    cmake -S . -B build -DTFM_PLATFORM=arm/mps2/an521 -DTF_PSA_CRYPTO_PATH=<TF-PSA-Crypto base folder>
     cmake --build build -- install
 
 .. _Building NSPE:
@@ -352,5 +352,7 @@ of TF-M applications in **tf-m-extras** repository.
 
 --------------
 
-*Copyright (c) 2017-2024, Arm Limited. All rights reserved.*
 *Copyright (c) 2022, Cypress Semiconductor Corporation. All rights reserved.*
+*SPDX-FileCopyrightText: Copyright The TrustedFirmware-M Contributors*
+
+*SPDX-License-Identifier: BSD-3-Clause*
