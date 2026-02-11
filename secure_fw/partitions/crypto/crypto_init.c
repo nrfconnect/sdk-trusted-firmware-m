@@ -251,6 +251,8 @@ static psa_status_t tfm_crypto_api_dispatcher(psa_invec in_vec[],
         return tfm_crypto_random_interface(in_vec, out_vec);
     case TFM_CRYPTO_GROUP_ID_PAKE:
         return tfm_crypto_pake_interface(in_vec, out_vec, &encoded_key);
+    case TFM_CRYPTO_GROUP_ID_KEY_WRAPPING:
+        return tfm_crypto_key_wrapping_interface(in_vec, out_vec, &encoded_key);
     default:
         LOG_ERRFMT("[ERR][Crypto] Unsupported request!\r\n");
         return PSA_ERROR_NOT_SUPPORTED;

@@ -193,5 +193,9 @@
         PSA_FUNCTION_NAME(psa_key_derivation_verify_key)
 #define psa_key_derivation_verify_bytes \
         PSA_FUNCTION_NAME(psa_key_derivation_verify_bytes)
+#define psa_wrap_key \
+        PSA_FUNCTION_NAME(psa_wrap_key)
+#define psa_unwrap_key \
+        PSA_FUNCTION_NAME(psa_unwrap_key)
 
 #endif /* CRYPTO_SPE_H */

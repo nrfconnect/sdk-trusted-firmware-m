@@ -128,4 +128,10 @@
 #error "CRYPTO_PAKE_MODULE_ENABLED enabled, but not all prerequisites (missing PAKE algorithms)!"
 #endif
 
+#if CRYPTO_KEY_WRAPPING_MODULE_ENABLED && \
+    (!defined(PSA_WANT_ALG_AES_KW) && \
+     !defined(PSA_WANT_ALG_AES_KWP))
+#error "CRYPTO_KEY_WRAPPING_MODULE_ENABLED enabled, but not all prerequisites (missing key wrapping algorithms)!"
+#endif
+
 #endif /* __CRYPTO_CHECK_CONFIG_H__ */
