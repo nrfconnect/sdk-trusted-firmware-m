@@ -37,8 +37,6 @@
 #include <hal/nrf_mramc.h>
 #include <hal/nrf_mpc.h>
 #include <hal/nrf_cache.h>
-#include "tfm_spm_log.h"
-
 
 #if !defined(DAUTH_CHIP_DEFAULT)
 #error "Debug access on this platform can only be configured by programming the corresponding registers in UICR."
@@ -313,6 +311,8 @@ void peripheral_configuration(void)
 	uint32_t uart_periph_start = tfm_peripheral_uarte22.periph_start;
 #elif NRF_SECURE_UART_INSTANCE == 30
 	uint32_t uart_periph_start = tfm_peripheral_uarte30.periph_start;
+#else
+#error "Unsupported NRF_SECURE_UART_INSTANCE for nrf71 series. Supported instances: 00, 20, 21, 22, 30"
 #endif
 	spu_peripheral_config_secure(uart_periph_start, SPU_LOCK_CONF_LOCKED);
 #endif /* SECURE_UART1 */

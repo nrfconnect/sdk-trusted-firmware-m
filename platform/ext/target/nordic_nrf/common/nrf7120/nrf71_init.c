@@ -15,6 +15,7 @@
 #define FLASH_PAGE_ERASE_MAX_TIME_US 42000UL
 #define FLASH_PAGE_MAX_CNT           381UL
 
+#ifdef DT_HAS_COMPAT_STATUS_OKAY
 #if DT_HAS_COMPAT_STATUS_OKAY(nordic_nrf_pwr_antswc)
 
 #if !defined(CONFIG_TRUSTED_EXECUTION_NONSECURE) || defined(__NRF_TFM__)
@@ -25,6 +26,7 @@
 
 #define PWR_ANTSWC_ENABLE (0x3UL)
 #endif /* DT_HAS_COMPAT_STATUS_OKAY(nordic_nrf_pwr_antswc) */
+#endif /* DT_HAS_COMPAT_STATUS_OKAY */
 
 /* This handler needs to be ported to the upstream TF-M project when Cracen is supported there.
  * The implementation of this is currently in sdk-nrf. We define it to avoid warnings when we build
@@ -54,16 +56,20 @@ int  __attribute__((weak)) soc_early_init_hook(void){
 	wifi_setup();
 #endif
 
+#ifdef DT_HAS_COMPAT_STATUS_OKAY
 #if DT_HAS_COMPAT_STATUS_OKAY(nordic_nrf_pwr_antswc)
 	*(volatile uint32_t *)PWR_ANTSWC_REG |= PWR_ANTSWC_ENABLE;
-#endif
+#endif /* DT_HAS_COMPAT_STATUS_OKAY(nordic_nrf_pwr_antswc) */
+#endif /* DT_HAS_COMPAT_STATUS_OKAY */
 
 	/* Configure LFXO capacitive load if internal load capacitors are used */
+#ifdef DT_ENUM_HAS_VALUE
 #if DT_ENUM_HAS_VALUE(LFXO_NODE, load_capacitors, internal)
 	nrf_lfxo_cload_set(NRF_LFXO,
 			(uint8_t)(DT_PROP(LFXO_NODE, load_capacitance_femtofarad) / 1000));
-#endif
+#endif /* DT_ENUM_HAS_VALUE(LFXO_NODE, load_capacitors, internal) */
+#endif /* DT_ENUM_HAS_VALUE */
 
-#endif
+#endif /* CONFIG_TRUSTED_EXECUTION_NONSECURE && !__NRF_TFM__ */
 	return 0;
 }

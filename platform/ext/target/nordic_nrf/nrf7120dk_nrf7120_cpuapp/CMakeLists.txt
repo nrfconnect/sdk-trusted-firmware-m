@@ -34,7 +34,6 @@ if(BL2)
         PUBLIC
             partition
             ../common/nrf7120/partition
-        PRIVATE
             .
     )
 endif()
@@ -60,7 +59,7 @@ endif()
 
 install(FILES       RTE_Device.h
                     device_cfg.h
-                    ns/CMakeLists.txt
+                    ../common/nrf7120/ns/CMakeLists.txt
                     config.cmake
         DESTINATION ${INSTALL_PLATFORM_NS_DIR}
 )
