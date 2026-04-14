@@ -37,12 +37,15 @@ if((NRF_SOC_VARIANT MATCHES "^nrf54l1[05]$") OR
   # variables keep changing so we check both to be future proof
   set(HAS_RRAMC 1)
   set(HAS_CRACEN 1)
+  set(HAS_KMU 1)
 elseif((NRF_SOC_VARIANT MATCHES nrf7120) OR (TFM_PLATFORM MATCHES "nordic\_nrf\/nrf7120dk\_nrf7120\_cpuapp") OR (PSA_API_TEST_TARGET MATCHES "nrf7120"))
   set(HAS_MRAMC 1)
   set(HAS_CRACEN 1)
+  set(HAS_KMU 1)
 else()
   set(HAS_NVMC 1)
   set(HAS_CRACEN 0)
+  set(HAS_KMU 0)
 endif()
 
 #========================= Platform dependencies ===============================#
@@ -123,6 +126,7 @@ target_sources(platform_s
         $<$<BOOL:${TEST_PSA_API}>:${CMAKE_CURRENT_SOURCE_DIR}/pal_plat_test.c>
         $<$<AND:$<BOOL:${ITS_ENCRYPTION}>,$<NOT:${HAS_CRACEN}>>:${CMAKE_CURRENT_SOURCE_DIR}/tfm_hal_its_encryption.c>
         $<$<AND:$<BOOL:${ITS_ENCRYPTION}>,$<BOOL:${HAS_CRACEN}>>:${CMAKE_CURRENT_SOURCE_DIR}/tfm_hal_its_encryption_cracen.c>
+        $<$<BOOL:${HAS_KMU}>:${HAL_NORDIC_PATH}/nrfx/drivers/src/nrfx_kmu.c>
 )
 
 if (NRF_HW_INIT_RESET_ON_BOOT)
