@@ -187,6 +187,45 @@ int fputc(int ch, FILE *f)
     return ch;
 }
 
+#define DEFAULT_HANDLE 0x100
+
+FILEHANDLE _sys_open(const char *name, int openmode)
+{
+    (void)name;
+    (void)openmode;
+
+    return DEFAULT_HANDLE;
+}
+
+int _sys_close(FILEHANDLE fh)
+{
+    (void)fh;
+
+    return 0;
+}
+
+int _sys_write(FILEHANDLE fh, const unsigned char *buf,
+               unsigned len, int mode)
+{
+    (void)fh;
+    (void)buf;
+    (void)len;
+    (void)mode;
+
+    return 0;
+}
+
+int _sys_read(FILEHANDLE fh, unsigned char *buf,
+              unsigned len, int mode)
+{
+    (void)fh;
+    (void)buf;
+    (void)len;
+    (void)mode;
+
+    return 0;
+}
+
 void _ttywrch(int ch)
 {
     /* Arm C runtime may call this low-level debug character hook.
@@ -194,6 +233,35 @@ void _ttywrch(int ch)
      * dummy definition to satisfy the runtime without extra dependencies. */
     (void)ch;
  for (;;);
+}
+
+int _sys_istty(FILEHANDLE fh)
+{
+    (void)fh;
+
+    return 1;
+}
+
+int _sys_seek(FILEHANDLE fh, long pos)
+{
+    (void)fh;
+    (void)pos;
+
+    return -1;
+}
+
+int _sys_ensure(FILEHANDLE fh)
+{
+    (void)fh;
+
+    return 0;
+}
+
+long _sys_flen(FILEHANDLE fh)
+{
+    (void)fh;
+
+    return 0;
 }
 
 void _sys_exit(int returncode)
