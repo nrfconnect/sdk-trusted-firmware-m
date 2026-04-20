@@ -96,21 +96,25 @@ extern struct platform_data_t tfm_peripheral_uarte30;
 #define TFM_PERIPHERAL_UARTE22       (&tfm_peripheral_uarte22)
 #define TFM_PERIPHERAL_UARTE30       (&tfm_peripheral_uarte30)
 
+/*
+ * Map TFM_PERIPHERAL_STD_UART to the UART instance that is actually configured
+ * as the TF-M logging UART. The default UART differs between nRF54L variants
+ * (e.g. nRF54LV10A uses UART20, while nRF54L15 uses UART30). Each nRF54L
+ * variant's platform config.cmake (common/nrfXX/config.cmake) FORCE-sets
+ * NRF_SECURE_UART_INSTANCE, which is exported as a compile definition from
+ * common/core/CMakeLists.txt, so the value is always visible here.
+ */
+#if NRF_SECURE_UART_INSTANCE == 00
+#define TFM_PERIPHERAL_STD_UART     TFM_PERIPHERAL_UARTE00
+#elif NRF_SECURE_UART_INSTANCE == 20
+#define TFM_PERIPHERAL_STD_UART     TFM_PERIPHERAL_UARTE20
+#elif NRF_SECURE_UART_INSTANCE == 21
+#define TFM_PERIPHERAL_STD_UART     TFM_PERIPHERAL_UARTE21
+#elif NRF_SECURE_UART_INSTANCE == 22
+#define TFM_PERIPHERAL_STD_UART     TFM_PERIPHERAL_UARTE22
+#else
 #define TFM_PERIPHERAL_STD_UART     TFM_PERIPHERAL_UARTE30
-
-extern struct platform_data_t tfm_peripheral_uarte00;
-extern struct platform_data_t tfm_peripheral_uarte20;
-extern struct platform_data_t tfm_peripheral_uarte21;
-extern struct platform_data_t tfm_peripheral_uarte22;
-extern struct platform_data_t tfm_peripheral_uarte30;
-
-#define TFM_PERIPHERAL_UARTE00       (&tfm_peripheral_uarte00)
-#define TFM_PERIPHERAL_UARTE20       (&tfm_peripheral_uarte20)
-#define TFM_PERIPHERAL_UARTE21       (&tfm_peripheral_uarte21)
-#define TFM_PERIPHERAL_UARTE22       (&tfm_peripheral_uarte22)
-#define TFM_PERIPHERAL_UARTE30       (&tfm_peripheral_uarte30)
-
-#define TFM_PERIPHERAL_STD_UART     TFM_PERIPHERAL_UARTE30
+#endif
 
 #ifdef PSA_API_TEST_IPC
 /* see other platforms when supporting this */
