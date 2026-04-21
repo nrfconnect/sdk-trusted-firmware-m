@@ -1863,12 +1863,13 @@ out:
     return ret;
 }
 
-psa_status_t parse_fmp_header(psa_fwu_component_t component, const void *block, size_t size)
+psa_status_t parse_fmp_header(psa_fwu_component_t component, const void *block, size_t size, size_t *fmp_bytes)
 {
     /* Parse the incoming block to make sure complete FMP header is received */
     if (sizeof(fmp_header_image_info[component].fmp_hdr) >= (fmp_header_image_info[component].fmp_hdr_size_recvd + size)) {
         memcpy(&fmp_header_image_info[component].fmp_hdr, block, size);
         fmp_header_image_info[component].fmp_hdr_size_recvd += size;
+        *fmp_bytes = size;
         return PSA_ERROR_INSUFFICIENT_DATA;
     }
     if (fmp_header_image_info[component].fmp_hdr_size_recvd != sizeof(fmp_header_image_info[component].fmp_hdr)) {
@@ -1876,6 +1877,7 @@ psa_status_t parse_fmp_header(psa_fwu_component_t component, const void *block, 
                 block,
                 (sizeof(fmp_header_image_info[component].fmp_hdr) - fmp_header_image_info[component].fmp_hdr_size_recvd));
 
+        *fmp_bytes = sizeof(fmp_header_image_info[component].fmp_hdr) - fmp_header_image_info[component].fmp_hdr_size_recvd;
         fmp_header_image_info[component].fmp_hdr_size_recvd = sizeof(fmp_header_image_info[component].fmp_hdr);
         return PSA_SUCCESS;
     }
@@ -1915,16 +1917,17 @@ psa_status_t fwu_bootloader_load_image(psa_fwu_component_t component,
     uint32_t fw_version;
     uint8_t fwu_image_index = component - FWU_FAKE_IMAGES_INDEX_COUNT;
     struct fwu_private_metadata priv_metadata;
+    size_t fmp_bytes = 0;
 
     /* Parse the incoming block to make sure complete FMP header is received */
     if (fmp_header_image_info[fwu_image_index].fmp_hdr_size_recvd != sizeof(fmp_header_image_info[fwu_image_index].fmp_hdr)) {
-        ret = parse_fmp_header(fwu_image_index, block, block_size);
+        ret = parse_fmp_header(fwu_image_index, block, block_size, &fmp_bytes);
         if(ret == PSA_ERROR_INSUFFICIENT_DATA) {
             return PSA_SUCCESS;
         }
         if (ret == PSA_SUCCESS) {
-            block_size -= fmp_header_image_info[fwu_image_index].fmp_hdr_size_recvd;
-            block += fmp_header_image_info[fwu_image_index].fmp_hdr_size_recvd;
+            block_size -= fmp_bytes;
+            block += fmp_bytes;
         }
     }
 
