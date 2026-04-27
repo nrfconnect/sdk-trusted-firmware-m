@@ -173,6 +173,13 @@ if(TFM_NRF_SYSTEM_OFF_SERVICE)
     )
 endif()
 
+if(TFM_NRF_MRAMC_SERVICE)
+    target_compile_definitions(platform_s
+        PUBLIC
+            TFM_NRF_MRAMC_SERVICE
+    )
+endif()
+
 target_compile_options(platform_s
     PUBLIC
         ${COMPILER_CMSE_FLAG}

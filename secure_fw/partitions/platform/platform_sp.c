@@ -12,6 +12,8 @@
 #include "load/partition_defs.h"
 #include "psa_manifest/pid.h"
 
+#include "tfm_spm_log.h"
+
 #if !PLATFORM_NV_COUNTER_MODULE_DISABLED
 #include "tfm_plat_nv_counters.h"
 #endif /* !PLATFORM_NV_COUNTER_MODULE_DISABLED */
