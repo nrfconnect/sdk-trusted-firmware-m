@@ -8,6 +8,7 @@
 mainmenu "TF-M Configuration"
 
 # Load platform Kconfig file if exists
+# blah blah blah
 osource "$(PLATFORM_PATH)/Kconfig"
 osource "$(TFM_SOURCE_DIR)/config/build_type/Kconfig.$(CMAKE_BUILD_TYPE)"
 
