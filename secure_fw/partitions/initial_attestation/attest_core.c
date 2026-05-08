@@ -522,7 +522,7 @@ static enum psa_attest_err_t attest_get_t_cose_algorithm(
 {
     psa_status_t status;
     psa_key_attributes_t attr;
-    psa_key_handle_t handle = TFM_BUILTIN_KEY_ID_IAK;
+    psa_key_id_t handle = TFM_BUILTIN_KEY_ID_IAK;
     psa_key_type_t key_type;
 
     status = psa_get_key_attributes(handle, &attr);

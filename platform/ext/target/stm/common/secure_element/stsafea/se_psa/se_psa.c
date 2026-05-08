@@ -116,11 +116,11 @@ psa_status_t se_st_to_psa_error(int32_t  ret)
 static psa_status_t register_key_in_all_domain(mbedtls_svc_key_id_t key,
                                                psa_key_attributes_t *attr) {
   psa_status_t psa_status = PSA_ERROR_GENERIC_ERROR;
-  
-  
-  psa_key_handle_t key_handle;
-    
-    
+
+
+  psa_key_id_t key_handle;
+
+
  /* check if keys are present */
   SE_ST_PSA_PRINT("checking key existance %x\n", key.MBEDTLS_PRIVATE(key_id));
   psa_status = psa_open_key(key, &key_handle);
@@ -142,7 +142,7 @@ static psa_status_t register_key_in_all_domain(mbedtls_svc_key_id_t key,
   }
 
 exit:
-  
+
   return psa_status;
 }
 
@@ -204,7 +204,7 @@ static psa_status_t register_se_keys(void)
     /* check if keys are present */
 #ifdef TOP_CHECK_KEY
     mbedtls_svc_key_id_t key_id = {0,tfm_nspm_get_current_client_id()};
-    psa_key_handle_t key_handle;
+    psa_key_id_t key_handle;
 
     key_id.MBEDTLS_PRIVATE(key_id) = SE_ST_ID_TO_PSA_ID(SE_ST_SERIAL_NUMBER);
     psa_status = psa_open_key(key_id, &key_handle);
@@ -237,7 +237,7 @@ static psa_status_t psa_se_st_init(psa_drv_se_context_t *drv_context,
   /* Not used by SE_API */
   if (drv_context == NULL)
   {
-    
+
     return PSA_ERROR_INVALID_ARGUMENT;
   }
   memset(&se_st_t_ctx, 0, sizeof(se_st_t_ctx));
@@ -249,7 +249,7 @@ static psa_status_t psa_se_st_init(psa_drv_se_context_t *drv_context,
   if (location != PSA_SE_ST_LOCATION)
   {
     SE_ST_PSA_PRINT("Invalid driver\n");
-    
+
     return PSA_ERROR_GENERIC_ERROR;
   }
 
@@ -278,12 +278,12 @@ static psa_status_t psa_se_st_validate_slot_number_fct(
   psa_key_slot_number_t key_slot)
 {
   psa_key_type_t type = psa_get_key_type(attributes);
-  
+
   /* support registration and import only for memory region */
   if (method != PSA_KEY_CREATION_REGISTER)
   {
     SE_ST_PSA_PRINT("Key slot validation cannot operate with method : %x\n", method);
-    
+
     return PSA_ERROR_NOT_SUPPORTED;
   }
   /* if type = PSA_KEY_TYPE_RAW_DATA check if SE_ST_SERIAL_NUMBER */
@@ -300,16 +300,16 @@ static psa_status_t psa_se_st_validate_slot_number_fct(
   }
 
   /* if already exists do not return error */
-  
+
   return PSA_SUCCESS;
 }
 
 /**
   * @brief   psa_se_st_export_public_fct
-  *          
+  *
   * @note    Not implemented
   *
-  * @param   drv_context 
+  * @param   drv_context
   * @param   key
   * @param   p_data
   * @param   data_size
@@ -328,15 +328,15 @@ static psa_status_t psa_se_st_export_public_fct(psa_drv_se_context_t *drv_contex
 
 /**
   * @brief   psa_se_st_gen_key_fct
-  *          
+  *
   * @note    Not implemented
   *
-  * @param   drv_context 
-  * @param   key_slot 
-  * @param   attributes 
-  * @param   pubkey 
-  * @param   pubkey_size 
-  * @param   pubkey_length 
+  * @param   drv_context
+  * @param   key_slot
+  * @param   attributes
+  * @param   pubkey
+  * @param   pubkey_size
+  * @param   pubkey_length
   * @retval  PSA_ERROR_NOT_SUPPORTED
   */
 static psa_status_t psa_se_st_gen_key_fct(
@@ -350,7 +350,7 @@ static psa_status_t psa_se_st_gen_key_fct(
 
 /**
   * @brief   psa_se_st_import_fct
-  *         
+  *
   * @note    PSA_ERROR_NOT_SUPPORTED
   *
   * @param   drv_context
@@ -389,14 +389,14 @@ static void byte2char(uint8_t b, uint8_t *c)
 
 static psa_status_t psa_se_st_get_serial(uint8_t *data, size_t data_size, size_t *p_data_length)
 {
-  uint8_t sn_data[] = { 0x14, 0x11, 0xFC, 0xBE };  
+  uint8_t sn_data[] = { 0x14, 0x11, 0xFC, 0xBE };
   uint8_t r_data[100];
   uint8_t *sn = &r_data[10];
   int32_t ret = 0;
   if (data_size < 9)
   {
     SE_ST_PSA_PRINT("Serial Number cannot be set in a buffer of size : %d\n", data_size);
-    
+
     return PSA_ERROR_BUFFER_TOO_SMALL;
   }
 
@@ -410,7 +410,7 @@ static psa_status_t psa_se_st_get_serial(uint8_t *data, size_t data_size, size_t
   {
     return PSA_ERROR_HARDWARE_FAILURE;
   }
-  
+
   if (data_size >= 19)
   {
     for (int i = 0; i < 9; i++)
@@ -435,17 +435,17 @@ static psa_status_t psa_se_st_get_serial(uint8_t *data, size_t data_size, size_t
   if (ret != 0)
   {
     SE_ST_PSA_PRINT("Serial Number cannot be recovered\n");
-    
+
     return PSA_ERROR_HARDWARE_FAILURE;
   }
-  
+
   return PSA_SUCCESS;
 }
 
 /**
   * @brief   psa_se_st_export_fct
   *          export serial number from SE
-  * @note    
+  * @note
   *
   * @param   drv_context : psa_drv_se_context_t structure to keep persistent data and transient data
   * @param   key_slot : internal key index
@@ -462,12 +462,12 @@ static psa_status_t psa_se_st_export(psa_drv_se_context_t *drv_context,
                               size_t *p_data_length)
 {
   const uint16_t slot = key;
-  
+
   switch (slot)
   {
     case SE_ST_SERIAL_NUMBER :
     {
-      return psa_se_st_get_serial(data, data_size, p_data_length);      
+      return psa_se_st_get_serial(data, data_size, p_data_length);
     }
     default:
       return PSA_ERROR_NOT_SUPPORTED;
@@ -477,7 +477,7 @@ static psa_status_t psa_se_st_export(psa_drv_se_context_t *drv_context,
 
 /**
   * @brief   psa_se_st_allocate_key
-  *          
+  *
   *
   * @param   drv_context
   * @param   persistent_data
@@ -625,4 +625,3 @@ int se_st_engine_init(void)
     return 0;
 }
 #endif /* PSA_USE_SE_ST */
-
