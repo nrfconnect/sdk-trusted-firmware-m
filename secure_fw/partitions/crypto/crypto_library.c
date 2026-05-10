@@ -40,7 +40,7 @@
  * \brief This Mbed TLS include is needed to retrieve version information for
  *        display
  */
-#include "mbedtls/version.h"
+//#include "mbedtls/version.h"
 
 #ifndef MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER
 #error "MBEDTLS_PSA_CRYPTO_KEY_ID_ENCODES_OWNER must be selected in Mbed TLS config file"
@@ -82,7 +82,7 @@ tfm_crypto_library_key_id_t tfm_crypto_library_key_id_init(int32_t owner, psa_ke
 
 char *tfm_crypto_library_get_info(void)
 {
-    memcpy(mbedtls_version_full, MBEDTLS_VERSION_STRING_FULL, sizeof(MBEDTLS_VERSION_STRING_FULL));
+    //memcpy(mbedtls_version_full, MBEDTLS_VERSION_STRING_FULL, sizeof(MBEDTLS_VERSION_STRING_FULL));
     return mbedtls_version_full;
 }
 
