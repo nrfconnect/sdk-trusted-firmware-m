@@ -83,7 +83,6 @@ endif()
 
 if (TFM_PARTITION_CRYPTO)
         if(PSA_CRYPTO_EXTERNAL_CORE)
-                include(${TFM_BOARDS_NRF_DIR}/external_core_install.cmake)
                 install(FILES       ${INTERFACE_INC_DIR}/tfm_crypto_defs.h
                         DESTINATION ${INSTALL_INTERFACE_INC_DIR})
         else()
