@@ -105,9 +105,6 @@ if (TFM_PARTITION_CRYPTO)
                             ${INTERFACE_INC_DIR}/psa/crypto.h
                             ${INTERFACE_INC_DIR}/psa/crypto_compat.h
                             ${INTERFACE_INC_DIR}/psa/crypto_driver_common.h
-                            ${INTERFACE_INC_DIR}/psa/crypto_driver_contexts_composites.h
-                            ${INTERFACE_INC_DIR}/psa/crypto_driver_contexts_key_derivation.h
-                            ${INTERFACE_INC_DIR}/psa/crypto_driver_contexts_primitives.h
                             ${INTERFACE_INC_DIR}/psa/crypto_driver_random.h
                             ${INTERFACE_INC_DIR}/psa/crypto_extra.h
                             ${INTERFACE_INC_DIR}/psa/crypto_platform.h
