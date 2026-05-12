@@ -16,12 +16,18 @@ set(is_v8.xm    "$<OR:${is_v8.1m},${is_v8.0m}>")
 
 # Interface library target for client-only builds of PSA Crypto
 add_library(psa_crypto_config INTERFACE)
-target_compile_definitions(psa_crypto_config
-    INTERFACE
-        $<BUILD_INTERFACE:TFM_PSA_CRYPTO_CLIENT_ONLY>
-        $<BUILD_INTERFACE:TF_PSA_CRYPTO_CONFIG_FILE="${TFM_TF_PSA_CRYPTO_CONFIG_PATH}">
-        $<BUILD_INTERFACE:$<$<BOOL:${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}>:MBEDTLS_PSA_CRYPTO_PLATFORM_FILE="${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}">>
-)
+# [nrf noup] Skip the upstream TF_PSA_CRYPTO_CONFIG_FILE definitions when an
+# external PSA core (e.g. Oberon-PSA-Crypto via nRF Security) is configured.
+# external_core.cmake sets the equivalents for the external core, and having
+# both definitions on the command line causes a redefinition error.
+if(NOT PSA_CRYPTO_EXTERNAL_CORE)
+    target_compile_definitions(psa_crypto_config
+        INTERFACE
+            $<BUILD_INTERFACE:TFM_PSA_CRYPTO_CLIENT_ONLY>
+            $<BUILD_INTERFACE:TF_PSA_CRYPTO_CONFIG_FILE="${TFM_TF_PSA_CRYPTO_CONFIG_PATH}">
+            $<BUILD_INTERFACE:$<$<BOOL:${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}>:MBEDTLS_PSA_CRYPTO_PLATFORM_FILE="${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}">>
+    )
+endif()
 # The following is required for tfm_plat_crypto_nv_seed.h
 target_include_directories(psa_crypto_config
     INTERFACE
@@ -29,19 +35,24 @@ target_include_directories(psa_crypto_config
 )
 # This defines the configuration files for the users of the library directly
 add_library(psa_crypto_library_config INTERFACE)
-target_compile_definitions(psa_crypto_library_config
-    INTERFACE
-        TF_PSA_CRYPTO_CONFIG_FILE="${TFM_TF_PSA_CRYPTO_CONFIG_PATH}"
-)
+# [nrf noup] See comment above on psa_crypto_config. The external PSA core sets
+# TF_PSA_CRYPTO_CONFIG_FILE and the library include dirs itself via
+# external_core.cmake; skip the upstream wiring to avoid conflicts.
+if(NOT PSA_CRYPTO_EXTERNAL_CORE)
+    target_compile_definitions(psa_crypto_library_config
+        INTERFACE
+            TF_PSA_CRYPTO_CONFIG_FILE="${TFM_TF_PSA_CRYPTO_CONFIG_PATH}"
+    )
 
-target_include_directories(psa_crypto_library_config
-    INTERFACE
-        # The following is required for mbedtls_entropy_nv_seed_config.h
-        ${CMAKE_SOURCE_DIR}/platform/include
-        # Workaround: needed for private headers in drivers/builtin/include/mbedtls/private
-        # which are included by some of the TF-PSA-Crypto interface headers.
-        ${TF_PSA_CRYPTO_PATH}/drivers/builtin/include
-)
+    target_include_directories(psa_crypto_library_config
+        INTERFACE
+            # The following is required for mbedtls_entropy_nv_seed_config.h
+            ${CMAKE_SOURCE_DIR}/platform/include
+            # Workaround: needed for private headers in drivers/builtin/include/mbedtls/private
+            # which are included by some of the TF-PSA-Crypto interface headers.
+            ${TF_PSA_CRYPTO_PATH}/drivers/builtin/include
+    )
+endif()
 
 if (NOT TFM_PARTITION_CRYPTO)
     return()
