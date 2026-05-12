@@ -203,37 +203,3 @@ target_link_libraries(${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto
     INTERFACE
         platform_common_interface
     )
-
-############################### TF-PSA-Crypto internal targets #################
-
-target_compile_definitions(${TF_PSA_CRYPTO_TARGET_PREFIX}p256-m
-    PRIVATE
-        # Code is branchless but UMLAL might take a variable amount of cycles
-        # depedening on inputs if ${is_v8.1m} is false. We don't aim to protect
-        # against side channel so this is a acknowledged behaviour
-        MUL64_IS_CONSTANT_TIME
-        MULADD64_IGNORE_ASM
-)
-
-set(_tfpsa_internal_targets
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}p256-m
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}builtin
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}everest
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}platform
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}pqcp
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}utilities
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}extras
-)
-
-foreach(_tfpsa_target ${_tfpsa_internal_targets})
-    # Passing TF-PSA-Crypto configuration and required include paths to internal targets
-    target_link_libraries(${_tfpsa_target}
-        PRIVATE
-            crypto_service_tfpsacrypto_config
-    )
-    # Propagating FPU flags to internal targets
-    target_compile_options(${_tfpsa_target}
-        PRIVATE
-            ${COMPILER_CP_FLAG}
-    )
-endforeach()
