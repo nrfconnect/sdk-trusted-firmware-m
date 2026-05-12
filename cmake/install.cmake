@@ -332,9 +332,14 @@ install(FILES       ${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}
 
 target_compile_definitions(psa_crypto_config
         INTERFACE
-        $<INSTALL_INTERFACE:TFM_PSA_CRYPTO_CLIENT_ONLY>
-        $<INSTALL_INTERFACE:TF_PSA_CRYPTO_CONFIG_FILE="$<INSTALL_PREFIX>/${INSTALL_INTERFACE_INC_DIR}/mbedtls/tf_psa_crypto_config.h">
-        $<INSTALL_INTERFACE:$<$<BOOL:${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}>:MBEDTLS_PSA_CRYPTO_PLATFORM_FILE="$<INSTALL_PREFIX>/${INSTALL_INTERFACE_INC_DIR}/mbedtls/tfm_mbedtls_psa_crypto_platform.h">>)
+        $<INSTALL_INTERFACE:TFM_PSA_CRYPTO_CLIENT_ONLY>)
+
+if(NOT PSA_CRYPTO_EXTERNAL_CORE)
+    target_compile_definitions(psa_crypto_config
+            INTERFACE
+            $<INSTALL_INTERFACE:TF_PSA_CRYPTO_CONFIG_FILE="$<INSTALL_PREFIX>/${INSTALL_INTERFACE_INC_DIR}/mbedtls/tf_psa_crypto_config.h">
+            $<INSTALL_INTERFACE:$<$<BOOL:${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}>:MBEDTLS_PSA_CRYPTO_PLATFORM_FILE="$<INSTALL_PREFIX>/${INSTALL_INTERFACE_INC_DIR}/mbedtls/tfm_mbedtls_psa_crypto_platform.h">>)
+endif()
 
 # Install config files and remap tfm_config definitions to point to them
 if(PROJECT_CONFIG_HEADER_FILE)
