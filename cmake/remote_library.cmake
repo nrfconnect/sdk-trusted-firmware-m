@@ -134,6 +134,11 @@ function(fetch_remote_library)
     else()
         string(TOUPPER ${ARG_LIB_NAME} ARG_LIB_NAME_UPCASE)
         set(FETCHCONTENT_SOURCE_DIR_${ARG_LIB_NAME_UPCASE} ${${ARG_LIB_SOURCE_PATH_VAR}})
+
+        # User-supplied source path: do not let MakeAvailable add_subdirectory it,
+        # because it may rely on a parent project's CMake extensions (e.g. Zephyr's).
+        list(APPEND ARG_FETCH_CONTENT_ARGS
+         SOURCE_SUBDIR _fetch_remote_library_no_add_subdirectory)
     endif()
 
     # list all available patches in absolute names
