@@ -33,6 +33,8 @@ fetch_remote_library(
         GIT_PROGRESS        TRUE
 )
 
+add_subdirectory(${QCBOR_PATH} ${CMAKE_CURRENT_BINARY_DIR}/qcbor)
+
 set_target_properties(qcbor PROPERTIES EXCLUDE_FROM_ALL TRUE)
 
 target_compile_options(qcbor
