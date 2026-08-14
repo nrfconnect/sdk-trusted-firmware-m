@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------
 # Copyright (c) 2020-2022, Arm Limited. All rights reserved.
-# Copyright (c) 2025, Nordic Semiconductor ASA.
+# Copyright (c) 2026, Nordic Semiconductor ASA.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -49,10 +49,10 @@ target_sources(tfm_spm
 install(FILES       ../nrf71/config.cmake
                     ns/CMakeLists.txt
                     cpuarch.cmake
-        DESTINATION ${INSTALL_PLATFORM_NS_DIR}/common/nrf7120
+        DESTINATION ${INSTALL_PLATFORM_NS_DIR}/common/nrf7120e
 )
 
 install(DIRECTORY    partition
                      tests
-        DESTINATION  ${INSTALL_PLATFORM_NS_DIR}/common/nrf7120
+        DESTINATION  ${INSTALL_PLATFORM_NS_DIR}/common/nrf7120e
 )

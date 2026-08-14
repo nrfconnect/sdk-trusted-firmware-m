@@ -1,9 +1,11 @@
 #-------------------------------------------------------------------------------
 # Copyright (c) 2025, Nordic Semiconductor ASA.
-# Copyright (c) 2020-2023, Arm Limited. All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 #
 #-------------------------------------------------------------------------------
 
-include(${PLATFORM_PATH}/common/nrf71/config.cmake)
+set(PLATFORM_DIR  ${CMAKE_CURRENT_LIST_DIR})
+set(PLATFORM_PATH ${CMAKE_CURRENT_LIST_DIR})
+
+include(${CMAKE_CURRENT_LIST_DIR}/common/nrf7120e/cpuarch.cmake)
