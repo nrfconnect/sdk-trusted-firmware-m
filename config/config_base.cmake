@@ -118,6 +118,8 @@ set(CONFIG_TFM_STACK_WATERMARKS         OFF         CACHE BOOL      "Whether to 
 
 set(CONFIG_TFM_BRANCH_PROTECTION_FEAT   BRANCH_PROTECTION_DISABLED   CACHE STRING    "Set default branch protection usage to disabled")
 
+set(CONFIG_TFM_LOG_SHARE_UART           OFF         CACHE BOOL      "Allow TF-M and the non-secure application to share the UART instance. TF-M will use it while it is booting, after which the non-secure application will use it until an eventual fatal error is handled and logged by TF-M. Logging from TF-M will therefore otherwise be suppressed")
+
 ############################ Platform ##########################################
 
 set(NUM_MAILBOX_QUEUE_SLOT              1           CACHE BOOL      "Number of mailbox queue slots")
@@ -167,6 +169,7 @@ set(PS_ENCRYPTION                       ON          CACHE BOOL      "Enable encr
 set(PS_ROLLBACK_PROTECTION              ON          CACHE BOOL      "Enable rollback protection for Protected Storage partition")
 set(PS_SUPPORT_FORMAT_TRANSITION        OFF         CACHE BOOL      "Enable reading the older format of Protected Storage data")
 set(PS_CRYPTO_AEAD_ALG                  PSA_ALG_GCM CACHE STRING    "The AEAD algorithm to use for authenticated encryption in Protected Storage")
+set(PS_CRYPTO_KDF_ALG                   PSA_ALG_HKDF\(PSA_ALG_SHA_256\) CACHE STRING "KDF Algorithm to use for Protect Storage")
 set(PS_AES_KEY_USAGE_LIMIT              0           CACHE STRING    "Number of blocks to use a key for before changing it. 0 for no limit")
 
 set(TFM_PARTITION_INTERNAL_TRUSTED_STORAGE OFF      CACHE BOOL      "Enable Internal Trusted Storage partition")

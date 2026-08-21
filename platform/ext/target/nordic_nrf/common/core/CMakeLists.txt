@@ -167,6 +167,18 @@ if(TFM_SPM_LOG_RAW_ENABLED OR SECURE_UART1)
     )
 endif()
 
+if(TFM_NRF_SYSTEM_OFF_SERVICE)
+    target_sources(platform_s
+        PRIVATE
+            ${HAL_NORDIC_PATH}/nrfx/helpers/nrfx_ram_ctrl.c
+    )
+
+    target_compile_definitions(platform_s
+        PUBLIC
+            TFM_NRF_SYSTEM_OFF_SERVICE
+    )
+endif()
+
 if(SOC_NRF7120_TFM_MRAMC_SERVICE)
     target_compile_definitions(platform_s
         PUBLIC
@@ -188,6 +200,17 @@ if(NRF_RAM_CTRL_SERVICE)
     target_compile_definitions(platform_s
         PUBLIC
             TFM_NRF_RAM_CTRL_SERVICE
+    )
+endif()
+
+if(CONFIG_NRF_WIFI_KMU)
+    target_sources(platform_s
+        PRIVATE
+            ${ZEPHYR_NRF_MODULE_DIR}/lib/wifi_kmu/wifi_kmu.c
+    )
+    target_compile_definitions(platform_s
+        PUBLIC
+            CONFIG_NRF_WIFI_KMU=1
     )
 endif()
 

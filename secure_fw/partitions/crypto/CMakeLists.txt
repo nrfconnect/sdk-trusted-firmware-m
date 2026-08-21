@@ -16,12 +16,18 @@ set(is_v8.xm    "$<OR:${is_v8.1m},${is_v8.0m}>")
 
 # Interface library target for client-only builds of PSA Crypto
 add_library(psa_crypto_config INTERFACE)
-target_compile_definitions(psa_crypto_config
-    INTERFACE
-        $<BUILD_INTERFACE:TFM_PSA_CRYPTO_CLIENT_ONLY>
-        $<BUILD_INTERFACE:TF_PSA_CRYPTO_CONFIG_FILE="${TFM_TF_PSA_CRYPTO_CONFIG_PATH}">
-        $<BUILD_INTERFACE:$<$<BOOL:${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}>:MBEDTLS_PSA_CRYPTO_PLATFORM_FILE="${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}">>
-)
+# [nrf noup] Skip the upstream TF_PSA_CRYPTO_CONFIG_FILE definitions when an
+# external PSA core (e.g. Oberon-PSA-Crypto via nRF Security) is configured.
+# external_core.cmake sets the equivalents for the external core, and having
+# both definitions on the command line causes a redefinition error.
+if(NOT PSA_CRYPTO_EXTERNAL_CORE)
+    target_compile_definitions(psa_crypto_config
+        INTERFACE
+            $<BUILD_INTERFACE:TFM_PSA_CRYPTO_CLIENT_ONLY>
+            $<BUILD_INTERFACE:TF_PSA_CRYPTO_CONFIG_FILE="${TFM_TF_PSA_CRYPTO_CONFIG_PATH}">
+            $<BUILD_INTERFACE:$<$<BOOL:${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}>:MBEDTLS_PSA_CRYPTO_PLATFORM_FILE="${MBEDTLS_PSA_CRYPTO_PLATFORM_FILE}">>
+    )
+endif()
 # The following is required for tfm_plat_crypto_nv_seed.h
 target_include_directories(psa_crypto_config
     INTERFACE
@@ -29,19 +35,24 @@ target_include_directories(psa_crypto_config
 )
 # This defines the configuration files for the users of the library directly
 add_library(psa_crypto_library_config INTERFACE)
-target_compile_definitions(psa_crypto_library_config
-    INTERFACE
-        TF_PSA_CRYPTO_CONFIG_FILE="${TFM_TF_PSA_CRYPTO_CONFIG_PATH}"
-)
+# [nrf noup] See comment above on psa_crypto_config. The external PSA core sets
+# TF_PSA_CRYPTO_CONFIG_FILE and the library include dirs itself via
+# external_core.cmake; skip the upstream wiring to avoid conflicts.
+if(NOT PSA_CRYPTO_EXTERNAL_CORE)
+    target_compile_definitions(psa_crypto_library_config
+        INTERFACE
+            TF_PSA_CRYPTO_CONFIG_FILE="${TFM_TF_PSA_CRYPTO_CONFIG_PATH}"
+    )
 
-target_include_directories(psa_crypto_library_config
-    INTERFACE
-        # The following is required for mbedtls_entropy_nv_seed_config.h
-        ${CMAKE_SOURCE_DIR}/platform/include
-        # Workaround: needed for private headers in drivers/builtin/include/mbedtls/private
-        # which are included by some of the TF-PSA-Crypto interface headers.
-        ${TF_PSA_CRYPTO_PATH}/drivers/builtin/include
-)
+    target_include_directories(psa_crypto_library_config
+        INTERFACE
+            # The following is required for mbedtls_entropy_nv_seed_config.h
+            ${CMAKE_SOURCE_DIR}/platform/include
+            # Workaround: needed for private headers in drivers/builtin/include/mbedtls/private
+            # which are included by some of the TF-PSA-Crypto interface headers.
+            ${TF_PSA_CRYPTO_PATH}/drivers/builtin/include
+    )
+endif()
 
 if (NOT TFM_PARTITION_CRYPTO)
     return()
@@ -68,6 +79,8 @@ target_sources(tfm_psa_rot_partition_crypto
         crypto_key_management.c
         crypto_rng.c
         crypto_library.c
+        crypto_pake.c
+        crypto_key_wrapping.c
         $<$<BOOL:${CRYPTO_TFM_BUILTIN_KEYS_DRIVER}>:psa_driver_api/tfm_builtin_key_loader.c>
 )
 
@@ -105,6 +118,9 @@ target_link_libraries(tfm_psa_rot_partition_crypto
 )
 
 target_compile_definitions(tfm_psa_rot_partition_crypto
+    PUBLIC
+        MBEDTLS_PSA_CRYPTO_DRIVERS
+        $<$<BOOL:${CRYPTO_TFM_BUILTIN_KEYS_DRIVER}>:MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS PSA_CRYPTO_DRIVER_TFM_BUILTIN_KEY>
     PRIVATE
         $<$<STREQUAL:${CRYPTO_HW_ACCELERATOR_TYPE},cc312>:CRYPTO_HW_ACCELERATOR_CC312>
 )
@@ -163,7 +179,7 @@ set(TF_PSA_CRYPTO_TARGET_PREFIX crypto_service_)
 # TF_PSA_CRYPTO_BUILD_TYPE must be set manually here
 set(SAVED_BUILD_TYPE ${CMAKE_BUILD_TYPE})
 set(CMAKE_BUILD_TYPE ${TF_PSA_CRYPTO_BUILD_TYPE})
-add_subdirectory(${TF_PSA_CRYPTO_PATH} ${CMAKE_CURRENT_BINARY_DIR}/tfpsacrypto EXCLUDE_FROM_ALL)
+add_subdirectory(${ZEPHYR_NRF_MODULE_DIR}/subsys/nrf_security/tfm ${CMAKE_CURRENT_BINARY_DIR}/tfpsacrypto EXCLUDE_FROM_ALL)
 set(CMAKE_BUILD_TYPE ${SAVED_BUILD_TYPE})
 
 if(NOT TARGET ${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto)
@@ -203,37 +219,3 @@ target_link_libraries(${TF_PSA_CRYPTO_TARGET_PREFIX}tfpsacrypto
     INTERFACE
         platform_common_interface
     )
-
-############################### TF-PSA-Crypto internal targets #################
-
-target_compile_definitions(${TF_PSA_CRYPTO_TARGET_PREFIX}p256-m
-    PRIVATE
-        # Code is branchless but UMLAL might take a variable amount of cycles
-        # depedening on inputs if ${is_v8.1m} is false. We don't aim to protect
-        # against side channel so this is a acknowledged behaviour
-        MUL64_IS_CONSTANT_TIME
-        MULADD64_IGNORE_ASM
-)
-
-set(_tfpsa_internal_targets
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}p256-m
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}builtin
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}everest
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}platform
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}pqcp
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}utilities
-    ${TF_PSA_CRYPTO_TARGET_PREFIX}extras
-)
-
-foreach(_tfpsa_target ${_tfpsa_internal_targets})
-    # Passing TF-PSA-Crypto configuration and required include paths to internal targets
-    target_link_libraries(${_tfpsa_target}
-        PRIVATE
-            crypto_service_tfpsacrypto_config
-    )
-    # Propagating FPU flags to internal targets
-    target_compile_options(${_tfpsa_target}
-        PRIVATE
-            ${COMPILER_CP_FLAG}
-    )
-endforeach()
