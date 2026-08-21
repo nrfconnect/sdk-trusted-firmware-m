@@ -146,6 +146,10 @@ enum sfcp_error_t sfcp_init_msg(uint8_t *buf, size_t buf_size, sfcp_node_id_t re
         sfcp_err = sfcp_get_trusted_subnet_for_node(receiver, &trusted_subnet);
         if (sfcp_err == SFCP_ERROR_SUCCESS) {
             found_trusted_subnet = true;
+        } else if (sfcp_err == SFCP_ERROR_INVALID_NODE) {
+            found_trusted_subnet = false;
+        } else {
+            return sfcp_err;
         }
     }
 
@@ -601,8 +605,8 @@ enum sfcp_error_t sfcp_receive_msg(uint8_t *buf, size_t buf_size, bool any_sende
         goto error_reply;
     }
 
-    sfcp_err = sfcp_encryption_handshake_responder(
-        packet, received_size,
+    sfcp_err = sfcp_helpers_encryption_handshake_validate(
+        packet, received_size, packet_type,
         packet_type == SFCP_PACKET_TYPE_REPLY ? packet_receiver : packet_sender, message_id,
         packet_uses_crypto, *payload, *payload_len, &is_handshake_req);
     if (sfcp_err != SFCP_ERROR_SUCCESS) {

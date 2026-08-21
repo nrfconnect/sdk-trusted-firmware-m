@@ -1,0 +1,49 @@
+*************
+Version 2.3.1
+*************
+
+Features and hotfixes
+=====================
+
+ - Upgrade to Update TF-PSA-Crypto to v1.1.1, which contains security advisories [1]_.
+ - Fixes for build system: compiler path, cryptography module update, git identity
+ - Fixes for ITS: zero align data, missing unmapping of invec
+ - Fixes for mailbox: checks at init, possible out-of-range write
+ - Fixes for crypto: checks on AEAD ops
+ - Fixes for docs: doxygen configuration for RTD
+ - Fixes for BL2: encryption-related code builds, remove MCUBOOT_USE_MBED_TLS
+ - corstone1000: fixes for fwu
+ - infineon: fixes for mailbox initialization
+ - psoc64: fixes for mailbox initialization
+ - rp2350: fixes for mailbox initialization
+ - rse: fixes for ATU, disable shallow clone for MCUboot, SFCP checks on subnets and nodes
+ - stm: fixes for ECDSA BL2 ROTPK keys and alignment
+ - stm32: fix issues for stm32wba65i_dk and nucleo_u3c5zi_q
+
+
+New security advisories
+=======================
+
+Two new security vulnerabilities have been fixed in v2.3.1:
+
+Refer to :doc:`TFMV-10 </security/security_advisories/missing_ns_pointer_validation_mailbox_init>`
+for more details.
+The mitigation is included in this release.
+
+Refer to :doc:`TFMV-11 </security/security_advisories/fwu_partial_fmp_header>` for more details.
+The mitigation is included in this release.
+
+
+References
+==========
+
+.. [1] `TF-PSA-Crypto <https://github.com/Mbed-TLS/TF-PSA-Crypto/releases/tag/tf-psa-crypto-1.1.1>`_
+
+
+--------------
+
+ *SPDX-License-Identifier: BSD-3-Clause*
+
+ *SPDX-FileCopyrightText: Copyright The TrustedFirmware-M Contributors*
+
+

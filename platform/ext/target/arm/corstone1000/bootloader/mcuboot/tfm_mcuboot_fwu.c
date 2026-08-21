@@ -1105,6 +1105,54 @@ static psa_status_t erase_image(uint32_t image_offset, uint32_t image_size)
     return PSA_SUCCESS;
 }
 
+#ifndef BL1_BUILD
+/* stale index is the index of the partition to remove within the partition entry
+ * array, which could be representing either bank 0 or bank 1. name_index is the
+ * index of partition to remove within the fwu_images image_names index, which is
+ * fixed at compile time in the structure
+ */
+static psa_status_t remove_all_stale_partitions(const uint32_t stale_index,
+                                                const uint32_t name_index)
+{
+    psa_status_t ret;
+
+    for (int i = 0; i < NR_OF_IMAGES_IN_FW_BANK; ++i) {
+        struct partition_entry_t part;
+        ret = gpt_entry_read_by_type(&(fwu_image[i].image_type), stale_index, &part);
+
+        if (ret == PSA_ERROR_DOES_NOT_EXIST) {
+            FWU_LOG_MSG("%s: Unable to find partition '%s', skipping removal\r\n",
+                    __func__, fwu_image[i].image_names[name_index]);
+            continue;
+        } else if (ret == PSA_ERROR_STORAGE_FAILURE) {
+            FWU_LOG_MSG("%s: Flash error whilst reading GPT partition '%s'\r\n",
+                    __func__, fwu_image[i].image_names[name_index]);
+            return ret;
+        } else if (ret < 0) {
+            FWU_LOG_MSG("%s: Unable to read partition '%s'\r\n",
+                    __func__, fwu_image[i].image_names[name_index]);
+            return ret;
+        }
+
+        ret = gpt_entry_remove(&(part.partition_guid));
+        if (ret == PSA_ERROR_STORAGE_FAILURE) {
+            FWU_LOG_MSG("%s: Flash error whilst removing GPT partition '%s'\r\n",
+                    __func__, fwu_image[i].image_names[name_index]);
+            return ret;
+        } else if (ret < 0) {
+            FWU_LOG_MSG("%s: Unable to remove partition '%s'\r\n",
+                    __func__, fwu_image[i].image_names[name_index]);
+            return ret;
+        }
+
+        FWU_LOG_MSG("%s: Removed GPT partition '%s'\r\n",
+                    __func__, fwu_image[i].image_names[name_index]);
+    }
+
+    return ret;
+}
+#endif
+
 static psa_status_t fwu_select_previous(
         struct fwu_metadata *metadata,
         struct fwu_private_metadata *priv_metadata)
@@ -1162,40 +1210,12 @@ static psa_status_t fwu_select_previous(
 
 #ifndef BL1_BUILD
     /* Remove the GPT partitions for the rejected images. It is always the newer
-     * (second) partitions that are rejected, as they are created during the
-     * fwu process
+     * (previous active) partitions that are rejected, as they are created during
+     * the fwu process
      */
-    for (int i = 0; i < NR_OF_IMAGES_IN_FW_BANK; ++i) {
-        struct partition_entry_t part;
-        ret = gpt_entry_read_by_type(&(fwu_image[i].image_type), 1, &part);
-
-        if (ret == PSA_ERROR_DOES_NOT_EXIST) {
-            FWU_LOG_MSG("%s: Unable to find partition '%s'\r\n",
-                    __func__, fwu_image[i].image_names[index]);
-            return ret;
-        } else if (ret == PSA_ERROR_STORAGE_FAILURE) {
-            FWU_LOG_MSG("%s: Flash error whilst reading GPT partition '%s'\r\n",
-                    __func__, fwu_image[i].image_names[index]);
-            return ret;
-        } else if (ret < 0) {
-            FWU_LOG_MSG("%s: Unable to read partition '%s'\r\n",
-                    __func__, fwu_image[i].image_names[index]);
-            return ret;
-        }
-
-        ret = gpt_entry_remove(&(part.partition_guid));
-        if (ret == PSA_ERROR_STORAGE_FAILURE) {
-            FWU_LOG_MSG("%s: Flash error whilst removing GPT partition '%s'\r\n",
-                    __func__, fwu_image[i].image_names[index]);
-            return ret;
-        } else if (ret < 0) {
-            FWU_LOG_MSG("%s: Unable to remove partition '%s'\r\n",
-                    __func__, fwu_image[i].image_names[index]);
-            return ret;
-        }
-
-        FWU_LOG_MSG("%s: Removed GPT partition '%s'\r\n",
-                    __func__, fwu_image[i].image_names[index]);
+    ret = remove_all_stale_partitions(1, metadata->previous_active_index);
+    if (ret != PSA_SUCCESS) {
+        return ret;
     }
 #endif /* BL1_BUILD */
 
@@ -1863,26 +1883,46 @@ out:
     return ret;
 }
 
-psa_status_t parse_fmp_header(psa_fwu_component_t component, const void *block, size_t size, size_t *fmp_bytes)
+static psa_status_t parse_fmp_header(
+    psa_fwu_component_t component,
+    const void *block,
+    size_t size,
+    size_t *fmp_bytes)
 {
+    size_t header_size = sizeof(fmp_header_image_info[component].fmp_hdr);
+    size_t *header_size_recv = &fmp_header_image_info[component].fmp_hdr_size_recvd;
+
+    if ((*header_size_recv + size) < size) {
+        return PSA_ERROR_INVALID_ARGUMENT;
+    }
+
     /* Parse the incoming block to make sure complete FMP header is received */
-    if (sizeof(fmp_header_image_info[component].fmp_hdr) >= (fmp_header_image_info[component].fmp_hdr_size_recvd + size)) {
-        memcpy(&fmp_header_image_info[component].fmp_hdr, block, size);
-        fmp_header_image_info[component].fmp_hdr_size_recvd += size;
+    if (header_size >= (*header_size_recv + size)) {
+        memcpy(
+            (uint8_t *)&fmp_header_image_info[component].fmp_hdr + *header_size_recv,
+            block,
+            size);
+
         *fmp_bytes = size;
+        *header_size_recv += size;
+
         return PSA_ERROR_INSUFFICIENT_DATA;
     }
-    if (fmp_header_image_info[component].fmp_hdr_size_recvd != sizeof(fmp_header_image_info[component].fmp_hdr)) {
-        memcpy(&fmp_header_image_info[component].fmp_hdr,
-                block,
-                (sizeof(fmp_header_image_info[component].fmp_hdr) - fmp_header_image_info[component].fmp_hdr_size_recvd));
+    if (*header_size_recv != header_size) {
+        memcpy(
+            (uint8_t *)&fmp_header_image_info[component].fmp_hdr + *header_size_recv,
+            block,
+            (header_size - *header_size_recv));
 
-        *fmp_bytes = sizeof(fmp_header_image_info[component].fmp_hdr) - fmp_header_image_info[component].fmp_hdr_size_recvd;
-        fmp_header_image_info[component].fmp_hdr_size_recvd = sizeof(fmp_header_image_info[component].fmp_hdr);
+        *fmp_bytes = header_size - *header_size_recv;
+        *header_size_recv = header_size;
+
         return PSA_SUCCESS;
     }
 
+    FWU_ASSERT(0);
 }
+
 psa_status_t fwu_bootloader_load_image(psa_fwu_component_t component,
                                        size_t block_offset,
                                        const void *block,
@@ -1924,6 +1964,9 @@ psa_status_t fwu_bootloader_load_image(psa_fwu_component_t component,
         ret = parse_fmp_header(fwu_image_index, block, block_size, &fmp_bytes);
         if(ret == PSA_ERROR_INSUFFICIENT_DATA) {
             return PSA_SUCCESS;
+        }
+        if(ret == PSA_ERROR_INVALID_ARGUMENT) {
+            return ret;
         }
         if (ret == PSA_SUCCESS) {
             block_size -= fmp_bytes;
@@ -1974,6 +2017,28 @@ psa_status_t fwu_bootloader_load_image(psa_fwu_component_t component,
                 priv_metadata.fmp_last_attempt_status[fwu_image_index]);
 
         FWU_LOG_MSG("ERROR: %s: version error\n\r",__func__);
+
+#ifndef BL1_BUILD
+        /* The FWU process short circuits at this point, so remove all images,
+         * effecitvely treating them all as rejected. Ignore return code and
+         * in order to return PSA_OPERATION_INCOMPLETE as per PSA FWU API.
+         */
+        uint32_t previous_active_index;
+        if (active_index == BANK_0) {
+            previous_active_index = BANK_1;
+        } else if (active_index == BANK_1) {
+            previous_active_index = BANK_0;
+        } else {
+            FWU_LOG_MSG("ERROR: %s: active_index %d\n\r",__func__,active_index);
+            ret = PSA_ERROR_DATA_INVALID;
+            goto out;
+        }
+
+        /* The newer index should be removed as that was just created in the
+         * staging phase.
+         */
+        (void)remove_all_stale_partitions(1, previous_active_index);
+#endif
         ret = PSA_OPERATION_INCOMPLETE;
         goto out;
     }
@@ -2023,6 +2088,31 @@ psa_status_t fwu_bootloader_load_image(psa_fwu_component_t component,
 
     image_offset = part.start * TFM_GPT_BLOCK_SIZE;
 #endif /* BL1_BUILD */
+
+    if ((fmp_header_image_info[fwu_image_index].image_size_recvd >
+            (UINT32_MAX - image_offset)) ||
+        (block_size > (UINT32_MAX - image_offset -
+            fmp_header_image_info[fwu_image_index].image_size_recvd))) {
+        FWU_LOG_MSG("%s: image write range overflows flash address space\n\r", __func__);
+        ret = PSA_ERROR_INVALID_ARGUMENT;
+        goto out;
+    }
+
+#ifdef BL1_BUILD
+    if ((fmp_header_image_info[fwu_image_index].image_size_recvd >
+            fwu_image[fwu_image_index].image_size) ||
+        (block_size > (fwu_image[fwu_image_index].image_size -
+            fmp_header_image_info[fwu_image_index].image_size_recvd))) {
+#else
+    if ((fmp_header_image_info[fwu_image_index].image_size_recvd >
+            (part.size * TFM_GPT_BLOCK_SIZE)) ||
+        (block_size > ((part.size * TFM_GPT_BLOCK_SIZE) -
+            fmp_header_image_info[fwu_image_index].image_size_recvd))) {
+#endif
+        FWU_LOG_MSG("%s: image write exceeds partition size\n\r", __func__);
+        ret = PSA_ERROR_INSUFFICIENT_STORAGE;
+        goto out;
+    }
 
     /* Firmware update process can only start in regular state. */
     current_state = get_fwu_image_state(&_metadata, &priv_metadata, fwu_image_index);

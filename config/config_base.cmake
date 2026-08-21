@@ -35,13 +35,14 @@ set(PROJECT_CONFIG_HEADER_FILE          ""          CACHE FILEPATH  "User define
 
 # External libraries source and version
 set(TF_PSA_CRYPTO_PATH                  "DOWNLOAD"  CACHE PATH      "Path to TF-PSA-Crypto (or DOWNLOAD to fetch automatically")
-set(TF_PSA_CRYPTO_VERSION               "v1.1.0"    CACHE STRING    "The version of TF-PSA-Crypto to use")
+set(TF_PSA_CRYPTO_VERSION               "v1.1.1"    CACHE STRING    "The version of TF-PSA-Crypto to use")
 set(TF_PSA_CRYPTO_FORCE_PATCH           OFF         CACHE BOOL      "Always apply TF-PSA-Crypto patches")
 set(TF_PSA_CRYPTO_GIT_REMOTE            "https://github.com/Mbed-TLS/TF-PSA-Crypto" CACHE STRING "The URL to retrieve TF-PSA-Crypto from.")
 
 set(MCUBOOT_PATH                        "DOWNLOAD"   CACHE PATH     "Path to MCUboot (or DOWNLOAD to fetch automatically")
 set(MCUBOOT_VERSION                     "v2.4.0"     CACHE STRING   "The version of MCUboot to use")
 set(MCUBOOT_GIT_REMOTE                  "https://github.com/mcu-tools/mcuboot.git" CACHE STRING "The URL to retrieve MCUboot from.")
+set(MCUBOOT_GIT_SHALLOW                 ON           CACHE BOOL     "Whether to perform a shallow clone of the MCUboot repository")
 set(MCUBOOT_PATCH_DIR                   "${CMAKE_SOURCE_DIR}/lib/ext/mcuboot"      CACHE PATH   "Path to local folder which contains patches for MCUboot")
 set(MCUBOOT_FORCE_PATCH                 OFF         CACHE BOOL      "Always apply MCUboot patches")
 
